@@ -93,7 +93,7 @@
             pointer-events: none;
         }
         .header-btn {
-            width: 38px; height: 38px; border-radius: 50%;
+            width: 42px; height: 42px; border-radius: 50%;
             background: var(--surface); border: 1px solid var(--border);
             display: flex; align-items: center; justify-content: center;
             color: var(--muted); cursor: pointer; flex-shrink: 0;
@@ -141,6 +141,13 @@
             box-shadow: 0 0 0 1px rgba(232,114,42,0.18), 0 6px 28px rgba(196,90,16,0.18);
         }
         .card.today .arrow { border-color: var(--accent); color: var(--accent); }
+        /* ── JERARQUÍA VISUAL DASHBOARD ── */
+        .card.primary {
+            background: rgba(28,18,10,0.78);
+            border-color: rgba(210,100,20,0.32);
+        }
+        .card.primary .day-badge { box-shadow: 0 4px 16px rgba(196,90,16,0.55); }
+        .card.week-done { opacity: 0.55; filter: blur(0.5px); }
 
         .day-badge {
             min-width: 50px; height: 50px; border-radius: 14px;
@@ -175,37 +182,11 @@
             color: var(--muted); flex-shrink: 0; font-size: 0.75rem;
         }
 
-        /* ── WORKOUT HEADER CARD ── */
-        .workout-day-header {
-            background: rgba(232,114,42,0.08);
-            border: 1px solid rgba(232,114,42,0.35);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            display: flex; align-items: center; gap: 16px;
-            box-shadow: 0 4px 24px rgba(196,90,16,0.15);
-        }
-        .workout-day-badge {
-            min-width: 54px; height: 54px; border-radius: 15px;
-            background: linear-gradient(145deg, #f09040, #c45a10);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            flex-shrink: 0; box-shadow: 0 4px 16px rgba(196,90,16,0.5);
-        }
-        .workout-day-badge .num { font-size: 1.5rem; font-weight: 900; color: #fff; line-height: 1; }
-        .workout-day-badge .lbl { font-size: 0.55rem; font-weight: 700; color: rgba(255,255,255,0.8); letter-spacing: 1.5px; text-transform: uppercase; }
-        .workout-day-info { flex: 1; text-align: center; }
-        .workout-day-info .wname { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-        .workout-day-info .wmuscles { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
-        .workout-day-info .wstatus {
-            display: inline-block; margin-top: 6px;
-            font-size: 0.62rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
-            padding: 3px 10px; border-radius: 99px;
-            background: rgba(232,114,42,0.15); color: var(--accent);
-            border: 1px solid rgba(232,114,42,0.3);
-        }
+        /* C1 — workout-day-header removed */
 
-        /* ── MUSCLE GROUP ── */
+        /* ── MUSCLE GROUP (D1 fixed, D2 inline + btn) ── */
         .muscle-group-wrapper {
-            display: flex; align-items: center; gap: 10px;
+            display: flex; align-items: center; gap: 8px;
             margin-top: 6px;
         }
         .mg-line { flex: 1; height: 1px; background: var(--border); }
@@ -213,7 +194,6 @@
             font-size: 0.65rem; font-weight: 800; letter-spacing: 2.5px;
             text-transform: uppercase; color: var(--accent); padding: 0 4px;
         }
-        .mg-controls { display: flex; gap: 6px; }
 
         /* ── EXERCISE CARD ── */
         .exercise-card {
@@ -227,39 +207,52 @@
             background: linear-gradient(180deg, var(--accent), var(--accent2));
         }
 
-        .ex-header-row {
-            padding: 12px 14px 12px 16px;
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-            min-height: 52px; gap: 8px;
+        /* E1 — two-row card header */
+        .ex-row-1 {
+            padding: 12px 12px 6px 16px;
+            display: flex; align-items: flex-start; gap: 6px;
         }
         .ex-name {
-            font-size: 1rem; font-weight: 800;
+            font-size: 1.08rem; font-weight: 800;
             text-transform: uppercase; letter-spacing: 0.5px;
             color: var(--text);
             flex: 1; min-width: 0;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            white-space: normal; word-break: break-word; line-height: 1.3;
         }
-        .ex-controls { display: flex; gap: 6px; flex-shrink: 0; position: relative; z-index: 1; }
+        .ex-row-1-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; padding-top: 2px; }
+        .ex-done-check {
+            width: 24px; height: 24px; border-radius: 50%;
+            border: 1.5px solid rgba(232,114,42,0.3); background: transparent;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.72rem; color: transparent; flex-shrink: 0; cursor: default;
+        }
+        .ex-done-check.done { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .ex-row-2 {
+            padding: 4px 10px 10px 4px;
+            display: flex; align-items: center; gap: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+        .ex-controls { display: flex; gap: 4px; flex-shrink: 0; position: relative; z-index: 1; }
         .ctrl-btn {
-            width: 30px; height: 30px; border-radius: 8px;
+            width: 38px; height: 38px; border-radius: 8px;
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
             color: var(--muted); display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 0.8rem;
+            cursor: pointer; font-size: 0.85rem; flex-shrink: 0;
         }
         .ctrl-btn:active { background: rgba(255,255,255,0.1); color: var(--text); }
+        .ctrl-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
         .btn-del { color: var(--danger) !important; }
 
         /* Stats grid */
         .stats-grid {
-            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0;
+            display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); gap: 0;
         }
         .stat-box {
             display: flex; flex-direction: column; align-items: center;
-            padding: 14px 8px 10px; border-right: 1px solid var(--border); gap: 8px;
+            padding: 16px 6px 14px; border-right: 1px solid var(--border); gap: 8px;
         }
         .stat-box:last-child { border-right: none; }
-        .stat-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+        .stat-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
 
         /* Selector de reps */
         select.reps-select {
@@ -276,7 +269,7 @@
         /* Modo Fallo — tabla de series */
         .fallo-grid {
             padding: 12px 16px 14px;
-            display: flex; flex-direction: column; gap: 8px;
+            display: flex; flex-direction: column; gap: 8px; align-items: center;
             border-top: 1px solid var(--border);
         }
         .fallo-row {
@@ -288,7 +281,7 @@
             white-space: nowrap; width: 56px;
         }
         .fallo-input {
-            flex: 1; background: rgba(232,114,42,0.06);
+            width: 64px; flex: none; background: rgba(232,114,42,0.06);
             border: 1px solid rgba(232,114,42,0.3);
             border-radius: 10px; color: var(--accent);
             padding: 8px 6px; font-size: 1.2rem; font-weight: 800;
@@ -305,7 +298,11 @@
             transition: border-color 0.2s;
         }
         input:focus { border-color: var(--accent); background: rgba(255,255,255,0.1); }
-        input.weight-input { color: var(--accent); border-color: rgba(232,114,42,0.3); background: rgba(232,114,42,0.06); }
+        input.weight-input { color: var(--accent); border-color: rgba(232,114,42,0.3); background: rgba(232,114,42,0.06); max-width: 53px; }
+        /* ── SIN SPINNERS NATIVOS ── */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { display: none; }
+        input[type=number] { -moz-appearance: textfield; }
 
         .mini-history {
             padding: 8px 16px 12px;
@@ -360,14 +357,16 @@
         .img-preview-container img { width: 100%; height: 100%; object-fit: cover; }
         .img-placeholder { font-size: 1.4rem; color: var(--muted); }
 
-        /* Drag & Drop */
+        /* J1 Drag handle — 44×44 tap target, 250ms hold */
         .drag-handle {
+            width: 44px; height: 44px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
             font-size: 1.15rem; color: rgba(255,255,255,0.22);
-            padding: 0 10px 0 0; cursor: grab; flex-shrink: 0;
-            touch-action: none; user-select: none; -webkit-user-select: none;
-            line-height: 1;
+            cursor: grab; touch-action: none;
+            user-select: none; -webkit-user-select: none;
         }
-        .drag-handle:active { cursor: grabbing; color: var(--accent); }
+        .drag-handle.hold-ready { color: var(--accent); }
+        .drag-handle:active { cursor: grabbing; }
         .exercise-card.is-dragging,
         .muscle-group-wrapper.is-dragging { opacity: 0.25; }
         .drag-ghost {
@@ -402,8 +401,11 @@
             font-weight: 800; font-size: 1rem; letter-spacing: 1.5px; text-transform: uppercase;
             box-shadow: 0 4px 28px rgba(196,90,16,0.55); cursor: pointer;
             z-index: 200; display: none;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.25s ease;
         }
         .fab:active { transform: translateX(-50%) scale(0.98); }
+        .fab.visible { opacity: 1; pointer-events: auto; }
 
         /* ── SETTINGS ── */
         .settings-container { text-align: center; padding: 20px; }
@@ -477,6 +479,209 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
 
+        /* ── STEPPER +/- ── */
+        .stepper-box {
+            display: flex; align-items: center; width: 100%; gap: 3px;
+            justify-content: center;
+        }
+        .stepper-box input {
+            flex: 1; min-width: 36px; width: auto;
+            padding-left: 0; padding-right: 0;
+            font-size: 1.1rem; font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.5px;
+        }
+        .stepper-btn {
+            width: 26px; height: 44px; flex-shrink: 0; border-radius: 6px;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--muted); font-size: 1.2rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        .stepper-btn:active { background: rgba(232,114,42,0.2); color: var(--accent); }
+
+        /* ── DELTA PESO ── */
+        .weight-delta {
+            display: inline-block; margin-top: 4px;
+            font-size: 0.65rem; font-weight: 800; letter-spacing: 0.5px;
+            padding: 2px 7px; border-radius: 99px;
+        }
+        .weight-delta.up   { background: rgba(232,114,42,0.18); color: #f09040; border: 1px solid rgba(232,114,42,0.3); }
+        .weight-delta.down { background: rgba(207,102,121,0.14); color: var(--danger); border: 1px solid rgba(207,102,121,0.25); }
+        .weight-delta.eq   { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid rgba(255,255,255,0.08); }
+
+        /* ── SERIES CHECKS ── */
+        .series-checks {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; padding: 10px 16px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .series-check {
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 1.5px solid rgba(232,114,42,0.3);
+            background: transparent; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; color: transparent;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .series-check:active { background: rgba(232,114,42,0.15); }
+        .series-check.checked {
+            background: var(--accent); border-color: var(--accent); color: #fff;
+        }
+
+        /* ── EJERCICIO COMPLETADO (vía series) ── */
+        .exercise-card.completed { opacity: 0.55; }
+        .exercise-card.completed::before { background: var(--muted); }
+        .exercise-card.completed .ex-name { color: var(--muted); }
+        .ex-done-mark { color: var(--accent); font-size: 0.85rem; margin-left: 4px; }
+
+        /* ── H1 TIMER POR CARD ── */
+        .card-timer-row {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 8px 16px 10px; border-top: 1px solid var(--border);
+            background: rgba(232,114,42,0.04);
+        }
+        .timer-display {
+            font-size: 1.3rem; font-weight: 900; letter-spacing: 2px;
+            color: var(--accent); font-variant-numeric: tabular-nums;
+            min-width: 72px; text-align: center;
+            user-select: none; -webkit-user-select: none;
+        }
+        .timer-action-btn {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(232,114,42,0.12); border: 1px solid rgba(232,114,42,0.25);
+            color: var(--accent); font-size: 0.9rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .timer-action-btn:active { background: rgba(232,114,42,0.25); }
+
+        /* ── F3 REPS STEPPER + FALLO TOGGLE ── */
+        .reps-stepper-wrap {
+            display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%;
+        }
+        .fallo-toggle {
+            font-size: 0.62rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+            padding: 4px 10px; border-radius: 99px; cursor: pointer;
+            background: transparent; border: 1px solid rgba(232,114,42,0.3); color: var(--muted);
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+        .fallo-toggle.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .fallo-toggle.expanded {
+            width: 100%; height: 44px; border-radius: 10px;
+            font-size: 0.85rem; padding: 0; letter-spacing: 1px;
+        }
+        .fallo-check {
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 1.5px solid rgba(232,114,42,0.3); background: transparent;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; color: transparent; flex-shrink: 0;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .fallo-check.checked { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+        /* ── FIELD ICON BTNS (en ex-row-1-right) ── */
+        .field-icon-btn {
+            width: 30px; height: 30px; border-radius: 8px; font-size: 0.95rem;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0; color: var(--muted);
+        }
+        .field-icon-btn:active { background: rgba(255,255,255,0.12); }
+        .field-icon-btn label { cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        .photo-wrap-row { padding: 6px 16px 8px; }
+        .photo-preview-wrap {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .photo-preview-thumb {
+            width: 64px; height: 64px; border-radius: 8px; overflow: hidden;
+            border: 1px solid var(--border); cursor: pointer; flex-shrink: 0;
+        }
+        .photo-preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-del-btn {
+            width: 24px; height: 24px; border-radius: 50%; font-size: 0.7rem;
+            background: rgba(207,102,121,0.15); border: 1px solid rgba(207,102,121,0.3);
+            color: var(--danger); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0;
+        }
+
+        /* ── K COMBINED MODE ── */
+        .combo-weight-row {
+            display: flex; gap: 6px; width: 100%;
+        }
+        .combo-weight-row .stat-box { flex: 1; border: none; padding: 14px 4px 10px; }
+        .combo-grid {
+            padding: 12px 16px 14px;
+            display: flex; flex-direction: column; gap: 8px; align-items: center;
+            border-top: 1px solid var(--border);
+        }
+        .combo-row {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .combo-row .fallo-label { width: 48px; }
+        .combo-input {
+            width: 64px; flex: none; background: rgba(232,114,42,0.06);
+            border: 1px solid rgba(232,114,42,0.3);
+            border-radius: 10px; color: var(--accent);
+            padding: 8px 6px; font-size: 1.1rem; font-weight: 800;
+            text-align: center; outline: none;
+            transition: border-color 0.2s;
+        }
+        .combo-input:focus { border-color: var(--accent); background: rgba(232,114,42,0.12); }
+        .combo-sep { color: var(--muted); font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+
+        /* ── NOTES DOT ── */
+        .notes-dot {
+            display: inline-block; width: 6px; height: 6px;
+            border-radius: 50%; background: var(--accent);
+            margin-left: 6px; vertical-align: middle; flex-shrink: 0;
+        }
+
+        /* D2 — add-group-btn removed; + is now inline ctrl-btn in group header */
+
+        /* C2 — workout total timer removed */
+
+        /* ── BARRA DE BÚSQUEDA ── */
+        .search-row {
+            display: flex; gap: 8px; align-items: center;
+            padding: 4px 0 2px;
+        }
+        .search-input {
+            flex: 1; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+            color: var(--text); padding: 10px 12px; font-size: 0.9rem;
+            outline: none; transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: rgba(232,114,42,0.4); }
+        .search-input::placeholder { color: rgba(245,237,228,0.25); }
+
+        /* ── CONFIRM MODAL ── */
+        #confirm-modal {
+            display: none; position: fixed; inset: 0; z-index: 3000;
+            background: rgba(0,0,0,0.88);
+            justify-content: center; align-items: center;
+        }
+        #confirm-modal.open { display: flex; }
+        #confirm-modal-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 18px; padding: 28px 24px 22px;
+            width: min(320px, 88vw);
+            display: flex; flex-direction: column; gap: 14px; text-align: center;
+        }
+        #confirm-msg { font-size: 0.92rem; color: var(--text); line-height: 1.55; }
+        .confirm-btns { display: flex; gap: 10px; margin-top: 4px; }
+        .confirm-yes {
+            flex: 1; padding: 13px; background: var(--accent); color: #fff;
+            border: none; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer;
+        }
+        .confirm-no {
+            flex: 1; padding: 13px;
+            background: rgba(255,255,255,0.06); color: var(--muted);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+            font-weight: 700; font-size: 0.95rem; cursor: pointer;
+        }
+
         /* ── SPLASH ── */
         @keyframes splashZoomIn {
             0%   { transform: scale(0.08); border-radius: 50%; }
@@ -499,7 +704,7 @@
             display: block;
             image-rendering: high-quality;
             transform-origin: center center;
-            animation: splashZoomIn 3.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: splashZoomIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
 </head>
@@ -571,6 +776,16 @@
         <div id="edit-modal-box">
             <input id="edit-modal-input" type="text" autocomplete="off" spellcheck="false">
             <button id="edit-modal-confirm" onclick="confirmEditModal()">Confirmar</button>
+        </div>
+    </div>
+
+    <div id="confirm-modal">
+        <div id="confirm-modal-box">
+            <div id="confirm-msg"></div>
+            <div class="confirm-btns">
+                <button class="confirm-no" id="confirm-no-btn" onclick="closeConfirmModal()">Cancelar</button>
+                <button class="confirm-yes" id="confirm-yes-btn">Confirmar</button>
+            </div>
         </div>
     </div>
 
@@ -753,6 +968,11 @@
         let appLogo = null;
         let autoSaveTimer = null;
 
+        // --- SESSION STATE ---
+        let activeTimer = null;       // { name, interval, seconds, running }
+        let completedSets = {};       // { exerciseName: checkedCount }
+        let expandedFields = {};      // { name: { notes: bool, link: bool } }
+
         // --- HELPERS ---
         const getLogs       = () => JSON.parse(localStorage.getItem('gym_logs') || '{}');
         const getExData     = () => JSON.parse(localStorage.getItem('gym_data') || '{}');
@@ -803,21 +1023,60 @@
             if (bgLayer) bgLayer.style.backgroundImage = `url(${base64Img})`;
         }
 
-        // --- DASHBOARD ---
+        // --- DASHBOARD / TIMESTAMP HELPERS ---
+        function parseLogTimestamp(ts) {
+            if (!ts) return 0;
+            // ISO format: "2026-04-30T18:25"
+            const iso = ts.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+            if (iso) return new Date(ts).getTime();
+            // Legacy format: "30/4 18:25"
+            const leg = ts.match(/^(\d+)\/(\d+)\s+(\d+):(\d+)$/);
+            if (leg) {
+                const now = new Date();
+                return new Date(now.getFullYear(), parseInt(leg[2])-1, parseInt(leg[1]), parseInt(leg[3]), parseInt(leg[4])).getTime();
+            }
+            return 0;
+        }
+
+        function formatLogForDisplay(ts) {
+            if (!ts) return '';
+            const iso = ts.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+            if (iso) {
+                const d = new Date(ts);
+                return `${d.getDate()}/${d.getMonth()+1} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            }
+            return ts; // legacy already in display format
+        }
+
+        function isThisWeek(ts) {
+            if (!ts) return false;
+            const t = parseLogTimestamp(ts);
+            if (!t) return false;
+            const now = new Date();
+            const dow = now.getDay(); // 0=Sun
+            const mondayOffset = dow === 0 ? -6 : 1 - dow;
+            const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + mondayOffset, 0, 0, 0, 0);
+            const sunday = new Date(monday.getTime() + 7*24*60*60*1000 - 1);
+            return t >= monday.getTime() && t <= sunday.getTime();
+        }
+
         function renderDashboard() {
             const container = document.getElementById('dashboard-view');
             container.innerHTML = '';
-            // Bloquear scroll táctil en dashboard
             container.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
             const logs = getLogs();
 
             routineData.forEach((day, index) => {
                 const card = document.createElement('div');
-                const lastTime = logs[day.dia];
-                const isLogged = !!lastTime;
-                card.className = 'card';
+                const rawTs = logs[day.dia];
+                const isLogged = !!rawTs;
+                const classes = ['card'];
+                if (index < 4) classes.push('primary');
+                if (isLogged && isThisWeek(rawTs)) classes.push('week-done');
+                card.className = classes.join(' ');
                 card.onclick = () => openWorkout(index);
 
+                const displayTs = formatLogForDisplay(rawTs);
                 card.innerHTML = `
                     <div class="day-badge">
                         <span class="num">${day.dia}</span>
@@ -827,7 +1086,7 @@
                         <div class="day-title">${day.nombre.replace(/^Día \d+ – /, '')}</div>
                         <div class="muscles">${day.musculos}</div>
                         <span class="last-log ${isLogged ? '' : 'pending'}">
-                            ${isLogged ? '✓ ' + lastTime : 'Sin registros'}
+                            ${isLogged ? '✓ ' + displayTs : 'Sin registros'}
                         </span>
                     </div>
                     <div class="arrow">→</div>
@@ -838,6 +1097,12 @@
 
         // --- WORKOUT ---
         function openWorkout(index) {
+            const isNewDay = currentDayIdx !== index;
+            if (isNewDay) {
+                if (activeTimer) { clearInterval(activeTimer.interval); activeTimer = null; }
+                completedSets = {};
+                expandedFields = {};
+            }
             currentDayIdx = index;
             const dayData = routineData[index];
             const savedData = getExData();
@@ -850,9 +1115,236 @@
 
             document.getElementById('back-btn').classList.remove('hidden');
             document.getElementById('settings-btn').classList.add('hidden');
-            document.getElementById('finish-btn').style.display = 'block';
+
+            const fab = document.getElementById('finish-btn');
+            fab.style.display = 'block';
+            fab.classList.remove('visible');
 
             renderExerciseList(dayData, savedData);
+        }
+
+        function groupExercises(ejercicios) {
+            const groups = [];
+            let current = null;
+            ejercicios.forEach((item, idx) => {
+                if (item.titulo) {
+                    current = { titulo: item.titulo, tituloIdx: idx, exercises: [] };
+                    groups.push(current);
+                } else {
+                    if (!current) { current = { titulo: null, tituloIdx: -1, exercises: [] }; groups.push(current); }
+                    current.exercises.push({ item, originalIdx: idx });
+                }
+            });
+            return groups;
+        }
+
+        function buildExerciseCard(item, exIdx, savedData, isMediaDay, isUrlDay) {
+            let defSets = "", defReps = "", defWeight = "", defWeight2 = "", defLink = "", defImg = "", defFalloData = [], defNotes = "", defComboData = [];
+            let defCombined = false;
+            let prevWeight = "", prevWeight2 = "";
+            if (item.s && item.s.includes('x')) {
+                const parts = item.s.split('x');
+                defSets = parts[0].trim(); defReps = parts[1].trim();
+            } else { defReps = item.s || ""; }
+
+            let historyLabel = `Meta: ${item.p || '0'}`;
+            if (savedData[item.n]) {
+                const sd     = savedData[item.n];
+                prevWeight   = sd.weight    || "";
+                prevWeight2  = sd.weight2   || "";
+                defSets      = sd.sets      || defSets;
+                defReps      = sd.reps      || defReps;
+                defWeight    = sd.weight    || "";
+                defWeight2   = sd.weight2   || "";
+                defCombined  = !!sd.combined;
+                defComboData = sd.comboData || [];
+                defLink      = sd.link      || item.url || "";
+                defImg       = sd.img       || item.img || "";
+                defFalloData = sd.falloData || [];
+                defNotes     = sd.notes     || "";
+                if (defCombined && sd.fecha) {
+                    const w1 = sd.weight || '?'; const w2 = sd.weight2 || '?';
+                    historyLabel = `Último: <span>${w1}kg + ${w2}kg</span>`;
+                } else if (sd.fecha && sd.weight) {
+                    historyLabel = `Actualizado: <span>${sd.fecha} · ${sd.weight}kg</span>`;
+                } else if (sd.falloData && sd.falloData.some(v=>v)) {
+                    historyLabel = `Actualizado: <span>${sd.fecha} · Fallo</span>`;
+                } else if (sd.weight) {
+                    historyLabel = `Último: <span>${sd.weight}kg</span>`;
+                }
+            }
+            if (!defLink && item.url) defLink = item.url;
+            if (!defImg  && item.img) defImg  = item.img;
+
+            const isFallo   = defReps === 'Fallo';
+            const numSets   = parseInt(defSets) || 4;
+            const numReps   = isFallo ? 1 : (parseInt(defReps) || 1);
+            const checkedCount = completedSets[item.n] || 0;
+            const isDone    = checkedCount >= numSets && numSets > 0;
+            const hasDot    = defNotes.trim().length > 0;
+            const safeName  = item.n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            const safeId    = item.n.replace(/[^a-zA-Z0-9]/g,'_');
+
+            // Fallo grid rows
+            let falloRowsHtml = '';
+            for (let fi = 0; fi < numSets; fi++) {
+                falloRowsHtml += `<div class="fallo-row">
+                    <span class="fallo-label">Serie ${fi+1}</span>
+                    <input type="number" inputmode="numeric" min="0" class="fallo-input" placeholder="—" value="${defFalloData[fi] || ''}">
+                    <button class="fallo-check ${fi < checkedCount ? 'checked' : ''}" onclick="toggleFalloCheck(this,'${safeName}',${numSets})">✓</button>
+                </div>`;
+            }
+
+            // Combo grid rows
+            let comboRowsHtml = '';
+            for (let ci = 0; ci < numSets; ci++) {
+                const cRow = defComboData[ci] || ['',''];
+                comboRowsHtml += `<div class="combo-row">
+                    <span class="fallo-label">S${ci+1}</span>
+                    <input type="number" inputmode="numeric" min="0" class="combo-input combo-a" placeholder="—" value="${cRow[0]||''}">
+                    <span class="combo-sep">+</span>
+                    <input type="number" inputmode="numeric" min="0" class="combo-input combo-b" placeholder="—" value="${cRow[1]||''}">
+                    <button class="fallo-check ${ci < checkedCount ? 'checked' : ''}" onclick="toggleFalloCheck(this,'${safeName}',${numSets})">✓</button>
+                </div>`;
+            }
+
+            // Weight delta chips
+            const deltaHtml  = prevWeight  !== '' ? `<span class="weight-delta eq" id="delta1-${safeId}">= ${prevWeight}kg</span>`  : `<span class="weight-delta eq" id="delta1-${safeId}" style="display:none"></span>`;
+            const delta2Html = prevWeight2 !== '' ? `<span class="weight-delta eq" id="delta2-${safeId}">= ${prevWeight2}kg</span>` : `<span class="weight-delta eq" id="delta2-${safeId}" style="display:none"></span>`;
+
+            // Series checks
+            let checksHtml = `<div class="series-checks"${(isFallo || defCombined) ? ' style="display:none"' : ''}>`;
+            for (let si = 0; si < numSets; si++) {
+                checksHtml += `<button class="series-check ${si < checkedCount ? 'checked' : ''}" onclick="toggleSeriesCheck(this,'${safeName}',${numSets})">✓</button>`;
+            }
+            checksHtml += '</div>';
+
+            // I1 — collapsed fields
+            const exFields = expandedFields[item.n] || {};
+            const notesExpanded = exFields.notes || hasDot;
+            const linkExpanded  = exFields.link  || !!defLink;
+            const notesSection = notesExpanded
+                ? `<div class="notes-row" id="notes-section-${safeId}">
+                    <textarea class="in-notes" rows="2" placeholder="Anotaciones...">${defNotes}</textarea>
+                  </div>`
+                : `<div class="notes-row" id="notes-section-${safeId}" style="display:none">
+                    <textarea class="in-notes" rows="2" placeholder="Anotaciones...">${defNotes}</textarea>
+                  </div>`;
+            const linkSection = linkExpanded
+                ? `<div class="notes-row" id="link-section-${safeId}" style="padding:4px 16px 10px">
+                    <div class="url-row">
+                      <input type="url" class="in-link" placeholder="Pegar link video..." value="${defLink}">
+                      ${defLink ? `<a href="${defLink}" target="_blank" class="link-btn">▶ Ver</a>` : ''}
+                    </div>
+                   </div>`
+                : `<div class="notes-row" id="link-section-${safeId}" style="display:none;padding:4px 16px 10px">
+                    <div class="url-row">
+                      <input type="url" class="in-link" placeholder="Pegar link video..." value="${defLink}">
+                      ${defLink ? `<a href="${defLink}" target="_blank" class="link-btn">▶ Ver</a>` : ''}
+                    </div>
+                   </div>`;
+
+            let photoSection = '';
+            if (defImg) {
+                photoSection = `<div class="photo-preview-wrap" id="photo-wrap-${safeId}">
+                    <div class="photo-preview-thumb" onclick="showModal('${defImg}')"><img src="${defImg}"></div>
+                    <button class="photo-del-btn" onclick="deletePhoto(this,'${safeName}')">✕</button>
+                </div>`;
+            } else {
+                photoSection = `<div id="photo-wrap-${safeId}"></div>`;
+            }
+
+            const el = document.createElement('div');
+            el.className = 'exercise-card' + (isDone ? ' completed' : '');
+            el.dataset.name = item.n;
+            el.dataset.idx  = exIdx;
+            el._exData = item;
+
+            el.innerHTML = `
+                <div class="ex-row-1">
+                    <span class="ex-name">${item.n}${hasDot ? '<span class="notes-dot"></span>' : ''}</span>
+                    <div class="ex-row-1-right">
+                        <button class="field-icon-btn" title="Notas" onclick="expandField(this,'notes','${safeName}','${safeId}')">📝</button>
+                        ${(isUrlDay) ? `<button class="field-icon-btn" title="Link" onclick="expandField(this,'link','${safeName}','${safeId}')">🔗</button>` : ''}
+                        ${(isMediaDay) ? `<div class="field-icon-btn" title="Foto"><label>📷<input type="file" accept="image/*" class="file-input" onchange="handleImageUpload(this,'${safeName}')"></label></div>` : ''}
+                        <div class="ex-done-check${isDone ? ' done' : ''}">✓</div>
+                    </div>
+                </div>
+                <div class="ex-row-2">
+                    <span class="drag-handle">⠿</span>
+                    <div style="flex:1"></div>
+                    <div class="ex-controls">
+                        <button class="ctrl-btn${defCombined ? ' active' : ''}" title="Combinado" onclick="toggleCombined(this)">⇄</button>
+                        <button class="ctrl-btn" title="Cronómetro" onclick="toggleCardTimer(this,'${safeName}')">⏱</button>
+                        <button class="ctrl-btn" title="Renombrar" onclick="editItemName(${currentDayIdx},${exIdx})">✎</button>
+                        <button class="ctrl-btn btn-del" title="Borrar" onclick="deleteItem(${currentDayIdx},${exIdx})">🗑</button>
+                    </div>
+                </div>
+                <div class="stats-grid" ${defCombined ? 'style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)"' : ''}>
+                    <div class="stat-box">
+                        <label class="stat-label">Series</label>
+                        <div class="stepper-box">
+                            <button class="stepper-btn" onclick="stepSets(this,-1)">−</button>
+                            <input type="number" inputmode="numeric" min="1" class="in-sets" value="${defSets}">
+                            <button class="stepper-btn" onclick="stepSets(this,1)">＋</button>
+                        </div>
+                    </div>
+                    ${defCombined
+                        ? `<div class="stat-box">
+                            <label class="stat-label">Peso 1</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepWeight1(this,-2.5)">−</button>
+                                <input type="number" inputmode="decimal" min="0" step="any" class="in-w1 weight-input" placeholder="0" value="${defWeight}" data-prev="${prevWeight}">
+                                <button class="stepper-btn" onclick="stepWeight1(this,2.5)">＋</button>
+                            </div>
+                            ${deltaHtml}
+                           </div>
+                           <div class="stat-box" style="border-right:none">
+                            <label class="stat-label">Peso 2</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepWeight2(this,-2.5)">−</button>
+                                <input type="number" inputmode="decimal" min="0" step="any" class="in-w2 weight-input" placeholder="0" value="${defWeight2}" data-prev="${prevWeight2}">
+                                <button class="stepper-btn" onclick="stepWeight2(this,2.5)">＋</button>
+                            </div>
+                            ${delta2Html}
+                           </div>`
+                        : `<div class="stat-box">
+                            <label class="stat-label">Reps</label>
+                            <div class="reps-stepper-wrap">
+                                <div class="stepper-box"${isFallo ? ' style="display:none"' : ''}>
+                                    <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
+                                    <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="${isFallo ? '' : (numReps||'')}" ${isFallo ? 'disabled' : ''}>
+                                    <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
+                                </div>
+                                <button class="fallo-toggle${isFallo ? ' active expanded' : ''}" onclick="toggleFallo(this)">Fallo</button>
+                            </div>
+                           </div>
+                           <div class="stat-box peso-box">
+                            <label class="stat-label">Peso kg</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepWeight(this,-2.5)">−</button>
+                                <input type="number" inputmode="decimal" min="0" step="any" class="in-weight weight-input" placeholder="0" value="${defWeight}" data-prev="${prevWeight}">
+                                <button class="stepper-btn" onclick="stepWeight(this,2.5)">＋</button>
+                            </div>
+                            ${deltaHtml}
+                           </div>`
+                    }
+                </div>
+                <div class="fallo-grid" style="${(isFallo && !defCombined) ? 'display:flex' : 'display:none'}">${falloRowsHtml}</div>
+                <div class="combo-grid" style="${defCombined ? 'display:flex' : 'display:none'}">${comboRowsHtml}</div>
+                ${checksHtml}
+                <div class="mini-history">${historyLabel}</div>
+                ${defImg ? `<div class="photo-wrap-row">${photoSection}</div>` : photoSection}
+                ${notesSection}
+                ${linkSection}
+                <div class="card-timer-row" id="timer-row-${safeId}" style="display:none">
+                    <span class="timer-display" id="tdisp-${safeId}">00:00</span>
+                    <button class="timer-action-btn" id="tpause-${safeId}" onclick="toggleCardTimerPause(this,'${safeName}')">▶</button>
+                    <button class="timer-action-btn" onclick="resetCardTimer('${safeName}')">↻</button>
+                </div>
+            `;
+
+            return el;
         }
 
         function renderExerciseList(dayData, savedData) {
@@ -861,144 +1353,47 @@
 
             const isMediaDay = dayData.dia === 7 || dayData.nombre.toLowerCase().includes('abs');
             const isUrlDay   = dayData.dia === 4 || dayData.dia === 7 || dayData.nombre.toLowerCase().includes('abs');
+            const exerciseCount = dayData.ejercicios.filter(e => !e.titulo).length;
 
-            // Day header
-            const headerEl = document.createElement('div');
-            headerEl.className = 'workout-day-header';
-            headerEl.innerHTML = `
-                <div class="workout-day-badge">
-                    <span class="num">${dayData.dia}</span>
-                    <span class="lbl">Día</span>
-                </div>
-                <div class="workout-day-info">
-                    <div class="wname">${dayData.nombre.replace(/^Día \d+ – /, '')}</div>
-                    <div class="wmuscles">${dayData.musculos}</div>
-                    <span class="wstatus">En progreso</span>
-                </div>
-            `;
-            container.appendChild(headerEl);
+            // C1: no workout-day-header
 
-            dayData.ejercicios.forEach((item, exIdx) => {
-                if (item.titulo) {
+            // Search bar if > 15 exercises
+            if (exerciseCount > 15) {
+                const searchRow = document.createElement('div');
+                searchRow.className = 'search-row';
+                searchRow.innerHTML = `
+                    <input type="text" class="search-input" placeholder="Buscar ejercicio..." oninput="filterExercises(this.value)">
+                    <button class="ctrl-btn" onclick="clearSearch()">✕</button>
+                `;
+                container.appendChild(searchRow);
+            }
+
+            const groups = groupExercises(dayData.ejercicios);
+
+            groups.forEach(group => {
+                if (group.titulo) {
+                    // D1: fixed group — no drag, no delete; D2: inline + btn
                     const wrapper = document.createElement('div');
                     wrapper.className = 'muscle-group-wrapper';
                     wrapper.innerHTML = `
-                        <span class="drag-handle">⠿</span>
                         <div class="mg-line"></div>
-                        <span class="muscle-group-header">${item.titulo}</span>
+                        <span class="muscle-group-header">${group.titulo}</span>
                         <div class="mg-line"></div>
-                        <div class="mg-controls">
-                            <button class="ctrl-btn btn-del" onclick="deleteItem(${currentDayIdx},${exIdx})">✕</button>
-                        </div>
+                        <button class="ctrl-btn" style="font-size:1.1rem;" onclick="addNewExercise(${currentDayIdx},${group.tituloIdx})">＋</button>
                     `;
-                    wrapper._exData = item;
+                    wrapper._exData = { titulo: group.titulo };
                     container.appendChild(wrapper);
-                    return;
                 }
 
-                let defSets = "", defReps = "", defWeight = "", defLink = "", defImg = "", defFalloData = [], defNotes = "";
-                if (item.s && item.s.includes('x')) {
-                    const parts = item.s.split('x');
-                    defSets = parts[0].trim();
-                    defReps = parts[1].trim();
-                } else { defReps = item.s || ""; }
-
-                let historyLabel = `Meta: ${item.p || '0'}`;
-                if (savedData[item.n]) {
-                    defSets      = savedData[item.n].sets      || defSets;
-                    defReps      = savedData[item.n].reps      || defReps;
-                    defWeight    = savedData[item.n].weight    || "";
-                    defLink      = savedData[item.n].link      || item.url  || "";
-                    defImg       = savedData[item.n].img       || item.img  || "";
-                    defFalloData = savedData[item.n].falloData || [];
-                    defNotes     = savedData[item.n].notes     || "";
-                    if (savedData[item.n].fecha && savedData[item.n].weight) {
-                        historyLabel = `Actualizado: <span>${savedData[item.n].fecha} · ${savedData[item.n].weight}kg</span>`;
-                    } else if (savedData[item.n].falloData && savedData[item.n].falloData.some(v=>v)) {
-                        historyLabel = `Actualizado: <span>${savedData[item.n].fecha} · Fallo</span>`;
-                    } else if (savedData[item.n].weight) {
-                        historyLabel = `Último: <span>${savedData[item.n].weight}kg</span>`;
-                    }
-                }
-
-                const isFallo  = defReps === 'Fallo';
-                const numSets  = parseInt(defSets) || 4;
-                const repRange = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30,40,50];
-                const repsOpts = repRange.map(n =>
-                    `<option value="${n}" ${!isFallo && String(defReps)===String(n) ? 'selected' : ''}>${n}</option>`
-                ).join('') + `<option value="Fallo" ${isFallo ? 'selected' : ''}>Fallo</option>`;
-
-                let falloRowsHtml = '';
-                for (let fi = 0; fi < numSets; fi++) {
-                    falloRowsHtml += `<div class="fallo-row">
-                        <span class="fallo-label">Serie ${fi+1}</span>
-                        <input type="number" inputmode="numeric" min="0" class="fallo-input" placeholder="—" value="${defFalloData[fi] || ''}">
-                    </div>`;
-                }
-
-                // Fallback URL/img desde defaults del ejercicio (cuando aún no hay savedData)
-                if (!defLink && item.url)  defLink = item.url;
-                if (!defImg  && item.img)  defImg  = item.img;
-
-                let extrasHtml = '';
-                if (isUrlDay || isMediaDay) {
-                    extrasHtml += '<div class="extras-row">';
-                    if (isUrlDay) {
-                        const btnHtml = defLink ? `<a href="${defLink}" target="_blank" class="link-btn">▶ Ver</a>` : '';
-                        extrasHtml += `<div class="url-row"><input type="url" class="in-link" placeholder="Pegar link video..." value="${defLink}">${btnHtml}</div>`;
-                    }
-                    if (isMediaDay) {
-                        const previewContent = defImg ? `<img src="${defImg}" onclick="showModal('${defImg}')">` : `<span class="img-placeholder">📷</span>`;
-                        extrasHtml += `<div class="img-row"><label class="upload-label">📷 Foto<input type="file" accept="image/*" class="file-input" onchange="handleImageUpload(this,'${item.n}')"></label><div class="img-preview-container" id="prev-${item.n.replace(/\s/g,'')}">${previewContent}</div></div>`;
-                    }
-                    extrasHtml += '</div>';
-                }
-
-                const el = document.createElement('div');
-                el.className = 'exercise-card';
-                el.dataset.name = item.n;
-                el.dataset.idx  = exIdx;
-                el._exData = item;
-                el.innerHTML = `
-                    <div class="ex-header-row">
-                        <span class="drag-handle">⠿</span>
-                        <span class="ex-name">${item.n}</span>
-                        <div class="ex-controls">
-                            <button class="ctrl-btn" onclick="editItemName(${currentDayIdx},${exIdx})">✎</button>
-                            <button class="ctrl-btn btn-del" onclick="deleteItem(${currentDayIdx},${exIdx})">🗑</button>
-                        </div>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <label class="stat-label">Series</label>
-                            <input type="number" inputmode="numeric" min="1" class="in-sets" value="${defSets}">
-                        </div>
-                        <div class="stat-box">
-                            <label class="stat-label">Reps</label>
-                            <select class="reps-select in-reps" onchange="handleRepsChange(this)">${repsOpts}</select>
-                        </div>
-                        <div class="stat-box peso-box">
-                            <label class="stat-label">Peso kg</label>
-                            <input type="number" inputmode="decimal" min="0" step="any" class="in-weight weight-input" placeholder="0" value="${defWeight}">
-                        </div>
-                    </div>
-                    <div class="fallo-grid" style="${isFallo ? 'display:flex' : 'display:none'}">${falloRowsHtml}</div>
-                    <div class="mini-history">${historyLabel}</div>
-                    <div class="notes-row">
-                        <textarea class="in-notes" rows="2" placeholder="Anotaciones...">${defNotes}</textarea>
-                    </div>
-                    ${extrasHtml}
-                `;
-                container.appendChild(el);
+                group.exercises.forEach(({ item, originalIdx }) => {
+                    const el = buildExerciseCard(item, originalIdx, savedData, isMediaDay, isUrlDay);
+                    container.appendChild(el);
+                });
             });
 
-            const addBtn = document.createElement('button');
-            addBtn.className = 'add-ex-btn';
-            addBtn.innerHTML = "＋ Agregar Ejercicio";
-            addBtn.onclick = () => addNewExercise(currentDayIdx);
-            container.appendChild(addBtn);
-
             setupAutoSave();
+            updateFabVisibility();
+            // C2: no workout timer
         }
 
         // --- SETTINGS ---
@@ -1009,7 +1404,8 @@
             document.getElementById('settings-view').classList.add('active');
             document.getElementById('back-btn').classList.remove('hidden');
             document.getElementById('settings-btn').classList.add('hidden');
-            document.getElementById('finish-btn').style.display = 'none';
+            const _fab = document.getElementById('finish-btn');
+            _fab.style.display = 'none'; _fab.classList.remove('visible');
             if (appLogo) {
                 document.getElementById('current-logo-container').innerHTML = `<img src="${appLogo}" class="current-logo"><br><span>Tocar para cambiar</span>`;
             }
@@ -1048,14 +1444,14 @@
         }
 
         function resetApp() {
-            if (confirm("¿Estás seguro? Se borrarán TODOS los registros, pesos y fotos.")) {
+            confirmModal('¿Estás seguro? Se borrarán TODOS los registros, pesos y fotos.', () => {
                 localStorage.clear();
                 location.reload();
-            }
+            });
         }
 
         function exportData() {
-            const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v3'];
+            const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v4'];
             const backup = {};
             keys.forEach(k => { const v = localStorage.getItem(k); if (v) backup[k] = JSON.parse(v); });
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -1073,12 +1469,12 @@
             reader.onload = e => {
                 try {
                     const backup = JSON.parse(e.target.result);
-                    const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v3'];
+                    const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v4'];
                     keys.forEach(k => { if (backup[k] !== undefined) localStorage.setItem(k, JSON.stringify(backup[k])); });
-                    alert('✓ Datos importados correctamente. La app se va a recargar.');
-                    location.reload();
+                    showToast('✓ Datos importados');
+                    setTimeout(() => location.reload(), 1500);
                 } catch {
-                    alert('Error: el archivo no es válido.');
+                    showToast('Error: archivo no válido');
                 }
             };
             reader.readAsText(file);
@@ -1099,16 +1495,20 @@
                     const MAX = 1000; let w = img.width, h = img.height;
                     if (w > MAX) { h *= MAX/w; w = MAX; }
                     canvas.width = w; canvas.height = h;
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
+                    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
                     ctx.drawImage(img, 0, 0, w, h);
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
                     const allData = getExData();
                     if (!allData[exerciseName]) allData[exerciseName] = {};
                     allData[exerciseName].img = dataUrl;
                     saveExData(allData);
-                    const cont = document.getElementById('prev-' + exerciseName.replace(/\s/g,''));
-                    if (cont) cont.innerHTML = `<img src="${dataUrl}" onclick="showModal('${dataUrl}')">`;
+                    const safeId = exerciseName.replace(/[^a-zA-Z0-9]/g,'_');
+                    const wrap = document.getElementById('photo-wrap-' + safeId);
+                    if (wrap) wrap.innerHTML = `
+                        <div class="photo-preview-wrap">
+                            <div class="photo-preview-thumb" onclick="showModal('${dataUrl}')"><img src="${dataUrl}"></div>
+                            <button class="photo-del-btn" onclick="deletePhoto(this,'${exerciseName.replace(/'/g,"\\'")}')">✕</button>
+                        </div>`;
                 };
             };
             reader.readAsDataURL(file);
@@ -1157,10 +1557,17 @@
         });
 
         // --- CRUD ---
-        function addNewExercise(dayIdx) {
+        function addNewExercise(dayIdx, tituloIdx) {
             openEditModal('', name => {
                 if (!name) return;
-                routineData[dayIdx].ejercicios.push({ "n": name, "s": "3 sets", "p": "0kg" });
+                const list = routineData[dayIdx].ejercicios;
+                let insertIdx = list.length;
+                if (tituloIdx >= 0) {
+                    for (let i = tituloIdx + 1; i < list.length; i++) {
+                        if (list[i].titulo) { insertIdx = i; break; }
+                    }
+                }
+                list.splice(insertIdx, 0, { n: name, s: "3 sets", p: "0kg" });
                 saveRoutineStructure();
                 openWorkout(dayIdx);
             });
@@ -1175,11 +1582,12 @@
             openWorkout(dayIdx);
         }
         function deleteItem(dayIdx, exIdx) {
-            if (!confirm("¿Borrar este elemento?")) return;
-            routineData[dayIdx].ejercicios.splice(exIdx, 1);
-            saveRoutineStructure();
-            tempSaveInputs();
-            openWorkout(dayIdx);
+            confirmModal('¿Borrar este elemento?', () => {
+                routineData[dayIdx].ejercicios.splice(exIdx, 1);
+                saveRoutineStructure();
+                tempSaveInputs();
+                openWorkout(dayIdx);
+            });
         }
         function editItemName(dayIdx, exIdx) {
             const item = routineData[dayIdx].ejercicios[exIdx];
@@ -1196,42 +1604,38 @@
             });
         }
 
+        // (timer y completed functions movidas a bloque de nuevas funciones)
+
         // --- AUTO-SAVE ---
-        function showToast() {
+        function showToast(msg) {
             const toast = document.getElementById('autosave-toast');
+            toast.textContent = msg || '✓ Guardado';
             toast.classList.add('show');
             clearTimeout(toast._t);
-            toast._t = setTimeout(() => toast.classList.remove('show'), 1400);
+            toast._t = setTimeout(() => { toast.classList.remove('show'); }, 2000);
         }
 
         function scheduleAutoSave() {
             clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(() => { saveCurrentWorkoutState(); showToast(); }, 700);
+            autoSaveTimer = setTimeout(() => { saveCurrentWorkoutState(); }, 700);
         }
 
-        function handleRepsChange(selectEl) {
-            const card      = selectEl.closest('.exercise-card');
-            const isFallo   = selectEl.value === 'Fallo';
-            const falloGrid = card.querySelector('.fallo-grid');
-            if (isFallo) {
-                rebuildFalloGrid(card);
-                falloGrid.style.display = 'flex';
-            } else {
-                falloGrid.style.display = 'none';
-            }
-            scheduleAutoSave();
-        }
+        // handleRepsChange removed — replaced by toggleFallo + stepReps
 
         function rebuildFalloGrid(card) {
+            const name      = card.dataset.name;
+            const safeName  = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
             const sets      = parseInt(card.querySelector('.in-sets').value) || 4;
             const falloGrid = card.querySelector('.fallo-grid');
             const prev      = Array.from(falloGrid.querySelectorAll('.fallo-input')).map(i => i.value);
+            const checked   = completedSets[name] || 0;
             falloGrid.innerHTML = '';
             for (let i = 0; i < sets; i++) {
                 const row = document.createElement('div');
                 row.className = 'fallo-row';
                 row.innerHTML = `<span class="fallo-label">Serie ${i+1}</span>
-                    <input type="number" inputmode="numeric" min="0" class="fallo-input" placeholder="—" value="${prev[i] || ''}">`;
+                    <input type="number" inputmode="numeric" min="0" class="fallo-input" placeholder="—" value="${prev[i] || ''}">
+                    <button class="fallo-check ${i < checked ? 'checked' : ''}" onclick="toggleFalloCheck(this,'${safeName}',${sets})">✓</button>`;
                 falloGrid.appendChild(row);
             }
         }
@@ -1243,30 +1647,43 @@
         }
 
         function handleWorkoutInput(e) {
-            const t = e.target;
-            if (t.classList.contains('in-sets') || t.classList.contains('in-weight') ||
-                t.classList.contains('in-link') || t.classList.contains('fallo-input') ||
-                t.classList.contains('in-notes')) {
+            const t    = e.target;
+            const card = t.closest('.exercise-card');
+            if (!card) return;
 
-                // Bloquear negativos en campos numéricos
-                if ((t.classList.contains('in-sets') || t.classList.contains('fallo-input')) && t.value !== '') {
-                    const v = parseInt(t.value);
-                    if (isNaN(v) || v < 0) { t.value = ''; return; }
-                    if (t.classList.contains('in-sets') && v < 1) t.value = '1';
-                }
-                if (t.classList.contains('in-weight') && t.value !== '') {
-                    const v = parseFloat(t.value);
-                    if (!isNaN(v) && v < 0) { t.value = '0'; return; }
-                }
+            const relevant = t.classList.contains('in-sets') || t.classList.contains('in-weight') ||
+                t.classList.contains('in-w1') || t.classList.contains('in-w2') ||
+                t.classList.contains('in-reps-num') || t.classList.contains('in-link') ||
+                t.classList.contains('fallo-input') || t.classList.contains('combo-input') ||
+                t.classList.contains('in-notes');
+            if (!relevant) return;
 
-                // Si cambiaron las series y estamos en modo Fallo, reconstruir filas
-                if (t.classList.contains('in-sets')) {
-                    const card   = t.closest('.exercise-card');
-                    const repsEl = card && card.querySelector('.in-reps');
-                    if (repsEl && repsEl.value === 'Fallo') rebuildFalloGrid(card);
-                }
-                scheduleAutoSave();
+            // Clamp numerics
+            if ((t.classList.contains('in-sets') || t.classList.contains('fallo-input') || t.classList.contains('combo-input')) && t.value !== '') {
+                const v = parseInt(t.value);
+                if (isNaN(v) || v < 0) { t.value = ''; return; }
+                if (t.classList.contains('in-sets') && v < 1) t.value = '1';
             }
+            if ((t.classList.contains('in-weight') || t.classList.contains('in-w1') || t.classList.contains('in-w2')) && t.value !== '') {
+                const v = parseFloat(t.value);
+                if (!isNaN(v) && v < 0) { t.value = '0'; return; }
+            }
+
+            if (t.classList.contains('in-sets')) {
+                const falloBtn = card.querySelector('.fallo-toggle');
+                if (falloBtn && falloBtn.classList.contains('active')) rebuildFalloGrid(card);
+                const combBtn = card.querySelector('.ctrl-btn[title="Combinado"]');
+                if (combBtn && combBtn.classList.contains('active')) rebuildComboGrid(card);
+                rebuildSeriesChecks(card);
+            }
+            const safeId = card.dataset.name.replace(/[^a-zA-Z0-9]/g,'_');
+            if (t.classList.contains('in-weight')) updateWeightDeltaEl(t, document.getElementById('delta1-' + safeId));
+            if (t.classList.contains('in-w1'))     updateWeightDeltaEl(t, document.getElementById('delta1-' + safeId));
+            if (t.classList.contains('in-w2'))     updateWeightDeltaEl(t, document.getElementById('delta2-' + safeId));
+            if (t.classList.contains('in-link'))   handleYouTubeDetect(t);
+            if (t.classList.contains('in-notes'))  updateNotesDot(card);
+
+            scheduleAutoSave();
         }
 
         function tempSaveInputs() { saveCurrentWorkoutState(); }
@@ -1276,28 +1693,40 @@
             const allData = getExData();
             const today   = getTodayStr();
             document.querySelectorAll('.exercise-card').forEach(card => {
-                const name     = card.dataset.name;
-                const sets     = card.querySelector('.in-sets').value.trim();
-                const repsEl   = card.querySelector('.in-reps');
-                const reps     = repsEl ? repsEl.value.trim() : '';
-                const isFallo  = reps === 'Fallo';
-                const weightEl = card.querySelector('.in-weight');
-                const weight   = weightEl ? weightEl.value.trim() : '';
+                const name      = card.dataset.name;
+                const sets      = (card.querySelector('.in-sets')?.value || '').trim();
+                const falloBtn  = card.querySelector('.fallo-toggle');
+                const combBtn   = card.querySelector('.ctrl-btn[title="Combinado"]');
+                const isFallo   = falloBtn && falloBtn.classList.contains('active');
+                const isCombined = combBtn && combBtn.classList.contains('active');
+                const repsNumEl = card.querySelector('.in-reps-num');
+                const reps      = isFallo ? 'Fallo' : (repsNumEl ? repsNumEl.value.trim() : '');
+                const weightEl  = card.querySelector('.in-weight') || card.querySelector('.in-w1');
+                const weight    = weightEl ? weightEl.value.trim() : '';
+                const w2El      = card.querySelector('.in-w2');
+                const weight2   = w2El ? w2El.value.trim() : '';
                 const falloData = isFallo
                     ? Array.from(card.querySelectorAll('.fallo-input')).map(i => i.value.trim())
                     : [];
-                const linkEl   = card.querySelector('.in-link');
-                const link     = linkEl ? linkEl.value.trim() : "";
-                const notesEl  = card.querySelector('.in-notes');
-                const notes    = notesEl ? notesEl.value.trim() : "";
-                const img      = (allData[name] || {}).img || "";
-                if (sets || reps || weight || link || img || notes || falloData.some(v => v)) {
-                    allData[name] = { sets, reps, weight, falloData, link, img, notes, fecha: today };
+                const comboData = isCombined
+                    ? Array.from(card.querySelectorAll('.combo-row')).map(r => [
+                        r.querySelector('.combo-a')?.value.trim() || '',
+                        r.querySelector('.combo-b')?.value.trim() || ''
+                      ])
+                    : [];
+                const linkEl  = card.querySelector('.in-link');
+                const link    = linkEl ? linkEl.value.trim() : '';
+                const notesEl = card.querySelector('.in-notes');
+                const notes   = notesEl ? notesEl.value.trim() : '';
+                const img     = (allData[name] || {}).img || '';
+                if (sets || reps || weight || weight2 || link || img || notes || falloData.some(v=>v) || comboData.some(r=>r[0]||r[1])) {
+                    allData[name] = { sets, reps, weight, weight2, combined: isCombined, falloData, comboData, link, img, notes, fecha: today };
                 }
-                // Actualizar historial en pantalla
                 const histEl = card.querySelector('.mini-history');
                 if (histEl) {
-                    if (isFallo && falloData.some(v => v)) {
+                    if (isCombined && (weight || weight2)) {
+                        histEl.innerHTML = `Actualizado: <span>${today} · ${weight||'?'}kg + ${weight2||'?'}kg</span>`;
+                    } else if (isFallo && falloData.some(v=>v)) {
                         histEl.innerHTML = `Actualizado: <span>${today} · Fallo (${falloData.filter(v=>v).join(', ')})</span>`;
                     } else if (weight) {
                         histEl.innerHTML = `Actualizado: <span>${today} · ${weight}kg</span>`;
@@ -1311,7 +1740,7 @@
         function finishWorkout() {
             if (currentDayIdx === null) return;
             const now = new Date();
-            const timestamp = `${now.getDate()}/${now.getMonth()+1} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+            const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
             const logs = getLogs();
             logs[routineData[currentDayIdx].dia] = timestamp;
             localStorage.setItem('gym_logs', JSON.stringify(logs));
@@ -1322,95 +1751,547 @@
         }
 
         function goHome() {
+            if (activeTimer) { clearInterval(activeTimer.interval); activeTimer = null; }
+            completedSets = {};
+            expandedFields = {};
             document.getElementById('workout-view').classList.remove('active');
             document.getElementById('settings-view').classList.remove('active');
             document.getElementById('dashboard-view').classList.add('active');
             document.getElementById('back-btn').classList.add('hidden');
             document.getElementById('settings-btn').classList.remove('hidden');
-            document.getElementById('finish-btn').style.display = 'none';
-            document.getElementById('finish-btn').innerText = 'Finalizar entrenamiento';
+            const fab = document.getElementById('finish-btn');
+            fab.style.display = 'none';
+            fab.classList.remove('visible');
+            fab.innerText = 'Finalizar entrenamiento';
             currentDayIdx = null;
             renderDashboard();
         }
 
         // --- BACK NAVIGATION (Android gesture + hardware back) ---
         window.addEventListener('popstate', (e) => {
-            // 1. Si el modal de imagen está abierto → cerrarlo
+            if (document.getElementById('confirm-modal').classList.contains('open')) {
+                closeConfirmModal(); return;
+            }
             if (document.getElementById('img-modal').classList.contains('open')) {
-                closeImgModal();
-                return;
+                closeImgModal(); return;
             }
-            // 2. Si el modal de edición está abierto → cerrarlo
             if (document.getElementById('edit-modal').classList.contains('open')) {
-                closeEditModal();
-                return;
+                closeEditModal(); return;
             }
-            // 3. Si estamos en workout o settings → volver al dashboard
             const backBtn = document.getElementById('back-btn');
-            if (backBtn && !backBtn.classList.contains('hidden')) {
-                goHome();
-            }
+            if (backBtn && !backBtn.classList.contains('hidden')) goHome();
         });
 
-        // --- DRAG & DROP EXERCISES ---
+        // --- CONFIRM MODAL ---
+        function confirmModal(msg, onYes) {
+            document.getElementById('confirm-msg').textContent = msg;
+            const yesBtn = document.getElementById('confirm-yes-btn');
+            yesBtn.onclick = () => { closeConfirmModal(); onYes(); };
+            document.getElementById('confirm-modal').classList.add('open');
+        }
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.remove('open');
+        }
+
+        // --- CARD TIMER (H1) ---
+        function fmtTimer(s) {
+            return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+        }
+
+        function toggleCardTimer(btn, name) {
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const timerRow = document.getElementById('timer-row-' + safeId);
+            if (!timerRow) return;
+            const isVisible = timerRow.style.display !== 'none';
+            if (isVisible) {
+                timerRow.style.display = 'none';
+                if (activeTimer && activeTimer.name === name) {
+                    clearInterval(activeTimer.interval); activeTimer = null;
+                }
+            } else {
+                if (activeTimer && activeTimer.name !== name) {
+                    const otherId = activeTimer.name.replace(/[^a-zA-Z0-9]/g,'_');
+                    const otherRow = document.getElementById('timer-row-' + otherId);
+                    if (otherRow) otherRow.style.display = 'none';
+                    clearInterval(activeTimer.interval); activeTimer = null;
+                }
+                timerRow.style.display = 'flex';
+                const disp = document.getElementById('tdisp-' + safeId);
+                const pauseBtn = document.getElementById('tpause-' + safeId);
+                if (!activeTimer || activeTimer.name !== name) {
+                    activeTimer = { name, interval: null, seconds: 0, running: false };
+                    if (disp) disp.textContent = '00:00';
+                    if (pauseBtn) pauseBtn.textContent = '▶';
+                }
+            }
+        }
+
+        function toggleCardTimerPause(btn, name) {
+            if (!activeTimer || activeTimer.name !== name) return;
+            activeTimer.running = !activeTimer.running;
+            if (activeTimer.running) {
+                btn.textContent = '⏸';
+                if (!activeTimer.interval) {
+                    const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+                    const disp = document.getElementById('tdisp-' + safeId);
+                    activeTimer.interval = setInterval(() => {
+                        if (activeTimer && activeTimer.running) {
+                            activeTimer.seconds++;
+                            if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
+                        }
+                    }, 1000);
+                }
+            } else {
+                btn.textContent = '▶';
+            }
+        }
+
+        function resetCardTimer(name) {
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const disp = document.getElementById('tdisp-' + safeId);
+            const pauseBtn = document.getElementById('tpause-' + safeId);
+            if (activeTimer && activeTimer.name === name) {
+                clearInterval(activeTimer.interval);
+                activeTimer.interval = null;
+                activeTimer.seconds = 0;
+                activeTimer.running = false;
+                if (pauseBtn) pauseBtn.textContent = '▶';
+            }
+            if (disp) disp.textContent = '00:00';
+        }
+
+        // --- WORKOUT TOTAL TIMER (C2 removed) ---
+
+        // --- SERIES CHECKS ---
+        function toggleSeriesCheck(btn, name, numSets) {
+            const card   = btn.closest('.exercise-card');
+            const checks = Array.from(card.querySelectorAll('.series-check'));
+            const idx    = checks.indexOf(btn);
+            const current = completedSets[name] || 0;
+            const newCount = idx < current ? idx : idx + 1;
+            completedSets[name] = newCount;
+            checks.forEach((c, i) => c.classList.toggle('checked', i < newCount));
+            const isDone = newCount >= numSets && numSets > 0;
+            card.classList.toggle('completed', isDone);
+            const doneCheck = card.querySelector('.ex-done-check');
+            if (doneCheck) doneCheck.classList.toggle('done', isDone);
+            if (isDone) {
+                saveCurrentWorkoutState();
+                if (activeTimer && activeTimer.name === name) toggleCardTimer(null, name);
+                const allCards = Array.from(document.querySelectorAll('.exercise-card'));
+                const ci = allCards.indexOf(card);
+                for (let i = ci + 1; i < allCards.length; i++) {
+                    if (!allCards[i].classList.contains('completed')) {
+                        allCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        break;
+                    }
+                }
+            }
+            updateFabVisibility();
+        }
+
+        function rebuildSeriesChecks(card) {
+            const numSets = parseInt(card.querySelector('.in-sets').value) || 4;
+            const name    = card.dataset.name;
+            const current = completedSets[name] || 0;
+            const container = card.querySelector('.series-checks');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < numSets; i++) {
+                const b = document.createElement('button');
+                b.className = 'series-check' + (i < current ? ' checked' : '');
+                b.textContent = '✓';
+                b.onclick = () => toggleSeriesCheck(b, name, numSets);
+                container.appendChild(b);
+            }
+        }
+
+        function updateFabVisibility() {
+            const cards = document.querySelectorAll('.exercise-card');
+            let done = 0;
+            cards.forEach(card => {
+                const n = card.dataset.name;
+                const s = parseInt(card.querySelector('.in-sets')?.value) || 0;
+                if (s > 0 && (completedSets[n] || 0) >= s) done++;
+            });
+            const fab = document.getElementById('finish-btn');
+            if (fab) fab.classList.toggle('visible', done >= 5);
+        }
+
+        // --- F3: FALLO TOGGLE ---
+        function toggleFallo(btn) {
+            const card       = btn.closest('.exercise-card');
+            const isFallo    = btn.classList.toggle('active');
+            const repsInput  = card.querySelector('.in-reps-num');
+            const stepperBox = card.querySelector('.reps-stepper-wrap .stepper-box');
+            const falloGrid  = card.querySelector('.fallo-grid');
+            const seriesChecks = card.querySelector('.series-checks');
+            if (isFallo) {
+                if (stepperBox) stepperBox.style.display = 'none';
+                btn.classList.add('expanded');
+                if (repsInput) repsInput.disabled = true;
+                if (seriesChecks) seriesChecks.style.display = 'none';
+                if (falloGrid) { rebuildFalloGrid(card); falloGrid.style.display = 'flex'; }
+            } else {
+                if (stepperBox) stepperBox.style.display = '';
+                btn.classList.remove('expanded');
+                if (repsInput) { repsInput.disabled = false; repsInput.style.opacity = ''; }
+                if (seriesChecks) seriesChecks.style.display = '';
+                if (falloGrid) falloGrid.style.display = 'none';
+            }
+            scheduleAutoSave();
+        }
+
+        function toggleFalloCheck(btn, name, numSets) {
+            const card   = btn.closest('.exercise-card');
+            const checks = Array.from(card.querySelectorAll('.fallo-check'));
+            const idx    = checks.indexOf(btn);
+            const current = completedSets[name] || 0;
+            const newCount = idx < current ? idx : idx + 1;
+            completedSets[name] = newCount;
+            checks.forEach((c, i) => c.classList.toggle('checked', i < newCount));
+            // sync hidden series-checks
+            Array.from(card.querySelectorAll('.series-check')).forEach((c, i) => c.classList.toggle('checked', i < newCount));
+            const isDone = newCount >= numSets && numSets > 0;
+            card.classList.toggle('completed', isDone);
+            const doneCheck = card.querySelector('.ex-done-check');
+            if (doneCheck) doneCheck.classList.toggle('done', isDone);
+            if (isDone) {
+                saveCurrentWorkoutState();
+                if (activeTimer && activeTimer.name === name) toggleCardTimer(null, name);
+                const allCards = Array.from(document.querySelectorAll('.exercise-card'));
+                const ci = allCards.indexOf(card);
+                for (let i = ci + 1; i < allCards.length; i++) {
+                    if (!allCards[i].classList.contains('completed')) {
+                        allCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        break;
+                    }
+                }
+            }
+            updateFabVisibility();
+        }
+
+        // --- K: COMBINED TOGGLE ---
+        function toggleCombined(btn) {
+            const card = btn.closest('.exercise-card');
+            const isCombined = btn.classList.toggle('active');
+            if (isCombined) {
+                const falloBtn = card.querySelector('.fallo-toggle');
+                if (falloBtn && falloBtn.classList.contains('active')) toggleFallo(falloBtn);
+            }
+            const statsGrid = card.querySelector('.stats-grid');
+            const falloGrid = card.querySelector('.fallo-grid');
+            const comboGrid = card.querySelector('.combo-grid');
+            const name     = card.dataset.name;
+            const safeId   = name.replace(/[^a-zA-Z0-9]/g,'_');
+
+            if (isCombined) {
+                const curW  = card.querySelector('.in-weight')?.value || '';
+                const prevW = card.querySelector('.in-weight')?.dataset.prev || '';
+                // Capture boxes before any DOM mutation
+                const boxes = Array.from(statsGrid.querySelectorAll(':scope > .stat-box'));
+                const repsBox = boxes[1];
+                const pesoBox = boxes[2];
+                // Col 2 → Peso 1
+                if (repsBox) repsBox.outerHTML = `<div class="stat-box">
+                    <label class="stat-label">Peso 1</label>
+                    <div class="stepper-box">
+                        <button class="stepper-btn" onclick="stepWeight1(this,-2.5)">−</button>
+                        <input type="number" inputmode="decimal" min="0" step="any" class="in-w1 weight-input" placeholder="0" value="${curW}" data-prev="${prevW}">
+                        <button class="stepper-btn" onclick="stepWeight1(this,2.5)">＋</button>
+                    </div>
+                    <span class="weight-delta eq" id="delta1-${safeId}" style="${prevW?'':'display:none'}">${prevW?'= '+prevW+'kg':''}</span>
+                </div>`;
+                // Col 3 → Peso 2
+                if (pesoBox) pesoBox.outerHTML = `<div class="stat-box" style="border-right:none">
+                    <label class="stat-label">Peso 2</label>
+                    <div class="stepper-box">
+                        <button class="stepper-btn" onclick="stepWeight2(this,-2.5)">−</button>
+                        <input type="number" inputmode="decimal" min="0" step="any" class="in-w2 weight-input" placeholder="0" value="" data-prev="">
+                        <button class="stepper-btn" onclick="stepWeight2(this,2.5)">＋</button>
+                    </div>
+                    <span class="weight-delta eq" id="delta2-${safeId}" style="display:none"></span>
+                </div>`;
+                // 3 equal columns
+                statsGrid.style.gridTemplateColumns = 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)';
+                if (falloGrid) falloGrid.style.display = 'none';
+                const seriesChecksC = card.querySelector('.series-checks');
+                if (seriesChecksC) seriesChecksC.style.display = 'none';
+                if (comboGrid) { rebuildComboGrid(card); comboGrid.style.display = 'flex'; }
+            } else {
+                // Capture boxes (now: [0]=Series, [1]=Peso1, [2]=Peso2)
+                const boxes = Array.from(statsGrid.querySelectorAll(':scope > .stat-box'));
+                const w1Box = boxes[1];
+                const w2Box = boxes[2];
+                // Col 2 → Reps
+                if (w1Box) w1Box.outerHTML = `<div class="stat-box">
+                    <label class="stat-label">Reps</label>
+                    <div class="reps-stepper-wrap">
+                        <div class="stepper-box">
+                            <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
+                            <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="">
+                            <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
+                        </div>
+                        <button class="fallo-toggle" onclick="toggleFallo(this)">Fallo</button>
+                    </div>
+                </div>`;
+                // Col 3 → Peso
+                if (w2Box) w2Box.outerHTML = `<div class="stat-box peso-box">
+                    <label class="stat-label">Peso kg</label>
+                    <div class="stepper-box">
+                        <button class="stepper-btn" onclick="stepWeight(this,-2.5)">−</button>
+                        <input type="number" inputmode="decimal" min="0" step="any" class="in-weight weight-input" placeholder="0" value="" data-prev="">
+                        <button class="stepper-btn" onclick="stepWeight(this,2.5)">＋</button>
+                    </div>
+                    <span class="weight-delta eq" id="delta1-${safeId}" style="display:none"></span>
+                </div>`;
+                // Restore original grid proportions
+                statsGrid.style.gridTemplateColumns = '';
+                if (comboGrid) comboGrid.style.display = 'none';
+                const seriesChecksOff = card.querySelector('.series-checks');
+                if (seriesChecksOff) seriesChecksOff.style.display = '';
+            }
+            scheduleAutoSave();
+        }
+
+        function rebuildComboGrid(card) {
+            const name     = card.dataset.name;
+            const safeName = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            const sets     = parseInt(card.querySelector('.in-sets').value) || 4;
+            const grid     = card.querySelector('.combo-grid');
+            if (!grid) return;
+            const prevRows = Array.from(grid.querySelectorAll('.combo-row'));
+            const prevData = prevRows.map(r => [
+                r.querySelector('.combo-a')?.value || '',
+                r.querySelector('.combo-b')?.value || ''
+            ]);
+            const checked  = completedSets[name] || 0;
+            grid.innerHTML = '';
+            for (let i = 0; i < sets; i++) {
+                const row = document.createElement('div');
+                row.className = 'combo-row';
+                row.innerHTML = `<span class="fallo-label">S${i+1}</span>
+                    <input type="number" inputmode="numeric" min="0" class="combo-input combo-a" placeholder="—" value="${prevData[i]?.[0]||''}">
+                    <span class="combo-sep">+</span>
+                    <input type="number" inputmode="numeric" min="0" class="combo-input combo-b" placeholder="—" value="${prevData[i]?.[1]||''}">
+                    <button class="fallo-check ${i < checked ? 'checked' : ''}" onclick="toggleFalloCheck(this,'${safeName}',${sets})">✓</button>`;
+                grid.appendChild(row);
+            }
+        }
+
+        // --- I1: EXPAND FIELD ---
+        function expandField(btn, field, name, safeId) {
+            const section = document.getElementById(field + '-section-' + safeId);
+            if (!section) return;
+            const isVisible = section.style.display !== 'none';
+            if (isVisible) {
+                const input = section.querySelector('input, textarea');
+                if (!input || !input.value.trim()) {
+                    section.style.display = 'none';
+                    if (expandedFields[name]) delete expandedFields[name][field];
+                }
+            } else {
+                if (!expandedFields[name]) expandedFields[name] = {};
+                expandedFields[name][field] = true;
+                section.style.display = '';
+                const input = section.querySelector('input, textarea');
+                if (input) setTimeout(() => input.focus(), 80);
+            }
+        }
+
+        function deletePhoto(btn, name) {
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const allData = getExData();
+            if (allData[name]) { allData[name].img = ''; saveExData(allData); }
+            const wrap = document.getElementById('photo-wrap-' + safeId);
+            if (wrap) wrap.innerHTML = '';
+        }
+
+        // --- WEIGHT DELTA ---
+        function updateWeightDeltaEl(input, deltaEl) {
+            if (!input || !deltaEl) return;
+            const prev = parseFloat(input.dataset.prev);
+            const curr = parseFloat(input.value);
+            if (isNaN(curr) || input.value === '' || isNaN(prev)) { deltaEl.style.display = 'none'; return; }
+            deltaEl.style.display = '';
+            const diff = curr - prev;
+            const fmt  = v => Number.isInteger(v) ? String(v) : v.toFixed(1);
+            if (diff > 0)      { deltaEl.className = 'weight-delta up';   deltaEl.textContent = `↑ +${fmt(diff)}kg`; }
+            else if (diff < 0) { deltaEl.className = 'weight-delta down'; deltaEl.textContent = `↓ ${fmt(diff)}kg`; }
+            else               { deltaEl.className = 'weight-delta eq';   deltaEl.textContent = `= ${fmt(prev)}kg`; }
+        }
+
+        function updateWeightDelta(card) {
+            const name   = card.dataset.name;
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const inp    = card.querySelector('.in-weight') || card.querySelector('.in-w1');
+            const deltaEl = document.getElementById('delta1-' + safeId);
+            updateWeightDeltaEl(inp, deltaEl);
+        }
+
+        // --- NOTES DOT ---
+        function updateNotesDot(card) {
+            const notes  = card.querySelector('.in-notes');
+            const nameEl = card.querySelector('.ex-name');
+            if (!notes || !nameEl) return;
+            const hasNotes = notes.value.trim().length > 0;
+            const existing = nameEl.querySelector('.notes-dot');
+            if (hasNotes && !existing) {
+                const dot = document.createElement('span');
+                dot.className = 'notes-dot';
+                nameEl.appendChild(dot);
+            } else if (!hasNotes && existing) {
+                existing.remove();
+            }
+        }
+
+        // --- YOUTUBE AUTO-DETECT ---
+        function handleYouTubeDetect(input) {
+            const val = input.value.trim();
+            const m   = val.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if (!m) return;
+            const videoId  = m[1];
+            const thumbUrl = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+            const card = input.closest('.exercise-card');
+            if (!card) return;
+            const name   = card.dataset.name;
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const allData = getExData();
+            if (!allData[name]) allData[name] = {};
+            allData[name].img = thumbUrl;
+            saveExData(allData);
+            const wrap = document.getElementById('photo-wrap-' + safeId);
+            if (wrap) wrap.innerHTML = `
+                <div class="photo-preview-wrap">
+                    <div class="photo-preview-thumb" onclick="showModal('${thumbUrl}')"><img src="${thumbUrl}"></div>
+                    <button class="photo-del-btn" onclick="deletePhoto(this,'${name.replace(/'/g,"\\'")}')">✕</button>
+                </div>`;
+            const urlRow = input.closest('.url-row');
+            if (urlRow) {
+                let btn = urlRow.querySelector('.link-btn');
+                if (!btn) { btn = document.createElement('a'); btn.className = 'link-btn'; btn.target = '_blank'; urlRow.appendChild(btn); }
+                btn.href = val; btn.textContent = '▶ Ver';
+            }
+        }
+
+        // --- STEPPERS ---
+        function stepSets(btn, delta) {
+            const card  = btn.closest('.exercise-card');
+            const input = card.querySelector('.in-sets');
+            input.value = Math.max(1, (parseInt(input.value) || 1) + delta);
+            const falloBtn = card.querySelector('.fallo-toggle');
+            const isFallo  = falloBtn && falloBtn.classList.contains('active');
+            if (isFallo) rebuildFalloGrid(card);
+            const combBtn = card.querySelector('.ctrl-btn[title="Combinado"]');
+            if (combBtn && combBtn.classList.contains('active')) rebuildComboGrid(card);
+            rebuildSeriesChecks(card);
+            scheduleAutoSave();
+        }
+
+        function stepReps(btn, delta) {
+            const card  = btn.closest('.exercise-card');
+            const input = card.querySelector('.in-reps-num');
+            if (!input || input.disabled) return;
+            input.value = Math.max(1, Math.min(99, (parseInt(input.value) || 1) + delta));
+            scheduleAutoSave();
+        }
+
+        function stepWeight(btn, delta) {
+            const card  = btn.closest('.exercise-card');
+            const input = card.querySelector('.in-weight');
+            if (!input) return;
+            input.value = Math.max(0, Math.round(((parseFloat(input.value) || 0) + delta) * 10) / 10);
+            updateWeightDelta(card);
+            scheduleAutoSave();
+        }
+
+        function stepWeight1(btn, delta) {
+            const card  = btn.closest('.exercise-card');
+            const input = card.querySelector('.in-w1');
+            if (!input) return;
+            input.value = Math.max(0, Math.round(((parseFloat(input.value) || 0) + delta) * 10) / 10);
+            updateWeightDeltaEl(input, document.getElementById('delta1-' + card.dataset.name.replace(/[^a-zA-Z0-9]/g,'_')));
+            scheduleAutoSave();
+        }
+
+        function stepWeight2(btn, delta) {
+            const card  = btn.closest('.exercise-card');
+            const input = card.querySelector('.in-w2');
+            if (!input) return;
+            input.value = Math.max(0, Math.round(((parseFloat(input.value) || 0) + delta) * 10) / 10);
+            updateWeightDeltaEl(input, document.getElementById('delta2-' + card.dataset.name.replace(/[^a-zA-Z0-9]/g,'_')));
+            scheduleAutoSave();
+        }
+
+        // --- SEARCH ---
+        function filterExercises(query) {
+            const q = query.toLowerCase().trim();
+            document.querySelectorAll('.exercise-card').forEach(card => {
+                card.style.display = (!q || (card.dataset.name || '').toLowerCase().includes(q)) ? '' : 'none';
+            });
+            document.querySelectorAll('.muscle-group-wrapper').forEach(el => {
+                el.style.display = q ? 'none' : '';
+            });
+        }
+
+        function clearSearch() {
+            const input = document.querySelector('.search-input');
+            if (input) { input.value = ''; filterExercises(''); }
+        }
+
+        // --- DRAG & DROP (J1-J3: 250ms hold, >10px cancel, exercise cards only) ---
         (function initDragDrop() {
             let drag = null;
+            let holdTimer = null;
+            let startX = 0, startY = 0;
 
             function draggableSiblings() {
                 return Array.from(document.getElementById('workout-view').children)
-                    .filter(el => el.classList.contains('exercise-card') || el.classList.contains('muscle-group-wrapper'));
+                    .filter(el => el.classList.contains('exercise-card'));
+            }
+
+            function allOrderedItems() {
+                return Array.from(document.getElementById('workout-view').children)
+                    .filter(el => el._exData);
             }
 
             function startDrag(handle, touch) {
-                const card = handle.closest('.exercise-card, .muscle-group-wrapper');
+                const card = handle.closest('.exercise-card');
                 if (!card) return;
                 const rect = card.getBoundingClientRect();
-
                 const ghost = card.cloneNode(true);
                 ghost.classList.add('drag-ghost');
-                ghost.style.top  = rect.top + 'px';
+                ghost.style.top    = rect.top + 'px';
                 ghost.style.height = rect.height + 'px';
                 document.body.appendChild(ghost);
                 card.classList.add('is-dragging');
-
                 drag = { card, ghost, offsetY: touch.clientY - rect.top };
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend',  onEnd,  { passive: true });
             }
 
             function onMove(e) {
                 if (!drag) return;
                 e.preventDefault();
                 const touch = e.touches[0];
-
-                // Mover ghost
                 const container = document.getElementById('workout-view');
                 const cRect = container.getBoundingClientRect();
-                const ghostY = Math.min(
-                    Math.max(touch.clientY - drag.offsetY, cRect.top),
-                    cRect.bottom - drag.ghost.offsetHeight
-                );
+                const ghostY = Math.min(Math.max(touch.clientY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
                 drag.ghost.style.top = ghostY + 'px';
 
-                // Encontrar posición de inserción en tiempo real
                 const sibs = draggableSiblings().filter(s => s !== drag.card);
-                let insertBefore = null;
-
                 draggableSiblings().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
-
+                let insertBefore = null;
                 for (const sib of sibs) {
                     const r = sib.getBoundingClientRect();
-                    if (touch.clientY < r.top + r.height / 2) {
-                        insertBefore = sib;
-                        break;
-                    }
+                    if (touch.clientY < r.top + r.height / 2) { insertBefore = sib; break; }
                 }
-
-                const addBtn = container.querySelector('.add-ex-btn');
                 if (insertBefore) {
                     container.insertBefore(drag.card, insertBefore);
                     insertBefore.classList.add('drag-insert-above');
                 } else {
-                    container.insertBefore(drag.card, addBtn || null);
-                    if (sibs.length) sibs[sibs.length - 1].classList.add('drag-insert-below');
+                    container.insertBefore(drag.card, null);
+                    if (sibs.length) sibs[sibs.length-1].classList.add('drag-insert-below');
                 }
             }
 
@@ -1419,12 +2300,9 @@
                 drag.ghost.remove();
                 drag.card.classList.remove('is-dragging');
                 draggableSiblings().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
-
                 document.removeEventListener('touchmove', onMove);
                 document.removeEventListener('touchend',  onEnd);
-
-                // Reconstruir array desde el orden del DOM
-                const newOrder = draggableSiblings().map(el => el._exData).filter(Boolean);
+                const newOrder = allOrderedItems().map(el => el._exData).filter(Boolean);
                 if (currentDayIdx !== null && newOrder.length) {
                     routineData[currentDayIdx].ejercicios = newOrder;
                     saveRoutineStructure();
@@ -1437,11 +2315,35 @@
             document.addEventListener('touchstart', e => {
                 const handle = e.target.closest('.drag-handle');
                 if (!handle) return;
-                e.preventDefault();
-                startDrag(handle, e.touches[0]);
-                document.addEventListener('touchmove', onMove, { passive: false });
-                document.addEventListener('touchend',  onEnd,  { passive: true });
-            }, { passive: false });
+                const card = handle.closest('.exercise-card');
+                if (!card) return;
+                const touch = e.touches[0];
+                startX = touch.clientX; startY = touch.clientY;
+                handle.classList.add('hold-ready');
+                holdTimer = setTimeout(() => {
+                    holdTimer = null;
+                    handle.classList.remove('hold-ready');
+                    startDrag(handle, touch);
+                }, 250);
+            }, { passive: true });
+
+            document.addEventListener('touchmove', e => {
+                if (!holdTimer) return;
+                const touch = e.touches[0];
+                if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
+                    clearTimeout(holdTimer); holdTimer = null;
+                    const handle = e.target.closest('.drag-handle');
+                    if (handle) handle.classList.remove('hold-ready');
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', e => {
+                if (holdTimer) {
+                    clearTimeout(holdTimer); holdTimer = null;
+                    const handle = e.target.closest('.drag-handle');
+                    if (handle) handle.classList.remove('hold-ready');
+                }
+            }, { passive: true });
         })();
 
         // --- SWIPE BACK GESTURE ---
@@ -1509,13 +2411,15 @@
         }
 
         init();
-        // Ocultar splash después de 3.5 segundos
-        setTimeout(() => {
+        // Ocultar splash después de 1.2s o al tocar
+        function hideSplash() {
             const splash = document.getElementById('splash');
-            if (!splash) return;
+            if (!splash || splash.classList.contains('hide')) return;
             splash.classList.add('hide');
             setTimeout(() => splash.remove(), 680);
-        }, 3500);
+        }
+        setTimeout(hideSplash, 1200);
+        document.getElementById('splash').addEventListener('touchstart', hideSplash, { once: true, passive: true });
     </script>
 </body>
 </html>
