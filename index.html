@@ -23,6 +23,7 @@
             --border:    rgba(210,100,20,0.22);
             --accent:    #e8722a;
             --accent2:   #c45a10;
+            --accent-rgb: 232, 114, 42;
             --danger:    #cf6679;
             --text:      #f5ede4;
             --muted:     rgba(245,237,228,0.45);
@@ -60,8 +61,8 @@
         #bg-gradient {
             position: fixed; inset: 0; z-index: -2;
             background-image:
-                radial-gradient(ellipse 90% 45% at 50% -5%, rgba(232,114,42,0.20) 0%, transparent 65%),
-                radial-gradient(ellipse 55% 35% at 95% 85%, rgba(196,90,16,0.12) 0%, transparent 60%);
+                radial-gradient(ellipse 90% 45% at 50% -5%, rgba(var(--accent-rgb),0.20) 0%, transparent 65%),
+                radial-gradient(ellipse 55% 35% at 95% 85%, rgba(var(--accent-rgb),0.12) 0%, transparent 60%);
             pointer-events: none;
         }
 
@@ -117,11 +118,7 @@
         .view.active::-webkit-scrollbar { display: none; }
         .view.active > * { flex-shrink: 0; }
 
-        /* Dashboard: sin scrollbar visible, scroll táctil OK */
-        #dashboard-view.active {
-            overflow: hidden;
-            touch-action: none;
-        }
+        /* Dashboard: scrollable con barra oculta */
 
         /* ── DASHBOARD CARDS ── */
         .card {
@@ -147,7 +144,26 @@
             border-color: rgba(210,100,20,0.32);
         }
         .card.primary .day-badge { box-shadow: 0 4px 16px rgba(196,90,16,0.55); }
-        .card.week-done { opacity: 0.55; filter: blur(0.5px); }
+        .card.week-done { position: relative; }
+        .card.week-done .day-badge,
+        .card.week-done .card-text,
+        .card.week-done .arrow { opacity: 0.4; }
+        .done-overlay {
+            position: absolute; inset: 0; border-radius: var(--radius);
+            background: rgba(10,7,4,0.55);
+            display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
+            padding: 0 14px; gap: 3px; pointer-events: none; z-index: 1;
+        }
+        .done-badge {
+            font-size: 0.62rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+            padding: 3px 9px; border-radius: 99px;
+            background: rgba(74,222,128,0.18); color: #4ade80;
+            border: 1px solid rgba(74,222,128,0.3);
+        }
+        .done-days-remaining {
+            font-size: 0.58rem; font-weight: 600; letter-spacing: 0.5px;
+            color: rgba(245,237,228,0.35); text-transform: uppercase; text-align: right;
+        }
 
         .day-badge {
             min-width: 50px; height: 50px; border-radius: 14px;
@@ -682,6 +698,137 @@
             font-weight: 700; font-size: 0.95rem; cursor: pointer;
         }
 
+        /* ── MUSCLE CHIPS ── */
+        .muscles-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; justify-content: center; }
+        .muscle-chip {
+            font-size: 0.6rem; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+            padding: 2px 7px; border-radius: 99px;
+            background: rgba(var(--accent-rgb),0.09); color: rgba(245,237,228,0.55);
+            border: 1px solid rgba(var(--accent-rgb),0.18);
+            white-space: nowrap;
+        }
+
+        /* ── PROGRESS BAR SEMANAL ── */
+        .weekly-progress {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 13px 16px 14px;
+            flex-shrink: 0;
+        }
+        .weekly-progress-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 9px;
+        }
+        .weekly-progress-label {
+            font-size: 0.65rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--muted);
+        }
+        .weekly-progress-count {
+            font-size: 0.7rem; font-weight: 800; color: var(--accent);
+        }
+        .weekly-progress-bar-wrap {
+            height: 5px; background: rgba(255,255,255,0.07); border-radius: 99px; overflow: hidden;
+        }
+        .weekly-progress-bar {
+            height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 99px; transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        /* ── CARD EDIT BTN ── */
+        .card-edit-btn {
+            position: absolute; top: 10px; right: 46px;
+            width: 26px; height: 26px; border-radius: 50%;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(245,237,228,0.3); cursor: pointer; font-size: 0.7rem;
+            z-index: 2; transition: color 0.15s, background 0.15s;
+        }
+        .card-edit-btn:active { color: var(--text); background: rgba(255,255,255,0.14); }
+
+        /* ── ADD DAY BTN ── */
+        .add-day-btn {
+            background: rgba(var(--accent-rgb),0.06); border: 1.5px dashed rgba(var(--accent-rgb),0.28);
+            border-radius: var(--radius); padding: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 9px;
+            color: var(--accent); font-size: 0.82rem; font-weight: 800; letter-spacing: 1px;
+            text-transform: uppercase; cursor: pointer; flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .add-day-btn:active { background: rgba(var(--accent-rgb),0.14); }
+
+        /* ── COLOR SWATCHES ── */
+        .color-swatch-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; align-items: center; }
+        .color-swatch {
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            border: 2.5px solid transparent; transition: transform 0.15s, border-color 0.15s;
+            flex-shrink: 0;
+        }
+        .color-swatch:active { transform: scale(0.88); }
+        .color-swatch.selected { border-color: var(--text); transform: scale(1.15); }
+        .color-picker-wrap {
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            border: 2px dashed rgba(255,255,255,0.3);
+            background: conic-gradient(red,yellow,lime,cyan,blue,magenta,red);
+            overflow: hidden; position: relative; flex-shrink: 0;
+        }
+        .color-picker-wrap input[type=color] {
+            position: absolute; width: 200%; height: 200%;
+            top: -50%; left: -50%; opacity: 0; cursor: pointer;
+            background: none; border: none; padding: 0;
+        }
+
+        /* ── DAY ABM MODAL ── */
+        #day-modal {
+            display: none; position: fixed; inset: 0; z-index: 1500;
+            background: rgba(0,0,0,0.75); align-items: flex-end; justify-content: center;
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        }
+        #day-modal.open { display: flex; }
+        #day-modal-box {
+            background: #1c1208; border: 1px solid var(--border);
+            border-radius: 22px 22px 0 0; padding: 24px 20px calc(env(safe-area-inset-bottom,0px) + 32px);
+            width: 100%; max-width: 480px;
+            animation: fadeIn 0.2s ease;
+        }
+        .day-modal-title {
+            font-size: 0.95rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--accent); margin-bottom: 20px;
+        }
+        .day-modal-field { margin-bottom: 13px; }
+        .day-modal-label {
+            display: block; font-size: 0.65rem; font-weight: 800; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+        }
+        .day-modal-input {
+            width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 11px; color: var(--text);
+            padding: 12px 14px; font-size: 1rem; font-weight: 700;
+            outline: none; transition: border-color 0.2s; font-family: var(--font);
+        }
+        .day-modal-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.10); }
+        .day-modal-save {
+            width: 100%; padding: 14px; border-radius: 12px; background: var(--accent);
+            color: #fff; font-size: 0.9rem; font-weight: 900; letter-spacing: 1px;
+            text-transform: uppercase; cursor: pointer; border: none; margin-top: 18px;
+        }
+        .day-modal-secondary {
+            width: 100%; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.11); color: var(--muted);
+            font-size: 0.85rem; font-weight: 700; cursor: pointer; margin-top: 8px;
+            font-family: var(--font);
+        }
+        .day-modal-del {
+            width: 100%; padding: 12px; border-radius: 12px; background: transparent;
+            border: 1px solid rgba(207,102,121,0.3); color: var(--danger);
+            font-size: 0.85rem; font-weight: 700; cursor: pointer; margin-top: 8px;
+            font-family: var(--font);
+        }
+
+        /* ── DASHBOARD SCROLLABLE ── */
+        #dashboard-view.active {
+            overflow-y: auto !important;
+            touch-action: pan-y !important;
+        }
+
         /* ── SPLASH ── */
         @keyframes splashZoomIn {
             0%   { transform: scale(0.08); border-radius: 50%; }
@@ -742,17 +889,41 @@
     <div id="settings-view" class="view">
         <div class="settings-card settings-container">
             <h2 style="margin-bottom:20px; color:var(--accent);">Personalizar App</h2>
-            <p style="margin-bottom:15px; font-size:0.9rem; color:var(--muted);">Sube una imagen para usar como fondo.</p>
+
+            <!-- Logo de la app (header + ícono) -->
+            <h3 style="color:var(--text); margin-bottom:10px; font-size:0.85rem; letter-spacing:1px; text-align:left;">LOGO E ÍCONO</h3>
+            <p style="margin-bottom:12px; font-size:0.82rem; color:var(--muted); text-align:left;">Reemplaza el logo del header y el ícono de la app.</p>
             <label class="logo-upload-area">
                 <div id="current-logo-container">
-                    <div style="font-size:2rem; margin-bottom:10px;">🏀</div>
-                    <span>Toca para subir imagen</span>
+                    <div style="font-size:2rem; margin-bottom:10px;">🏋️</div>
+                    <span>Tocar para subir logo/ícono</span>
                 </div>
-                <input type="file" accept="image/*" class="file-input" onchange="handleLogoUpload(this)">
+                <input type="file" accept="image/*" class="file-input" onchange="handleIconUpload(this)">
             </label>
-            <p class="settings-note">La imagen se guarda en tu teléfono.</p>
-            <div style="margin-top:30px; border-top:1px solid var(--border); padding-top:24px;">
-                <h3 style="color:var(--text); margin-bottom:14px; font-size:0.95rem; letter-spacing:1px;">DATOS</h3>
+            <p class="settings-note">Para que el ícono del teléfono cambie, reinstalá la app después de subir.</p>
+
+            <!-- Imagen de fondo -->
+            <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
+                <h3 style="color:var(--text); margin-bottom:10px; font-size:0.85rem; letter-spacing:1px; text-align:left;">IMAGEN DE FONDO</h3>
+                <label class="logo-upload-area" style="padding:16px;">
+                    <div id="current-bg-container">
+                        <div style="font-size:1.6rem; margin-bottom:8px;">🖼️</div>
+                        <span style="font-size:0.82rem;">Toca para subir fondo</span>
+                    </div>
+                    <input type="file" accept="image/*" class="file-input" onchange="handleLogoUpload(this)">
+                </label>
+            </div>
+
+            <!-- Color de acento -->
+            <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
+                <h3 style="color:var(--text); margin-bottom:8px; font-size:0.85rem; letter-spacing:1px; text-align:left;">COLOR DE ACENTO</h3>
+                <p style="font-size:0.82rem; color:var(--muted); margin-bottom:12px; text-align:left;">Personaliza el color principal de la app.</p>
+                <div class="color-swatch-grid" id="color-swatches"></div>
+            </div>
+
+            <!-- Datos -->
+            <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
+                <h3 style="color:var(--text); margin-bottom:14px; font-size:0.85rem; letter-spacing:1px; text-align:left;">DATOS</h3>
                 <button class="add-ex-btn" style="width:100%; margin-bottom:10px;" onclick="exportData()">⬇ Exportar datos</button>
                 <label class="add-ex-btn" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                     ⬆ Importar datos
@@ -786,6 +957,25 @@
                 <button class="confirm-no" id="confirm-no-btn" onclick="closeConfirmModal()">Cancelar</button>
                 <button class="confirm-yes" id="confirm-yes-btn">Confirmar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Day ABM Modal -->
+    <div id="day-modal">
+        <div id="day-modal-box">
+            <div class="day-modal-title" id="day-modal-title">Editar día</div>
+            <div class="day-modal-field">
+                <label class="day-modal-label" for="day-modal-name">Nombre del día</label>
+                <input type="text" id="day-modal-name" class="day-modal-input" placeholder="ej: Empuje (Push) + Abs" autocomplete="off">
+            </div>
+            <div class="day-modal-field">
+                <label class="day-modal-label" for="day-modal-muscles">Grupos musculares</label>
+                <input type="text" id="day-modal-muscles" class="day-modal-input" placeholder="ej: Pecho, Tríceps, Hombros" autocomplete="off">
+            </div>
+            <button class="day-modal-save" onclick="saveDayModal()">Guardar</button>
+            <button class="day-modal-secondary" id="day-modal-dup-btn" onclick="duplicateDayFromModal()">Duplicar este día</button>
+            <button class="day-modal-del" id="day-modal-del-btn" onclick="deleteDayFromModal()">Eliminar día</button>
+            <button class="day-modal-secondary" onclick="closeDayModal()" style="margin-top:4px;">Cancelar</button>
         </div>
     </div>
 
@@ -1013,14 +1203,43 @@
         function init() {
             loadRoutine();
             const config = getConfig();
-            if (config.logo) { appLogo = config.logo; applyTheme(appLogo); }
+            if (config.logo) { applyBgImage(config.logo); }
+            if (config.appIcon) { applyHeaderLogo(config.appIcon); }
+            if (config.accentColor) { applyAccentColor(config.accentColor, false); }
             updateManifest();
             renderDashboard();
         }
 
         function applyTheme(base64Img) {
+            applyBgImage(base64Img);
+        }
+
+        function applyBgImage(base64Img) {
             const bgLayer = document.getElementById('bg-layer');
             if (bgLayer) bgLayer.style.backgroundImage = `url(${base64Img})`;
+        }
+
+        function applyHeaderLogo(base64Img) {
+            const logoEl = document.querySelector('.logo-img');
+            if (logoEl) logoEl.src = base64Img;
+        }
+
+        function applyAccentColor(hex, save = true) {
+            const r = parseInt(hex.slice(1,3), 16);
+            const g = parseInt(hex.slice(3,5), 16);
+            const b = parseInt(hex.slice(5,7), 16);
+            const darker = (c, f) => Math.round(c * f).toString(16).padStart(2,'0');
+            const hex2 = '#' + darker(r,0.78) + darker(g,0.78) + darker(b,0.78);
+            const root = document.documentElement;
+            root.style.setProperty('--accent', hex);
+            root.style.setProperty('--accent2', hex2);
+            root.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
+            root.style.setProperty('--border', `rgba(${r},${g},${b},0.22)`);
+            if (save) {
+                const config = getConfig();
+                config.accentColor = hex;
+                saveConfig(config);
+            }
         }
 
         // --- DASHBOARD / TIMESTAMP HELPERS ---
@@ -1048,35 +1267,59 @@
             return ts; // legacy already in display format
         }
 
-        function isThisWeek(ts) {
+        function isWithin7Days(ts) {
             if (!ts) return false;
             const t = parseLogTimestamp(ts);
             if (!t) return false;
-            const now = new Date();
-            const dow = now.getDay(); // 0=Sun
-            const mondayOffset = dow === 0 ? -6 : 1 - dow;
-            const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + mondayOffset, 0, 0, 0, 0);
-            const sunday = new Date(monday.getTime() + 7*24*60*60*1000 - 1);
-            return t >= monday.getTime() && t <= sunday.getTime();
+            return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000;
+        }
+
+        function daysRemainingUntilReset(ts) {
+            if (!ts) return 0;
+            const t = parseLogTimestamp(ts);
+            if (!t) return 0;
+            const ms = 7 * 24 * 60 * 60 * 1000 - (Date.now() - t);
+            return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
         }
 
         function renderDashboard() {
             const container = document.getElementById('dashboard-view');
             container.innerHTML = '';
-            container.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
             const logs = getLogs();
+
+            // Weekly progress bar
+            const completedCount = routineData.filter(d => isWithin7Days(logs[d.dia])).length;
+            const total = routineData.length;
+            const pct = total ? Math.round(completedCount / total * 100) : 0;
+            const progressEl = document.createElement('div');
+            progressEl.className = 'weekly-progress';
+            progressEl.innerHTML = `
+                <div class="weekly-progress-header">
+                    <span class="weekly-progress-label">Últimos 7 días</span>
+                    <span class="weekly-progress-count">${completedCount}/${total} días</span>
+                </div>
+                <div class="weekly-progress-bar-wrap">
+                    <div class="weekly-progress-bar" style="width:${pct}%"></div>
+                </div>
+            `;
+            container.appendChild(progressEl);
 
             routineData.forEach((day, index) => {
                 const card = document.createElement('div');
                 const rawTs = logs[day.dia];
-                const isLogged = !!rawTs;
+                const isDone = isWithin7Days(rawTs);
+                const daysLeft = isDone ? daysRemainingUntilReset(rawTs) : 0;
                 const classes = ['card'];
                 if (index < 4) classes.push('primary');
-                if (isLogged && isThisWeek(rawTs)) classes.push('week-done');
+                if (isDone) classes.push('week-done');
                 card.className = classes.join(' ');
                 card.onclick = () => openWorkout(index);
 
                 const displayTs = formatLogForDisplay(rawTs);
+                const muscleChips = (day.musculos || '').split(',')
+                    .map(m => m.trim()).filter(Boolean)
+                    .map(m => `<span class="muscle-chip">${m}</span>`).join('');
+
                 card.innerHTML = `
                     <div class="day-badge">
                         <span class="num">${day.dia}</span>
@@ -1084,15 +1327,34 @@
                     </div>
                     <div class="card-text">
                         <div class="day-title">${day.nombre.replace(/^Día \d+ – /, '')}</div>
-                        <div class="muscles">${day.musculos}</div>
-                        <span class="last-log ${isLogged ? '' : 'pending'}">
-                            ${isLogged ? '✓ ' + displayTs : 'Sin registros'}
+                        <div class="muscles-chips">${muscleChips}</div>
+                        <span class="last-log ${rawTs ? '' : 'pending'}">
+                            ${rawTs ? '✓ ' + displayTs : 'Sin registros'}
                         </span>
                     </div>
                     <div class="arrow">→</div>
+                    ${isDone ? `<div class="done-overlay">
+                        <span class="done-badge">✓ Hecho</span>
+                        <span class="done-days-remaining">${daysLeft}d para reset</span>
+                    </div>` : ''}
                 `;
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'card-edit-btn';
+                editBtn.title = 'Editar día';
+                editBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+                editBtn.onclick = e => { e.stopPropagation(); openDayModal(index); };
+                card.appendChild(editBtn);
+
                 container.appendChild(card);
             });
+
+            // Add day button
+            const addBtn = document.createElement('div');
+            addBtn.className = 'add-day-btn';
+            addBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar día`;
+            addBtn.onclick = () => openDayModal(-1);
+            container.appendChild(addBtn);
         }
 
         // --- WORKOUT ---
@@ -1397,6 +1659,16 @@
         }
 
         // --- SETTINGS ---
+        const ACCENT_PRESETS = [
+            { hex: '#e8722a', label: 'Naranja' },
+            { hex: '#3b82f6', label: 'Azul' },
+            { hex: '#10b981', label: 'Verde' },
+            { hex: '#ef4444', label: 'Rojo' },
+            { hex: '#a855f7', label: 'Morado' },
+            { hex: '#f59e0b', label: 'Amarillo' },
+            { hex: '#ec4899', label: 'Rosa' },
+        ];
+
         function openSettings() {
             history.pushState({ page: 'settings' }, '');
             document.getElementById('dashboard-view').classList.remove('active');
@@ -1406,14 +1678,56 @@
             document.getElementById('settings-btn').classList.add('hidden');
             const _fab = document.getElementById('finish-btn');
             _fab.style.display = 'none'; _fab.classList.remove('visible');
-            if (appLogo) {
-                document.getElementById('current-logo-container').innerHTML = `<img src="${appLogo}" class="current-logo"><br><span>Tocar para cambiar</span>`;
+
+            const config = getConfig();
+            // Populate icon preview
+            const iconContainer = document.getElementById('current-logo-container');
+            if (config.appIcon) {
+                iconContainer.innerHTML = `<img src="${config.appIcon}" class="current-logo"><br><span>Tocar para cambiar</span>`;
             }
+            // Populate bg preview
+            const bgContainer = document.getElementById('current-bg-container');
+            if (config.logo) {
+                bgContainer.innerHTML = `<img src="${config.logo}" class="current-logo"><br><span>Tocar para cambiar</span>`;
+            }
+            // Build color swatches
+            buildColorSwatches(config.accentColor || '#e8722a');
         }
 
-        function handleLogoUpload(input) {
-            const file = input.files[0];
-            if (!file) return;
+        function buildColorSwatches(currentHex) {
+            const grid = document.getElementById('color-swatches');
+            if (!grid) return;
+            grid.innerHTML = '';
+            ACCENT_PRESETS.forEach(({ hex }) => {
+                const sw = document.createElement('div');
+                sw.className = 'color-swatch' + (hex.toLowerCase() === currentHex.toLowerCase() ? ' selected' : '');
+                sw.style.background = hex;
+                sw.title = hex;
+                sw.onclick = () => {
+                    grid.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+                    sw.classList.add('selected');
+                    applyAccentColor(hex);
+                    showToast('✓ Color aplicado');
+                };
+                grid.appendChild(sw);
+            });
+            // Custom color picker
+            const wrap = document.createElement('div');
+            wrap.className = 'color-picker-wrap';
+            wrap.title = 'Color personalizado';
+            const inp = document.createElement('input');
+            inp.type = 'color';
+            inp.value = currentHex;
+            inp.oninput = () => {
+                grid.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+                applyAccentColor(inp.value);
+            };
+            inp.onchange = () => showToast('✓ Color aplicado');
+            wrap.appendChild(inp);
+            grid.appendChild(wrap);
+        }
+
+        function resizeImage(file, maxSize, quality, callback) {
             const reader = new FileReader();
             reader.onload = e => {
                 const img = new Image();
@@ -1421,26 +1735,44 @@
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const MAX = 2000;
                     let w = img.width, h = img.height;
-                    if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } }
-                    else       { if (h > MAX) { w *= MAX/h; h = MAX; } }
+                    if (w > h) { if (w > maxSize) { h *= maxSize/w; w = maxSize; } }
+                    else       { if (h > maxSize) { w *= maxSize/h; h = maxSize; } }
                     canvas.width = w; canvas.height = h;
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
                     ctx.drawImage(img, 0, 0, w, h);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-                    const config = getConfig();
-                    config.logo = dataUrl;
-                    saveConfig(config);
-                    appLogo = dataUrl;
-                    applyTheme(dataUrl);
-                    updateManifest();
-                    document.getElementById('current-logo-container').innerHTML = `<img src="${dataUrl}" class="current-logo"><br><span>¡Logo Actualizado!</span>`;
-                    showToast();
+                    callback(canvas.toDataURL('image/jpeg', quality));
                 };
             };
             reader.readAsDataURL(file);
+        }
+
+        function handleIconUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            resizeImage(file, 512, 0.95, dataUrl => {
+                const config = getConfig();
+                config.appIcon = dataUrl;
+                saveConfig(config);
+                applyHeaderLogo(dataUrl);
+                updateManifest();
+                document.getElementById('current-logo-container').innerHTML = `<img src="${dataUrl}" class="current-logo"><br><span>¡Logo actualizado!</span>`;
+                showToast('✓ Logo actualizado');
+            });
+        }
+
+        function handleLogoUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            resizeImage(file, 2000, 0.92, dataUrl => {
+                const config = getConfig();
+                config.logo = dataUrl;
+                saveConfig(config);
+                applyBgImage(dataUrl);
+                document.getElementById('current-bg-container').innerHTML = `<img src="${dataUrl}" class="current-logo"><br><span>Tocar para cambiar</span>`;
+                showToast('✓ Fondo actualizado');
+            });
         }
 
         function resetApp() {
@@ -1547,9 +1879,13 @@
             if (e.key === 'Enter' && document.getElementById('edit-modal').classList.contains('open')) {
                 confirmEditModal();
             }
+            if (e.key === 'Enter' && document.getElementById('day-modal').classList.contains('open')) {
+                saveDayModal();
+            }
             if (e.key === 'Escape') {
                 closeEditModal();
                 closeImgModal();
+                closeDayModal();
             }
         });
         document.getElementById('edit-modal').addEventListener('click', function(e) {
@@ -1603,6 +1939,97 @@
                 }
             });
         }
+
+        // --- DAY ABM ---
+        let _dayModalIdx = -1; // -1 = new day
+
+        function openDayModal(index) {
+            _dayModalIdx = index;
+            const modal = document.getElementById('day-modal');
+            const title = document.getElementById('day-modal-title');
+            const nameInput = document.getElementById('day-modal-name');
+            const musclesInput = document.getElementById('day-modal-muscles');
+            const dupBtn = document.getElementById('day-modal-dup-btn');
+            const delBtn = document.getElementById('day-modal-del-btn');
+
+            if (index === -1) {
+                title.textContent = 'Nuevo día';
+                nameInput.value = '';
+                musclesInput.value = '';
+                dupBtn.style.display = 'none';
+                delBtn.style.display = 'none';
+            } else {
+                const day = routineData[index];
+                title.textContent = `Editar: Día ${day.dia}`;
+                nameInput.value = day.nombre.replace(/^Día \d+ – /, '');
+                musclesInput.value = day.musculos || '';
+                dupBtn.style.display = '';
+                delBtn.style.display = '';
+            }
+            modal.classList.add('open');
+            setTimeout(() => nameInput.focus(), 80);
+        }
+
+        function closeDayModal() {
+            document.getElementById('day-modal').classList.remove('open');
+            _dayModalIdx = -1;
+        }
+
+        function saveDayModal() {
+            const name = document.getElementById('day-modal-name').value.trim();
+            const muscles = document.getElementById('day-modal-muscles').value.trim();
+            if (!name) return;
+
+            if (_dayModalIdx === -1) {
+                // Create new day
+                const newDia = routineData.length > 0
+                    ? Math.max(...routineData.map(d => d.dia)) + 1
+                    : 1;
+                routineData.push({
+                    dia: newDia,
+                    nombre: `Día ${newDia} – ${name}`,
+                    musculos: muscles,
+                    ejercicios: []
+                });
+            } else {
+                const day = routineData[_dayModalIdx];
+                day.nombre = `Día ${day.dia} – ${name}`;
+                day.musculos = muscles;
+            }
+            saveRoutineStructure();
+            closeDayModal();
+            renderDashboard();
+        }
+
+        function duplicateDayFromModal() {
+            if (_dayModalIdx === -1) return;
+            const src = routineData[_dayModalIdx];
+            const newDia = Math.max(...routineData.map(d => d.dia)) + 1;
+            const copy = JSON.parse(JSON.stringify(src));
+            copy.dia = newDia;
+            copy.nombre = `Día ${newDia} – ${src.nombre.replace(/^Día \d+ – /, '')} (copia)`;
+            routineData.push(copy);
+            saveRoutineStructure();
+            closeDayModal();
+            renderDashboard();
+            showToast('✓ Día duplicado');
+        }
+
+        function deleteDayFromModal() {
+            if (_dayModalIdx === -1) return;
+            const day = routineData[_dayModalIdx];
+            confirmModal(`¿Eliminar "${day.nombre.replace(/^Día \d+ – /, '')}"? Se borrarán todos sus ejercicios.`, () => {
+                routineData.splice(_dayModalIdx, 1);
+                saveRoutineStructure();
+                closeDayModal();
+                renderDashboard();
+                showToast('Día eliminado');
+            });
+        }
+
+        document.getElementById('day-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeDayModal();
+        });
 
         // (timer y completed functions movidas a bloque de nuevas funciones)
 
@@ -2387,12 +2814,14 @@
 
         // --- MANIFEST ---
         function updateManifest() {
-            const iconSrc  = appLogo || new URL("icon.png", location.href).href;
-            const iconType = appLogo ? "image/jpeg" : "image/png";
+            const config   = getConfig();
+            const iconSrc  = config.appIcon || new URL("icon.png", location.href).href;
+            const iconType = config.appIcon ? "image/jpeg" : "image/png";
+            const accent   = config.accentColor || '#0d0a07';
             const manifest = {
                 "name": "Gym", "short_name": "Gym", "start_url": ".",
                 "display": "standalone", "background_color": "#0d0a07",
-                "theme_color": "#0d0a07", "orientation": "portrait",
+                "theme_color": accent, "orientation": "portrait",
                 "icons": [
                     { "src": iconSrc, "sizes": "192x192", "type": iconType, "purpose": "any maskable" },
                     { "src": iconSrc, "sizes": "512x512", "type": iconType, "purpose": "any maskable" }
