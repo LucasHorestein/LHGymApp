@@ -829,15 +829,14 @@
 
         /* ── SPLASH ── */
         @keyframes appZoomIn {
-            from { opacity: 0; transform: scale(0.88); }
+            from { opacity: 0; transform: scale(0.72); }
             to   { opacity: 1; transform: scale(1); }
         }
-        #app-content.opening {
-            animation: appZoomIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) both;
+        #app-content {
+            opacity: 0;
         }
-        #splash {
-            position: fixed; inset: 0; z-index: 999;
-            background: #0d0a07;
+        #app-content.opening {
+            animation: appZoomIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
 </head>
@@ -846,9 +845,6 @@
     <!-- Capas de fondo independientes -->
     <div id="bg-layer"></div>
     <div id="bg-gradient"></div>
-
-    <!-- Splash Screen -->
-    <div id="splash"></div>
 
     <div id="app-content">
     <header>
@@ -2924,24 +2920,7 @@
             navigator.serviceWorker.register('/sw.js');
         }
 
-        function hideSplash() {
-            const splash = document.getElementById('splash');
-            if (!splash || splash._hiding) return;
-            splash._hiding = true;
-            splash.style.transition = 'opacity 0.28s ease';
-            splash.style.opacity = '0';
-            const app = document.getElementById('app-content');
-            if (app) {
-                app.classList.add('opening');
-                app.addEventListener('animationend', () => {
-                    app.classList.remove('opening');
-                    app.style.opacity = '1';
-                }, { once: true });
-            }
-            setTimeout(() => splash.remove(), 320);
-        }
-
-        // Defer heavy init so splash renders cleanly before JS blocks
+        // Defer heavy init off the first paint so the background renders first
         setTimeout(() => {
             loadRoutine();
             const config = getConfig();
@@ -2951,11 +2930,16 @@
             updateManifest();
             requestAnimationFrame(() => {
                 renderDashboard();
-                setTimeout(hideSplash, 60);
+                const app = document.getElementById('app-content');
+                if (app) {
+                    app.classList.add('opening');
+                    app.addEventListener('animationend', () => {
+                        app.style.opacity = '1';
+                        app.classList.remove('opening');
+                    }, { once: true });
+                }
             });
         }, 0);
-
-        document.getElementById('splash').addEventListener('touchstart', hideSplash, { once: true, passive: true });
     </script>
 </body>
 </html>
