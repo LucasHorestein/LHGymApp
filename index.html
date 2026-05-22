@@ -828,6 +828,26 @@
         }
 
         /* ── SPLASH ── */
+        @keyframes splashZoomIn {
+            0%   { transform: scale(0.08); border-radius: 50%; }
+            60%  { border-radius: 12%; }
+            100% { transform: scale(1);  border-radius: 0; }
+        }
+        #splash {
+            position: fixed; inset: 0; z-index: 999;
+            background: #0d0a07;
+            overflow: hidden;
+        }
+        #splash .splash-logo {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            transform-origin: center center;
+            will-change: transform, border-radius;
+            animation: splashZoomIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
     </style>
 </head>
 <body>
@@ -835,6 +855,10 @@
     <!-- Capas de fondo independientes -->
     <div id="bg-layer"></div>
     <div id="bg-gradient"></div>
+
+    <div id="splash">
+        <img class="splash-logo" id="splash-logo" src="icon.png" alt="Gym">
+    </div>
 
     <div id="app-content">
     <header>
@@ -2910,16 +2934,36 @@
             navigator.serviceWorker.register('/sw.js');
         }
 
-        // Defer render off the first paint to avoid blocking the browser
+        function hideSplash() {
+            const splash = document.getElementById('splash');
+            if (!splash || splash._hiding) return;
+            splash._hiding = true;
+            splash.style.transition = 'opacity 0.5s ease';
+            splash.style.opacity = '0';
+            setTimeout(() => splash.remove(), 550);
+        }
+
+        // Defer init so the splash zoom animation gets a clean first frame
         setTimeout(() => {
             loadRoutine();
             const config = getConfig();
+            // Match splash icon to user's custom icon if set
+            if (config.appIcon) {
+                const sl = document.getElementById('splash-logo');
+                if (sl) sl.src = config.appIcon;
+            }
             if (config.logo) applyBgImage(config.logo);
             if (config.appIcon) applyHeaderLogo(config.appIcon);
             if (config.accentColor) applyAccentColor(config.accentColor, false);
             updateManifest();
-            requestAnimationFrame(() => { renderDashboard(); });
+            requestAnimationFrame(() => {
+                renderDashboard();
+                // Hide splash after zoom animation completes (0.9s)
+                setTimeout(hideSplash, 950);
+            });
         }, 0);
+
+        document.getElementById('splash').addEventListener('touchstart', hideSplash, { once: true, passive: true });
     </script>
 </body>
 </html>
