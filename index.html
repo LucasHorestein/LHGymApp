@@ -735,14 +735,14 @@
 
         /* ── CARD EDIT BTN ── */
         .card-edit-btn {
-            position: absolute; top: 8px; right: 8px;
-            width: 30px; height: 30px; border-radius: 8px;
-            background: rgba(var(--accent-rgb),0.15); border: 1px solid rgba(var(--accent-rgb),0.3);
+            flex-shrink: 0;
+            width: 36px; height: 36px; border-radius: 10px;
+            background: rgba(var(--accent-rgb),0.12); border: 1px solid rgba(var(--accent-rgb),0.28);
             display: flex; align-items: center; justify-content: center;
             color: var(--accent); cursor: pointer;
-            z-index: 2; transition: background 0.15s;
+            transition: background 0.15s;
         }
-        .card-edit-btn:active { background: rgba(var(--accent-rgb),0.3); }
+        .card-edit-btn:active { background: rgba(var(--accent-rgb),0.28); }
 
         /* ── ADD DAY BTN ── */
         .add-day-btn {
@@ -1333,18 +1333,19 @@
                             ${rawTs ? '✓ ' + displayTs : 'Sin registros'}
                         </span>
                     </div>
+                    <button class="card-edit-btn" title="Editar día">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
                     ${isDone ? `<div class="done-overlay">
                         <span class="done-badge">✓ Hecho</span>
                         <span class="done-days-remaining">${daysLeft}d para reset</span>
                     </div>` : ''}
                 `;
 
-                const editBtn = document.createElement('button');
-                editBtn.className = 'card-edit-btn';
-                editBtn.title = 'Editar día';
-                editBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-                editBtn.onclick = e => { e.stopPropagation(); openDayModal(index); };
-                card.appendChild(editBtn);
+                card.querySelector('.card-edit-btn').addEventListener('click', e => {
+                    e.stopPropagation();
+                    openDayModal(index);
+                });
 
                 container.appendChild(card);
             });
