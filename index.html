@@ -828,16 +828,6 @@
         }
 
         /* ── SPLASH ── */
-        @keyframes appZoomIn {
-            from { opacity: 0; transform: scale(0.72); }
-            to   { opacity: 1; transform: scale(1); }
-        }
-        #app-content {
-            opacity: 0;
-        }
-        #app-content.opening {
-            animation: appZoomIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
     </style>
 </head>
 <body>
@@ -2920,7 +2910,7 @@
             navigator.serviceWorker.register('/sw.js');
         }
 
-        // Defer heavy init off the first paint so the background renders first
+        // Defer render off the first paint to avoid blocking the browser
         setTimeout(() => {
             loadRoutine();
             const config = getConfig();
@@ -2928,17 +2918,7 @@
             if (config.appIcon) applyHeaderLogo(config.appIcon);
             if (config.accentColor) applyAccentColor(config.accentColor, false);
             updateManifest();
-            requestAnimationFrame(() => {
-                renderDashboard();
-                const app = document.getElementById('app-content');
-                if (app) {
-                    app.classList.add('opening');
-                    app.addEventListener('animationend', () => {
-                        app.style.opacity = '1';
-                        app.classList.remove('opening');
-                    }, { once: true });
-                }
-            });
+            requestAnimationFrame(() => { renderDashboard(); });
         }, 0);
     </script>
 </body>
