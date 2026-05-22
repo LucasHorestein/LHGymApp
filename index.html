@@ -828,26 +828,16 @@
         }
 
         /* ── SPLASH ── */
-        @keyframes splashZoomIn {
-            0%   { transform: scale(0.08); border-radius: 50%; }
-            60%  { border-radius: 12%; }
-            100% { transform: scale(1);  border-radius: 0; }
+        @keyframes appZoomIn {
+            from { opacity: 0; transform: scale(0.88); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        #app-content.opening {
+            animation: appZoomIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
         #splash {
             position: fixed; inset: 0; z-index: 999;
             background: #0d0a07;
-            overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
-        }
-        #splash .splash-logo {
-            position: absolute; inset: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
-            object-position: center;
-            display: block;
-            transform-origin: center center;
-            animation: splashZoomIn 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            will-change: transform, border-radius;
         }
     </style>
 </head>
@@ -858,10 +848,9 @@
     <div id="bg-gradient"></div>
 
     <!-- Splash Screen -->
-    <div id="splash">
-        <img class="splash-logo" src="icon.png" alt="Gym">
-    </div>
+    <div id="splash"></div>
 
+    <div id="app-content">
     <header>
         <div class="header-inner">
             <button id="settings-btn" class="header-btn" onclick="openSettings()">
@@ -935,6 +924,7 @@
             <button class="add-ex-btn" style="border-color:var(--danger); color:var(--danger); margin-top:10px;" onclick="resetApp()">Borrar todos los datos</button>
         </div>
     </div>
+    </div><!-- #app-content -->
 
     <button id="finish-btn" class="fab" onclick="finishWorkout()">Finalizar entrenamiento</button>
 
@@ -2938,12 +2928,20 @@
             const splash = document.getElementById('splash');
             if (!splash || splash._hiding) return;
             splash._hiding = true;
-            splash.style.transition = 'opacity 0.55s ease';
+            splash.style.transition = 'opacity 0.28s ease';
             splash.style.opacity = '0';
-            setTimeout(() => splash.remove(), 600);
+            const app = document.getElementById('app-content');
+            if (app) {
+                app.classList.add('opening');
+                app.addEventListener('animationend', () => {
+                    app.classList.remove('opening');
+                    app.style.opacity = '1';
+                }, { once: true });
+            }
+            setTimeout(() => splash.remove(), 320);
         }
 
-        // Defer heavy init so the splash zoom animation runs on a clean frame
+        // Defer heavy init so splash renders cleanly before JS blocks
         setTimeout(() => {
             loadRoutine();
             const config = getConfig();
@@ -2953,8 +2951,7 @@
             updateManifest();
             requestAnimationFrame(() => {
                 renderDashboard();
-                // Wait for zoom animation to complete (0.85s) then fade out
-                setTimeout(hideSplash, 900);
+                setTimeout(hideSplash, 60);
             });
         }, 0);
 
