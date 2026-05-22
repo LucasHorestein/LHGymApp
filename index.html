@@ -821,11 +821,31 @@
             font-family: var(--font);
         }
 
-        /* ── DASHBOARD SCROLLABLE ── */
+        /* ── DASHBOARD: sin scroll, cards llenan el espacio disponible ── */
         #dashboard-view.active {
-            overflow-y: auto !important;
-            touch-action: pan-y !important;
+            overflow: hidden !important;
+            touch-action: none !important;
+            padding-bottom: 16px !important;
+            gap: 7px !important;
         }
+        #dashboard-view.active > * {
+            flex-shrink: 1 !important;
+        }
+        #dashboard-view.active .card {
+            flex: 1;
+            min-height: 0;
+            padding: 8px 14px;
+            align-items: center;
+        }
+        #dashboard-view.active .day-badge {
+            min-width: 40px; height: 40px; border-radius: 11px;
+        }
+        #dashboard-view.active .day-badge .num { font-size: 1.1rem; }
+        #dashboard-view.active .day-badge .lbl { font-size: 0.5rem; }
+        #dashboard-view.active .day-title { font-size: 0.88rem; }
+        #dashboard-view.active .muscles-chips { margin-top: 3px; gap: 3px; }
+        #dashboard-view.active .last-log { margin-top: 2px; font-size: 0.58rem; padding: 1px 7px; }
+        #dashboard-view.active .arrow { width: 24px; height: 24px; font-size: 0.7rem; }
 
         /* ── SPLASH ── */
         @keyframes splashZoomIn {
