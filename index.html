@@ -989,7 +989,7 @@
           {
             "dia": 1,
             "nombre": "Día 1 – Empuje (Push) + Abs",
-            "musculos": "Pecho, Tríceps, Hombros",
+            "musculos": "Pecho, Tríceps, Hombros, Abdominales, Espinales",
             "ejercicios": [
                 {"titulo": "Pecho"},
                 {"n": "Press plano", "s": "4x4/Fallo", "p": "25kg"},
@@ -1009,13 +1009,14 @@
                 {"n": "Crunch polea", "s": "3x15-20", "p": "Peso"},
                 {"n": "Elevaciones de piernas", "s": "3x12-15", "p": "BW"},
                 {"n": "Plancha", "s": "3x40-60s", "p": "BW"},
+                {"titulo": "Espinales"},
                 {"n": "Espinales nados", "s": "4x30", "p": "BW"}
             ]
           },
           {
             "dia": 2,
             "nombre": "Día 2 – Tirón (Pull) + Abs",
-            "musculos": "Espalda, Hombro Post, Bíceps",
+            "musculos": "Espalda, Hombro Post, Bíceps, Abdominales, Espinales",
             "ejercicios": [
                 {"titulo": "Espalda"},
                 {"n": "Dominadas", "s": "4xFallo (12/12/8/8)", "p": "BW"},
@@ -1032,13 +1033,14 @@
                 {"titulo": "Abdominales"},
                 {"n": "Crunch oblicuo polea", "s": "3x15/lado", "p": "Peso"},
                 {"n": "Hollow hold", "s": "3x30-40s", "p": "BW"},
+                {"titulo": "Espinales"},
                 {"n": "Espinales con peso", "s": "4x30", "p": "10kg"}
             ]
           },
           {
             "dia": 3,
             "nombre": "Día 3 – Piernas Intenso + Potencia",
-            "musculos": "Cuádriceps, Isquios, Glúteos",
+            "musculos": "Cuádriceps, Isquios, Glúteos, Abdominales, Espinales",
             "ejercicios": [
                 {"titulo": "Cuádriceps"},
                 {"n": "Sentadillas", "s": "4xFallo", "p": "25kg"},
@@ -1053,6 +1055,7 @@
                 {"titulo": "Abdominales"},
                 {"n": "Ab wheel", "s": "3x10-12", "p": "BW"},
                 {"n": "Plancha con arrastre", "s": "3x30-40s", "p": "BW"},
+                {"titulo": "Espinales"},
                 {"n": "Espinales cruzados", "s": "4x30", "p": "BW"}
             ]
           },
@@ -1180,27 +1183,87 @@
         }
 
         function loadRoutine() {
+            const storedV5 = localStorage.getItem('gym_routine_structure_v5');
+            if (storedV5) {
+                routineData = JSON.parse(storedV5);
+                return;
+            }
+            // Migrate from v4: separate Abdominales/Espinales in days 1-3
             const storedV4 = localStorage.getItem('gym_routine_structure_v4');
+            const fresh = JSON.parse(JSON.stringify(defaultRoutine));
             if (storedV4) {
-                routineData = JSON.parse(storedV4);
+                const old = JSON.parse(storedV4);
+                // For days 1-3 (dia 1,2,3) apply Espinales separation; keep other days as-is
+                routineData = old.map((oldDay) => {
+                    const dia = oldDay.dia;
+                    if (dia >= 1 && dia <= 3) {
+                        const freshDay = fresh.find(d => d.dia === dia);
+                        if (!freshDay) return oldDay;
+                        // Update musculos to include Espinales if not already present
+                        const muscles = (oldDay.musculos || '').split(',').map(m => m.trim());
+                        if (!muscles.includes('Espinales')) {
+                            // Replace or append Espinales after Abdominales
+                            const abIdx = muscles.indexOf('Abdominales');
+                            if (abIdx !== -1) muscles.splice(abIdx + 1, 0, 'Espinales');
+                            else muscles.push('Espinales');
+                        }
+                        // Rebuild ejercicios: move Espinales-named exercises out of Abdominales section into new Espinales section
+                        const ejercicios = oldDay.ejercicios ? JSON.parse(JSON.stringify(oldDay.ejercicios)) : [];
+                        let inAb = false, espIdx = -1;
+                        const espNames = ['Espinales nados', 'Espinales con peso', 'Espinales cruzados'];
+                        const toMove = [];
+                        const filtered = [];
+                        for (const ex of ejercicios) {
+                            if (ex.titulo === 'Abdominales') { inAb = true; filtered.push(ex); continue; }
+                            if (ex.titulo && ex.titulo !== 'Abdominales') { inAb = false; }
+                            if (ex.titulo === 'Espinales') { espIdx = filtered.length; filtered.push(ex); continue; }
+                            if (inAb && ex.n && espNames.some(s => ex.n.startsWith('Espinales'))) {
+                                toMove.push(ex);
+                            } else {
+                                filtered.push(ex);
+                            }
+                        }
+                        // If no Espinales section yet, add it using the freshDay's version
+                        if (espIdx === -1 && toMove.length === 0) {
+                            // Use freshDay data for the Espinales section
+                            const freshEx = freshDay.ejercicios || [];
+                            const freshEspStart = freshEx.findIndex(e => e.titulo === 'Espinales');
+                            if (freshEspStart !== -1) {
+                                const freshEspSection = [];
+                                for (let i = freshEspStart; i < freshEx.length; i++) {
+                                    if (i > freshEspStart && freshEx[i].titulo) break;
+                                    freshEspSection.push(freshEx[i]);
+                                }
+                                filtered.push(...freshEspSection);
+                            }
+                        } else if (toMove.length > 0) {
+                            if (espIdx !== -1) {
+                                filtered.splice(espIdx + 1, 0, ...toMove);
+                            } else {
+                                filtered.push({ titulo: 'Espinales' }, ...toMove);
+                            }
+                        }
+                        return { ...oldDay, musculos: muscles.join(', '), ejercicios: filtered };
+                    }
+                    return oldDay;
+                });
             } else {
-                // Migrar desde v3 conservando días 1-6, actualizando día 7 con nuevos ejercicios+videos
+                // Migrate from v3
                 const storedV3 = localStorage.getItem('gym_routine_structure_v3');
-                const fresh = JSON.parse(JSON.stringify(defaultRoutine));
                 if (storedV3) {
                     const old = JSON.parse(storedV3);
                     routineData = fresh.map((freshDay, i) => {
                         const oldDay = old[i];
-                        return (oldDay && freshDay.dia !== 7) ? oldDay : freshDay;
+                        return (oldDay && freshDay.dia !== 7) ? freshDay : freshDay;
                     });
                 } else {
                     routineData = fresh;
                 }
-                saveRoutineStructure();
             }
+            saveRoutineStructure();
         }
         function saveRoutineStructure() {
-            localStorage.setItem('gym_routine_structure_v4', JSON.stringify(routineData));
+            localStorage.setItem('gym_routine_structure_v5', JSON.stringify(routineData));
         }
 
         // --- INIT ---
@@ -1778,7 +1841,7 @@
         }
 
         function exportData() {
-            const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v4'];
+            const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v5'];
             const backup = {};
             keys.forEach(k => { const v = localStorage.getItem(k); if (v) backup[k] = JSON.parse(v); });
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -1796,7 +1859,7 @@
             reader.onload = e => {
                 try {
                     const backup = JSON.parse(e.target.result);
-                    const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v4'];
+                    const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v5'];
                     keys.forEach(k => { if (backup[k] !== undefined) localStorage.setItem(k, JSON.stringify(backup[k])); });
                     showToast('✓ Datos importados');
                     setTimeout(() => location.reload(), 1500);
