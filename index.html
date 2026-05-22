@@ -735,14 +735,14 @@
 
         /* ── CARD EDIT BTN ── */
         .card-edit-btn {
-            position: absolute; top: 10px; right: 46px;
-            width: 26px; height: 26px; border-radius: 50%;
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            position: absolute; top: 8px; right: 8px;
+            width: 30px; height: 30px; border-radius: 8px;
+            background: rgba(var(--accent-rgb),0.15); border: 1px solid rgba(var(--accent-rgb),0.3);
             display: flex; align-items: center; justify-content: center;
-            color: rgba(245,237,228,0.3); cursor: pointer; font-size: 0.7rem;
-            z-index: 2; transition: color 0.15s, background 0.15s;
+            color: var(--accent); cursor: pointer;
+            z-index: 2; transition: background 0.15s;
         }
-        .card-edit-btn:active { color: var(--text); background: rgba(255,255,255,0.14); }
+        .card-edit-btn:active { background: rgba(var(--accent-rgb),0.3); }
 
         /* ── ADD DAY BTN ── */
         .add-day-btn {
@@ -802,6 +802,7 @@
             width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
             border-radius: 11px; color: var(--text);
             padding: 12px 14px; font-size: 1rem; font-weight: 700;
+            text-align: left;
             outline: none; transition: border-color 0.2s; font-family: var(--font);
         }
         .day-modal-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.10); }
@@ -1332,7 +1333,6 @@
                             ${rawTs ? '✓ ' + displayTs : 'Sin registros'}
                         </span>
                     </div>
-                    <div class="arrow">→</div>
                     ${isDone ? `<div class="done-overlay">
                         <span class="done-badge">✓ Hecho</span>
                         <span class="done-days-remaining">${daysLeft}d para reset</span>
@@ -2017,11 +2017,12 @@
 
         function deleteDayFromModal() {
             if (_dayModalIdx === -1) return;
-            const day = routineData[_dayModalIdx];
+            const idx = _dayModalIdx;           // capture before modal closes
+            const day = routineData[idx];
+            closeDayModal();                    // close day modal first
             confirmModal(`¿Eliminar "${day.nombre.replace(/^Día \d+ – /, '')}"? Se borrarán todos sus ejercicios.`, () => {
-                routineData.splice(_dayModalIdx, 1);
+                routineData.splice(idx, 1);
                 saveRoutineStructure();
-                closeDayModal();
                 renderDashboard();
                 showToast('Día eliminado');
             });
