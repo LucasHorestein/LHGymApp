@@ -828,23 +828,26 @@
         }
 
         /* ── SPLASH ── */
-        @keyframes splashLogoIn {
-            0%   { opacity: 0; transform: scale(0.3) translateY(24px); }
-            100% { opacity: 1; transform: scale(1)   translateY(0); }
+        @keyframes splashZoomIn {
+            0%   { transform: scale(0.08); border-radius: 50%; }
+            60%  { border-radius: 12%; }
+            100% { transform: scale(1);  border-radius: 0; }
         }
         #splash {
             position: fixed; inset: 0; z-index: 999;
             background: #0d0a07;
+            overflow: hidden;
             display: flex; align-items: center; justify-content: center;
-            will-change: opacity;
         }
         #splash .splash-logo {
-            width: 100px; height: 100px;
-            border-radius: 24px;
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
             object-fit: cover;
-            box-shadow: 0 16px 56px rgba(0,0,0,0.65);
-            animation: splashLogoIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
-            will-change: transform, opacity;
+            object-position: center;
+            display: block;
+            transform-origin: center center;
+            animation: splashZoomIn 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: transform, border-radius;
         }
     </style>
 </head>
@@ -2935,32 +2938,23 @@
             const splash = document.getElementById('splash');
             if (!splash || splash._hiding) return;
             splash._hiding = true;
-            const logo = splash.querySelector('.splash-logo');
-            if (logo) {
-                logo.style.transition = 'transform 0.42s cubic-bezier(0.4,0,1,1), opacity 0.36s ease';
-                logo.style.transform = 'scale(0.45) translateY(-36px)';
-                logo.style.opacity = '0';
-            }
-            splash.style.transition = 'opacity 0.46s ease 0.06s';
+            splash.style.transition = 'opacity 0.55s ease';
             splash.style.opacity = '0';
-            setTimeout(() => splash.remove(), 580);
+            setTimeout(() => splash.remove(), 600);
         }
 
-        // Defer heavy init so the splash animation starts on a clean frame
+        // Defer heavy init so the splash zoom animation runs on a clean frame
         setTimeout(() => {
             loadRoutine();
             const config = getConfig();
-            if (config.appIcon) {
-                const splashLogo = document.querySelector('#splash .splash-logo');
-                if (splashLogo) splashLogo.src = config.appIcon;
-            }
             if (config.logo) applyBgImage(config.logo);
             if (config.appIcon) applyHeaderLogo(config.appIcon);
             if (config.accentColor) applyAccentColor(config.accentColor, false);
             updateManifest();
             requestAnimationFrame(() => {
                 renderDashboard();
-                setTimeout(hideSplash, 180);
+                // Wait for zoom animation to complete (0.85s) then fade out
+                setTimeout(hideSplash, 900);
             });
         }, 0);
 
