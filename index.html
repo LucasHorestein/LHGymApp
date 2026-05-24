@@ -554,9 +554,17 @@
 
         /* ── H1 TIMER POR CARD ── */
         .card-timer-row {
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            padding: 8px 16px 10px; border-top: 1px solid var(--border);
+            border-top: 1px solid var(--border);
             background: rgba(232,114,42,0.04);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 8px 16px 10px;
+        }
+        .card-timer-row.timer-mode {
+            flex-direction: column; gap: 0; padding: 0 0 10px;
+        }
+        .timer-main-row {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; padding: 8px 16px 6px;
         }
         .timer-display {
             font-size: 1.3rem; font-weight: 900; letter-spacing: 2px;
@@ -571,6 +579,41 @@
             display: flex; align-items: center; justify-content: center;
         }
         .timer-action-btn:active { background: rgba(232,114,42,0.25); }
+        .timer-presets {
+            display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;
+            padding: 2px 12px 4px;
+        }
+        .timer-preset-btn {
+            padding: 3px 9px; border-radius: 8px; font-size: 0.7rem;
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+            color: var(--muted); cursor: pointer; font-family: var(--font);
+        }
+        .timer-preset-btn.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .timer-preset-btn:active { opacity: 0.7; }
+        .timer-manual-input {
+            width: 52px; text-align: center; font-size: 0.72rem;
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 8px; color: var(--text); padding: 3px 4px;
+            font-family: var(--font); outline: none;
+        }
+        .timer-manual-input:focus { border-color: var(--accent); }
+        /* Clock popover */
+        .card-clock-wrap { position: relative; }
+        .clock-popover {
+            position: absolute; right: 0; top: 42px; z-index: 200;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; min-width: 148px; overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .clock-pop-opt {
+            display: flex; align-items: center; gap: 8px; width: 100%;
+            padding: 11px 14px; background: none; border: none; color: var(--text);
+            font-size: 0.85rem; cursor: pointer; font-family: var(--font); text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .clock-pop-opt:last-child { border-bottom: none; }
+        .clock-pop-opt:active { background: rgba(255,255,255,0.08); }
+        .clock-pop-opt.cur { color: var(--accent); }
 
         /* ── F3 REPS STEPPER + FALLO TOGGLE ── */
         .reps-stepper-wrap {
@@ -1817,7 +1860,7 @@
                     <div style="flex:1"></div>
                     <div class="ex-controls">
                         <button class="ctrl-btn${defCombined ? ' active' : ''}" title="Combinado" onclick="toggleCombined(this)">⇄</button>
-                        <button class="ctrl-btn" title="Cronómetro" onclick="toggleCardTimer(this,'${safeName}')">⏱</button>
+                        <div class="card-clock-wrap"><button class="ctrl-btn" id="clock-btn-${safeId}" title="Reloj" onclick="openClockPopover(this,'${safeName}')">🕐</button></div>
                         <button class="ctrl-btn" title="Renombrar" onclick="editItemName(${currentDayIdx},${exIdx})">✎</button>
                         <button class="ctrl-btn btn-del" title="Borrar" onclick="deleteItem(${currentDayIdx},${exIdx})">🗑</button>
                     </div>
@@ -2676,56 +2719,169 @@
             document.getElementById('confirm-modal').classList.remove('open');
         }
 
-        // --- CARD TIMER (H1) ---
+        // --- CLOCK / TIMER SYSTEM ---
         function fmtTimer(s) {
-            return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+            s = Math.max(0, s);
+            return String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
         }
 
-        function toggleCardTimer(btn, name) {
+        let _audioCtx = null;
+        function playTimerAlert() {
+            try {
+                if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (_audioCtx.state === 'suspended') _audioCtx.resume();
+                [0, 0.28, 0.56].forEach(offset => {
+                    const osc = _audioCtx.createOscillator();
+                    const gain = _audioCtx.createGain();
+                    osc.connect(gain); gain.connect(_audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, _audioCtx.currentTime + offset);
+                    gain.gain.setValueAtTime(0.45, _audioCtx.currentTime + offset);
+                    gain.gain.exponentialRampToValueAtTime(0.001, _audioCtx.currentTime + offset + 0.22);
+                    osc.start(_audioCtx.currentTime + offset);
+                    osc.stop(_audioCtx.currentTime + offset + 0.22);
+                });
+            } catch(e) {}
+            try { navigator.vibrate && navigator.vibrate([150, 80, 150, 80, 150]); } catch(e) {}
+        }
+
+        function openClockPopover(btn, name) {
+            closeClockPopover();
+            const wrap = btn.parentElement;
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const timerRow = document.getElementById('timer-row-' + safeId);
+            const curMode = timerRow?.dataset.mode || null;
+            const isOpen = timerRow && timerRow.style.display !== 'none';
+            const pop = document.createElement('div');
+            pop.id = 'clock-popover';
+            pop.className = 'clock-popover';
+            pop.innerHTML = `
+                <button class="clock-pop-opt${curMode==='stopwatch'&&isOpen?' cur':''}"
+                    onclick="activateClockMode('${name}','stopwatch');closeClockPopover()">🕐 Cronómetro</button>
+                <button class="clock-pop-opt${curMode==='timer'&&isOpen?' cur':''}"
+                    onclick="activateClockMode('${name}','timer');closeClockPopover()">⏱ Timer</button>`;
+            wrap.appendChild(pop);
+            setTimeout(() => document.addEventListener('click', closeClockPopover, { once: true }), 10);
+        }
+
+        function closeClockPopover() {
+            const p = document.getElementById('clock-popover');
+            if (p) p.remove();
+        }
+
+        function activateClockMode(name, mode) {
             const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
             const timerRow = document.getElementById('timer-row-' + safeId);
             if (!timerRow) return;
-            const isVisible = timerRow.style.display !== 'none';
-            if (isVisible) {
-                timerRow.style.display = 'none';
-                if (activeTimer && activeTimer.name === name) {
-                    clearInterval(activeTimer.interval); activeTimer = null;
-                }
-            } else {
-                if (activeTimer && activeTimer.name !== name) {
+            if (activeTimer) {
+                clearInterval(activeTimer.interval);
+                if (activeTimer.name !== name) {
                     const otherId = activeTimer.name.replace(/[^a-zA-Z0-9]/g,'_');
                     const otherRow = document.getElementById('timer-row-' + otherId);
-                    if (otherRow) otherRow.style.display = 'none';
-                    clearInterval(activeTimer.interval); activeTimer = null;
+                    if (otherRow) { otherRow.style.display = 'none'; otherRow.dataset.mode = ''; }
                 }
-                timerRow.style.display = 'flex';
-                const disp = document.getElementById('tdisp-' + safeId);
-                const pauseBtn = document.getElementById('tpause-' + safeId);
-                if (!activeTimer || activeTimer.name !== name) {
-                    activeTimer = { name, interval: null, seconds: 0, running: false };
-                    if (disp) disp.textContent = '00:00';
-                    if (pauseBtn) pauseBtn.textContent = '▶';
-                }
+                activeTimer = null;
             }
+            const exData = getExData();
+            const configured = mode === 'timer' ? (exData[name]?.timerTime || 60) : 0;
+            activeTimer = { name, mode, configured, seconds: mode === 'timer' ? configured : 0, running: false, interval: null, everStarted: false };
+            timerRow.dataset.mode = mode;
+            timerRow.style.display = 'flex';
+            if (mode === 'timer') buildTimerModeRow(name, safeId, configured);
+            else buildStopwatchRow(name, safeId);
+        }
+
+        function buildTimerModeRow(name, safeId, configured) {
+            const timerRow = document.getElementById('timer-row-' + safeId);
+            if (!timerRow) return;
+            timerRow.classList.add('timer-mode');
+            const presets = [{l:'30s',s:30},{l:'45s',s:45},{l:'1m',s:60},{l:'1:30',s:90},{l:'2m',s:120},{l:'3m',s:180}];
+            const presetsHtml = presets.map(p =>
+                `<button class="timer-preset-btn${configured===p.s?' sel':''}" onclick="setTimerPreset('${name}',${p.s})">${p.l}</button>`
+            ).join('');
+            const mins = Math.floor(configured / 60);
+            const secs = configured % 60;
+            const manualVal = mins > 0 ? `${mins}:${String(secs).padStart(2,'0')}` : String(secs);
+            timerRow.innerHTML = `
+                <div class="timer-main-row">
+                    <span class="timer-display" id="tdisp-${safeId}">${fmtTimer(configured)}</span>
+                    <button class="timer-action-btn" id="tpause-${safeId}" onclick="toggleCardTimerPause(this,'${name}')">▶</button>
+                    <button class="timer-action-btn" onclick="resetCardTimer('${name}')">↻</button>
+                </div>
+                <div class="timer-presets">
+                    ${presetsHtml}
+                    <input type="text" class="timer-manual-input" placeholder="m:ss" value="${manualVal}"
+                        onblur="setTimerManual('${name}',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+                </div>`;
+        }
+
+        function buildStopwatchRow(name, safeId) {
+            const timerRow = document.getElementById('timer-row-' + safeId);
+            if (!timerRow) return;
+            timerRow.classList.remove('timer-mode');
+            timerRow.innerHTML = `
+                <span class="timer-display" id="tdisp-${safeId}">00:00</span>
+                <button class="timer-action-btn" id="tpause-${safeId}" onclick="toggleCardTimerPause(this,'${name}')">▶</button>
+                <button class="timer-action-btn" onclick="resetCardTimer('${name}')">↻</button>`;
+        }
+
+        function setTimerPreset(name, seconds) {
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            if (activeTimer && activeTimer.name === name) {
+                clearInterval(activeTimer.interval);
+                activeTimer.interval = null; activeTimer.running = false;
+                activeTimer.configured = seconds; activeTimer.seconds = seconds;
+                activeTimer.everStarted = false;
+            } else {
+                activeTimer = { name, mode: 'timer', configured: seconds, seconds, running: false, interval: null, everStarted: false };
+            }
+            const allData = getExData();
+            if (!allData[name]) allData[name] = {};
+            allData[name].timerTime = seconds;
+            saveExData(allData);
+            buildTimerModeRow(name, safeId, seconds);
+        }
+
+        function setTimerManual(name, val) {
+            const parts = val.trim().split(':');
+            let seconds = parts.length === 2 ? parseInt(parts[0]) * 60 + parseInt(parts[1]) : parseInt(parts[0]);
+            if (!isNaN(seconds) && seconds > 0) setTimerPreset(name, seconds);
         }
 
         function toggleCardTimerPause(btn, name) {
             if (!activeTimer || activeTimer.name !== name) return;
-            activeTimer.running = !activeTimer.running;
+            if (_audioCtx && _audioCtx.state === 'suspended') _audioCtx.resume();
             if (activeTimer.running) {
+                clearInterval(activeTimer.interval);
+                activeTimer.interval = null; activeTimer.running = false;
+                btn.textContent = '▶';
+            } else {
+                activeTimer.running = true; activeTimer.everStarted = true;
                 btn.textContent = '⏸';
-                if (!activeTimer.interval) {
-                    const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
-                    const disp = document.getElementById('tdisp-' + safeId);
+                const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+                const disp = document.getElementById('tdisp-' + safeId);
+                if (activeTimer.mode === 'timer') {
                     activeTimer.interval = setInterval(() => {
-                        if (activeTimer && activeTimer.running) {
-                            activeTimer.seconds++;
-                            if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
+                        if (!activeTimer || !activeTimer.running) return;
+                        activeTimer.seconds--;
+                        if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
+                        if (activeTimer.seconds <= 0) {
+                            clearInterval(activeTimer.interval);
+                            activeTimer.interval = null; activeTimer.running = false;
+                            playTimerAlert();
+                            activeTimer.seconds = activeTimer.configured;
+                            if (disp) disp.textContent = fmtTimer(activeTimer.configured);
+                            const pb = document.getElementById('tpause-' + safeId);
+                            if (pb) pb.textContent = '▶';
                         }
                     }, 1000);
+                } else {
+                    activeTimer.interval = setInterval(() => {
+                        if (!activeTimer || !activeTimer.running) return;
+                        activeTimer.seconds++;
+                        if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
+                    }, 1000);
                 }
-            } else {
-                btn.textContent = '▶';
             }
         }
 
@@ -2735,22 +2891,23 @@
             const pauseBtn = document.getElementById('tpause-' + safeId);
             if (activeTimer && activeTimer.name === name) {
                 clearInterval(activeTimer.interval);
-                activeTimer.interval = null;
-                activeTimer.seconds = 0;
-                activeTimer.running = false;
-                if (pauseBtn) pauseBtn.textContent = '▶';
+                activeTimer.interval = null; activeTimer.running = false;
+                activeTimer.seconds = activeTimer.mode === 'timer' ? activeTimer.configured : 0;
             }
-            if (disp) disp.textContent = '00:00';
+            const resetTo = (activeTimer?.name === name && activeTimer?.mode === 'timer') ? (activeTimer.configured || 0) : 0;
+            if (disp) disp.textContent = fmtTimer(resetTo);
+            if (pauseBtn) pauseBtn.textContent = '▶';
         }
 
         // --- WORKOUT TOTAL TIMER (C2 removed) ---
 
         // --- SERIES CHECKS ---
         function toggleSeriesCheck(btn, name, numSets) {
-            const card   = btn.closest('.exercise-card');
-            const checks = Array.from(card.querySelectorAll('.series-check'));
-            const idx    = checks.indexOf(btn);
+            const card    = btn.closest('.exercise-card');
+            const checks  = Array.from(card.querySelectorAll('.series-check'));
+            const idx     = checks.indexOf(btn);
             const current = completedSets[name] || 0;
+            const wasChecking = idx >= current;
             const newCount = idx < current ? idx : idx + 1;
             completedSets[name] = newCount;
             checks.forEach((c, i) => c.classList.toggle('checked', i < newCount));
@@ -2760,7 +2917,13 @@
             if (doneCheck) doneCheck.classList.toggle('done', isDone);
             if (isDone) {
                 saveCurrentWorkoutState();
-                if (activeTimer && activeTimer.name === name) toggleCardTimer(null, name);
+                // Stop timer on exercise completion
+                if (activeTimer && activeTimer.name === name) {
+                    clearInterval(activeTimer.interval);
+                    activeTimer.interval = null; activeTimer.running = false;
+                    const pb = document.getElementById('tpause-' + name.replace(/[^a-zA-Z0-9]/g,'_'));
+                    if (pb) pb.textContent = '▶';
+                }
                 const allCards = Array.from(document.querySelectorAll('.exercise-card'));
                 const ci = allCards.indexOf(card);
                 for (let i = ci + 1; i < allCards.length; i++) {
@@ -2769,6 +2932,14 @@
                         break;
                     }
                 }
+            } else if (wasChecking && activeTimer && activeTimer.name === name && activeTimer.everStarted && !activeTimer.running) {
+                // Auto-start timer after completing a set (not the last one)
+                const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+                activeTimer.seconds = activeTimer.mode === 'timer' ? activeTimer.configured : 0;
+                const disp = document.getElementById('tdisp-' + safeId);
+                if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
+                const pb = document.getElementById('tpause-' + safeId);
+                if (pb) toggleCardTimerPause(pb, name);
             }
             updateFabVisibility();
         }
@@ -2830,10 +3001,10 @@
             const checks = Array.from(card.querySelectorAll('.fallo-check'));
             const idx    = checks.indexOf(btn);
             const current = completedSets[name] || 0;
+            const wasChecking = idx >= current;
             const newCount = idx < current ? idx : idx + 1;
             completedSets[name] = newCount;
             checks.forEach((c, i) => c.classList.toggle('checked', i < newCount));
-            // sync hidden series-checks
             Array.from(card.querySelectorAll('.series-check')).forEach((c, i) => c.classList.toggle('checked', i < newCount));
             const isDone = newCount >= numSets && numSets > 0;
             card.classList.toggle('completed', isDone);
@@ -2841,7 +3012,12 @@
             if (doneCheck) doneCheck.classList.toggle('done', isDone);
             if (isDone) {
                 saveCurrentWorkoutState();
-                if (activeTimer && activeTimer.name === name) toggleCardTimer(null, name);
+                if (activeTimer && activeTimer.name === name) {
+                    clearInterval(activeTimer.interval);
+                    activeTimer.interval = null; activeTimer.running = false;
+                    const pb = document.getElementById('tpause-' + name.replace(/[^a-zA-Z0-9]/g,'_'));
+                    if (pb) pb.textContent = '▶';
+                }
                 const allCards = Array.from(document.querySelectorAll('.exercise-card'));
                 const ci = allCards.indexOf(card);
                 for (let i = ci + 1; i < allCards.length; i++) {
@@ -2850,6 +3026,13 @@
                         break;
                     }
                 }
+            } else if (wasChecking && activeTimer && activeTimer.name === name && activeTimer.everStarted && !activeTimer.running) {
+                const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+                activeTimer.seconds = activeTimer.mode === 'timer' ? activeTimer.configured : 0;
+                const disp = document.getElementById('tdisp-' + safeId);
+                if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
+                const pb = document.getElementById('tpause-' + safeId);
+                if (pb) toggleCardTimerPause(pb, name);
             }
             updateFabVisibility();
         }
