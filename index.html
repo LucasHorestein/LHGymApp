@@ -912,6 +912,79 @@
             will-change: transform, border-radius;
             animation: splashZoomIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+        /* ── ROUTINE SNAPSHOT VIEW ── */
+        #routine-view {
+            background: transparent;
+            padding: 0 0 80px;
+        }
+        .rsv-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px 12px; gap: 12px; position: sticky; top: 0;
+            background: var(--bg); z-index: 10; border-bottom: 1px solid var(--border);
+        }
+        .rsv-title {
+            font-size: 0.8rem; font-weight: 900; letter-spacing: 2px;
+            text-transform: uppercase; color: var(--accent);
+        }
+        .rsv-pdf-btn {
+            padding: 8px 16px; border-radius: 10px; background: var(--accent);
+            color: #fff; font-size: 0.78rem; font-weight: 900; letter-spacing: 1px;
+            text-transform: uppercase; border: none; cursor: pointer; font-family: var(--font);
+            white-space: nowrap;
+        }
+        .rsv-day {
+            margin: 18px 16px 0; border: 1px solid var(--border);
+            border-radius: 14px; overflow: hidden;
+        }
+        .rsv-day-header {
+            padding: 12px 16px; background: rgba(255,255,255,0.04);
+            font-size: 0.78rem; font-weight: 900; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--text);
+        }
+        .rsv-group {
+            padding: 10px 16px 4px; border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .rsv-group-title {
+            font-size: 0.6rem; font-weight: 800; letter-spacing: 2px;
+            text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+        }
+        .rsv-ex-row {
+            display: flex; align-items: baseline; gap: 6px;
+            padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .rsv-ex-row:last-child { border-bottom: none; }
+        .rsv-ex-name { flex: 1; font-size: 0.85rem; color: var(--text); }
+        .rsv-ex-sets { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+        .rsv-ex-weight {
+            font-size: 0.82rem; font-weight: 700; color: var(--accent);
+            white-space: nowrap; min-width: 48px; text-align: right;
+        }
+        .rsv-empty {
+            padding: 40px 20px; text-align: center;
+            font-size: 0.85rem; color: var(--muted);
+        }
+
+        /* ── PRINT STYLES ── */
+        @media print {
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { background: #fff !important; color: #111 !important; font-family: -apple-system, sans-serif; }
+            body > * { display: none !important; }
+            #routine-view { display: block !important; padding: 0 !important; }
+            .rsv-header { position: static; background: #fff !important; border-bottom: 2px solid #111 !important; padding: 12px 0 8px; }
+            .rsv-title { color: #111 !important; font-size: 1rem; }
+            .rsv-pdf-btn { display: none !important; }
+            .rsv-print-date { display: block !important; font-size: 0.75rem; color: #555; }
+            .rsv-day { margin: 16px 0 0; border: 1px solid #ccc !important; border-radius: 0 !important; page-break-inside: avoid; }
+            .rsv-day-header { background: #f0f0f0 !important; color: #111 !important; padding: 8px 12px; }
+            .rsv-group { padding: 8px 12px 4px; border-top: 1px solid #e0e0e0 !important; }
+            .rsv-group-title { color: #333 !important; }
+            .rsv-ex-name { color: #111 !important; }
+            .rsv-ex-sets { color: #555 !important; }
+            .rsv-ex-weight { color: #111 !important; }
+            .rsv-ex-row { border-bottom-color: #eee !important; }
+        }
+        .rsv-print-date { display: none; }
+
     </style>
 </head>
 <body>
@@ -951,9 +1024,18 @@
     <div id="dashboard-view" class="view active"></div>
     <div id="workout-view" class="view"></div>
 
+    <div id="routine-view" class="view"></div>
+
     <div id="settings-view" class="view">
         <div class="settings-card settings-container">
             <h2 style="margin-bottom:20px; color:var(--accent);">Personalizar App</h2>
+
+            <!-- Rutina actual -->
+            <div style="margin-bottom:22px; border-bottom:1px solid var(--border); padding-bottom:20px;">
+                <h3 style="color:var(--text); margin-bottom:8px; font-size:0.85rem; letter-spacing:1px; text-align:left;">MI RUTINA</h3>
+                <p style="margin-bottom:12px; font-size:0.82rem; color:var(--muted); text-align:left;">Ver y exportar la rutina actual con los últimos pesos registrados.</p>
+                <button class="add-ex-btn" style="width:100%;" onclick="openRoutineSnapshot()">Ver Rutina Actual</button>
+            </div>
 
             <!-- Logo de la app (header + ícono) -->
             <h3 style="color:var(--text); margin-bottom:10px; font-size:0.85rem; letter-spacing:1px; text-align:left;">LOGO E ÍCONO</h3>
@@ -1568,6 +1650,7 @@
 
             document.getElementById('dashboard-view').classList.remove('active');
             document.getElementById('settings-view').classList.remove('active');
+            document.getElementById('routine-view').classList.remove('active');
             document.getElementById('workout-view').classList.add('active');
 
             document.getElementById('back-btn').classList.remove('hidden');
@@ -1871,6 +1954,7 @@
             history.pushState({ page: 'settings' }, '');
             document.getElementById('dashboard-view').classList.remove('active');
             document.getElementById('workout-view').classList.remove('active');
+            document.getElementById('routine-view').classList.remove('active');
             document.getElementById('settings-view').classList.add('active');
             document.getElementById('back-btn').classList.remove('hidden');
             document.getElementById('settings-btn').classList.add('hidden');
@@ -1892,6 +1976,85 @@
             }
             // Build color swatches
             buildColorSwatches(config.accentColor || '#e8722a');
+        }
+
+        // --- ROUTINE SNAPSHOT ---
+        function openRoutineSnapshot() {
+            history.pushState({ page: 'routineSnapshot' }, '');
+            document.getElementById('dashboard-view').classList.remove('active');
+            document.getElementById('workout-view').classList.remove('active');
+            document.getElementById('settings-view').classList.remove('active');
+            document.getElementById('routine-view').classList.add('active');
+            document.getElementById('back-btn').classList.remove('hidden');
+            document.getElementById('settings-btn').classList.add('hidden');
+            document.getElementById('add-day-btn').classList.add('hidden');
+            document.getElementById('header-right-placeholder').classList.remove('hidden');
+            const _fab = document.getElementById('finish-btn');
+            _fab.style.display = 'none'; _fab.classList.remove('visible');
+            renderRoutineSnapshot();
+        }
+
+        function closeRoutineSnapshot() {
+            document.getElementById('routine-view').classList.remove('active');
+            openSettings();
+        }
+
+        function renderRoutineSnapshot() {
+            const container = document.getElementById('routine-view');
+            const exData = getExData();
+
+            // Days with at least one active exercise
+            const activeDays = routineData.filter(day =>
+                day.ejercicios.some(e => !e.titulo && e.active !== false)
+            );
+
+            const dateStr = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            let html = `
+                <div class="rsv-header">
+                    <span class="rsv-title">Rutina Actual</span>
+                    <span class="rsv-print-date">${dateStr}</span>
+                    <button class="rsv-pdf-btn" onclick="window.print()">Exportar PDF</button>
+                </div>
+            `;
+
+            if (activeDays.length === 0) {
+                html += `<div class="rsv-empty">No hay ejercicios activos en ningún día.</div>`;
+            } else {
+                activeDays.forEach(day => {
+                    const groups = groupExercises(day.ejercicios);
+                    html += `<div class="rsv-day"><div class="rsv-day-header">${day.nombre}</div>`;
+
+                    groups.forEach(group => {
+                        const activeExs = group.exercises.filter(({ item }) => item.active !== false);
+                        if (!activeExs.length) return;
+
+                        if (group.titulo) {
+                            html += `<div class="rsv-group"><div class="rsv-group-title">${group.titulo}</div>`;
+                        } else {
+                            html += `<div class="rsv-group">`;
+                        }
+
+                        activeExs.forEach(({ item }) => {
+                            const lastWeight = exData[item.n]?.weight;
+                            const displayWeight = lastWeight ? `${lastWeight} kg` : (item.p || '—');
+                            const sets = item.s || '';
+                            html += `
+                                <div class="rsv-ex-row">
+                                    <span class="rsv-ex-name">${item.n}</span>
+                                    <span class="rsv-ex-sets">${sets}</span>
+                                    <span class="rsv-ex-weight">${displayWeight}</span>
+                                </div>`;
+                        });
+
+                        html += `</div>`;
+                    });
+
+                    html += `</div>`;
+                });
+            }
+
+            container.innerHTML = html;
         }
 
         function buildColorSwatches(currentHex) {
@@ -2467,6 +2630,7 @@
             expandedFields = {};
             document.getElementById('workout-view').classList.remove('active');
             document.getElementById('settings-view').classList.remove('active');
+            document.getElementById('routine-view').classList.remove('active');
             document.getElementById('dashboard-view').classList.add('active');
             document.getElementById('back-btn').classList.add('hidden');
             document.getElementById('settings-btn').classList.remove('hidden');
@@ -2493,6 +2657,9 @@
             }
             if (document.getElementById('edit-modal').classList.contains('open')) {
                 closeEditModal(); return;
+            }
+            if (document.getElementById('routine-view').classList.contains('active')) {
+                closeRoutineSnapshot(); return;
             }
             const backBtn = document.getElementById('back-btn');
             if (backBtn && !backBtn.classList.contains('hidden')) goHome();
