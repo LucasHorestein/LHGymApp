@@ -821,6 +821,50 @@
             font-family: var(--font);
         }
 
+        /* ── GROUP MANAGER MODAL ── */
+        #group-manager-modal {
+            display: none; position: fixed; inset: 0; z-index: 2500;
+            background: rgba(0,0,0,0.80); align-items: flex-end; justify-content: center;
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        }
+        #group-manager-modal.open { display: flex; }
+        #gm-box {
+            background: #1c1208; border: 1px solid var(--border);
+            border-radius: 22px 22px 0 0; padding: 24px 20px calc(env(safe-area-inset-bottom,0px) + 24px);
+            width: 100%; max-height: 75vh; overflow-y: auto;
+            animation: fadeIn 0.2s ease;
+        }
+        #gm-title {
+            font-size: 0.85rem; font-weight: 900; letter-spacing: 2.5px; text-transform: uppercase;
+            color: var(--accent); margin-bottom: 16px;
+        }
+        .gm-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 4px; border-bottom: 1px solid rgba(255,255,255,0.06);
+            cursor: pointer; transition: opacity 0.15s;
+        }
+        .gm-row:not(.gm-active) { opacity: 0.38; }
+        .gm-toggle {
+            width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+            border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .gm-toggle.on { background: var(--accent); border-color: var(--accent); }
+        .gm-toggle.on::after { content: '✓'; color: #fff; font-size: 0.75rem; font-weight: 900; }
+        .gm-name { font-size: 0.9rem; color: var(--text); flex: 1; }
+        #gm-add-btn {
+            width: 100%; padding: 14px; border-radius: 12px; background: var(--accent);
+            color: #fff; font-size: 0.9rem; font-weight: 900; letter-spacing: 1px;
+            text-transform: uppercase; cursor: pointer; border: none; margin-top: 18px;
+            font-family: var(--font);
+        }
+        #gm-close-btn {
+            width: 100%; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.11); color: var(--muted);
+            font-size: 0.85rem; cursor: pointer; margin-top: 8px; font-family: var(--font);
+        }
+
         /* ── DASHBOARD: sin scroll, cards llenan el espacio disponible ── */
         #dashboard-view.active {
             overflow: hidden !important;
@@ -979,6 +1023,16 @@
                 <button class="confirm-no" id="confirm-no-btn" onclick="closeConfirmModal()">Cancelar</button>
                 <button class="confirm-yes" id="confirm-yes-btn">Confirmar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Group Manager Modal -->
+    <div id="group-manager-modal">
+        <div id="gm-box">
+            <div id="gm-title"></div>
+            <div id="gm-list"></div>
+            <button id="gm-add-btn" onclick="gmAddExercise()">+ Agregar ejercicio</button>
+            <button id="gm-close-btn" onclick="closeGroupManager()">Cerrar</button>
         </div>
     </div>
 
@@ -1253,13 +1307,20 @@
         }
 
         function loadRoutine() {
-            const storedV6 = localStorage.getItem('gym_routine_structure_v6');
+            const storedV7 = localStorage.getItem('gym_routine_structure_v7');
+            if (storedV7) {
+                routineData = JSON.parse(storedV7);
+                return;
+            }
+            // Migrate from v6: no structural changes; active defaults to true via item.active !== false
+            const storedV6 = localStorage.getItem('gym_routine_structure_v7');
             if (storedV6) {
                 routineData = JSON.parse(storedV6);
+                saveRoutineStructure();
                 return;
             }
             // Migrate from v5: add Movilidad day (dia 8)
-            const storedV5 = localStorage.getItem('gym_routine_structure_v6');
+            const storedV5 = localStorage.getItem('gym_routine_structure_v5');
             if (storedV5) {
                 const old = JSON.parse(storedV5);
                 const fresh = JSON.parse(JSON.stringify(defaultRoutine));
@@ -1343,7 +1404,7 @@
             saveRoutineStructure();
         }
         function saveRoutineStructure() {
-            localStorage.setItem('gym_routine_structure_v6', JSON.stringify(routineData));
+            localStorage.setItem('gym_routine_structure_v7', JSON.stringify(routineData));
         }
 
         // --- INIT ---
@@ -1777,13 +1838,14 @@
                         <div class="mg-line"></div>
                         <span class="muscle-group-header">${group.titulo}</span>
                         <div class="mg-line"></div>
-                        <button class="ctrl-btn" style="font-size:1.1rem;" onclick="addNewExercise(${currentDayIdx},${group.tituloIdx})">＋</button>
+                        <button class="ctrl-btn" style="font-size:1.1rem;" onclick="openGroupManager(${currentDayIdx},${group.tituloIdx})">＋</button>
                     `;
                     wrapper._exData = { titulo: group.titulo };
                     container.appendChild(wrapper);
                 }
 
                 group.exercises.forEach(({ item, originalIdx }) => {
+                    if (item.active === false) return;
                     const el = buildExerciseCard(item, originalIdx, savedData, isMediaDay, isUrlDay);
                     container.appendChild(el);
                 });
@@ -1921,7 +1983,7 @@
         }
 
         function exportData() {
-            const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v6'];
+            const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v7'];
             const backup = {};
             keys.forEach(k => { const v = localStorage.getItem(k); if (v) backup[k] = JSON.parse(v); });
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -1939,7 +2001,7 @@
             reader.onload = e => {
                 try {
                     const backup = JSON.parse(e.target.result);
-                    const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v6'];
+                    const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v7'];
                     keys.forEach(k => { if (backup[k] !== undefined) localStorage.setItem(k, JSON.stringify(backup[k])); });
                     showToast('✓ Datos importados');
                     setTimeout(() => location.reload(), 1500);
@@ -2024,6 +2086,7 @@
                 closeEditModal();
                 closeImgModal();
                 closeDayModal();
+                closeGroupManager();
             }
         });
         document.getElementById('edit-modal').addEventListener('click', function(e) {
@@ -2046,6 +2109,52 @@
                 openWorkout(dayIdx);
             });
         }
+        // --- GROUP MANAGER ---
+        function openGroupManager(dayIdx, tituloIdx) {
+            const modal = document.getElementById('group-manager-modal');
+            const titulo = routineData[dayIdx].ejercicios[tituloIdx].titulo;
+            document.getElementById('gm-title').textContent = titulo;
+            modal.dataset.dayIdx = dayIdx;
+            modal.dataset.tituloIdx = tituloIdx;
+            renderGmList(dayIdx, tituloIdx);
+            modal.classList.add('open');
+            history.pushState({ page: 'groupManager' }, '');
+        }
+        function renderGmList(dayIdx, tituloIdx) {
+            const exercises = routineData[dayIdx].ejercicios;
+            const list = document.getElementById('gm-list');
+            list.innerHTML = '';
+            for (let i = tituloIdx + 1; i < exercises.length; i++) {
+                if (exercises[i].titulo) break;
+                const item = exercises[i];
+                const isActive = item.active !== false;
+                const row = document.createElement('div');
+                row.className = 'gm-row' + (isActive ? ' gm-active' : '');
+                row.innerHTML = `<div class="gm-toggle ${isActive ? 'on' : ''}"></div><span class="gm-name">${item.n}</span>`;
+                row.onclick = () => {
+                    item.active = (item.active === false) ? true : false;
+                    const nowActive = item.active !== false;
+                    row.classList.toggle('gm-active', nowActive);
+                    row.querySelector('.gm-toggle').classList.toggle('on', nowActive);
+                    saveRoutineStructure();
+                };
+                list.appendChild(row);
+            }
+        }
+        function closeGroupManager() {
+            document.getElementById('group-manager-modal').classList.remove('open');
+            if (currentDayIdx !== null) {
+                renderExerciseList(routineData[currentDayIdx], getExData());
+            }
+        }
+        function gmAddExercise() {
+            const modal = document.getElementById('group-manager-modal');
+            const dayIdx = parseInt(modal.dataset.dayIdx);
+            const tituloIdx = parseInt(modal.dataset.tituloIdx);
+            modal.classList.remove('open');
+            addNewExercise(dayIdx, tituloIdx);
+        }
+
         function moveItem(dayIdx, exIdx, dir) {
             const list = routineData[dayIdx].ejercicios;
             const newIdx = exIdx + dir;
@@ -2375,6 +2484,9 @@
         window.addEventListener('popstate', (e) => {
             if (document.getElementById('confirm-modal').classList.contains('open')) {
                 closeConfirmModal(); return;
+            }
+            if (document.getElementById('group-manager-modal').classList.contains('open')) {
+                closeGroupManager(); return;
             }
             if (document.getElementById('img-modal').classList.contains('open')) {
                 closeImgModal(); return;
