@@ -3487,6 +3487,35 @@
             if (input) { input.value = ''; filterExercises(''); }
         }
 
+        // --- DRAG AUTO-SCROLL (zona 80px, velocidad progresiva) ---
+        const _autoScroll = {
+            _raf: null, _touchY: 0, _container: null,
+            ZONE: 80, MAX_SPEED: 14,
+            start(container) {
+                this._container = container;
+                if (this._raf) cancelAnimationFrame(this._raf);
+                this._tick();
+            },
+            update(touchY) { this._touchY = touchY; },
+            stop() {
+                if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null; }
+                this._container = null;
+            },
+            _tick() {
+                if (!this._container) return;
+                const rect = this._container.getBoundingClientRect();
+                const y = this._touchY;
+                const distTop = y - rect.top;
+                const distBot = rect.bottom - y;
+                if (distTop < this.ZONE && distTop > 0) {
+                    this._container.scrollTop -= (1 - distTop / this.ZONE) * this.MAX_SPEED;
+                } else if (distBot < this.ZONE && distBot > 0) {
+                    this._container.scrollTop += (1 - distBot / this.ZONE) * this.MAX_SPEED;
+                }
+                this._raf = requestAnimationFrame(() => this._tick());
+            }
+        };
+
         // --- DRAG & DROP (J1-J3: 250ms hold, >10px cancel, exercise cards only) ---
         (function initDragDrop() {
             let drag = null;
@@ -3514,6 +3543,8 @@
                 document.body.appendChild(ghost);
                 card.classList.add('is-dragging');
                 drag = { card, ghost, offsetY: touch.clientY - rect.top };
+                _autoScroll.update(touch.clientY);
+                _autoScroll.start(document.getElementById('workout-view'));
                 document.addEventListener('touchmove', onMove, { passive: false });
                 document.addEventListener('touchend',  onEnd,  { passive: true });
             }
@@ -3522,6 +3553,7 @@
                 if (!drag) return;
                 e.preventDefault();
                 const touch = e.touches[0];
+                _autoScroll.update(touch.clientY);
                 const container = document.getElementById('workout-view');
                 const cRect = container.getBoundingClientRect();
                 const ghostY = Math.min(Math.max(touch.clientY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
@@ -3545,6 +3577,7 @@
 
             function onEnd() {
                 if (!drag) return;
+                _autoScroll.stop();
                 drag.ghost.remove();
                 drag.card.classList.remove('is-dragging');
                 draggableSiblings().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
@@ -3689,6 +3722,8 @@
                 const groupEls = getGroupElements(wrapper);
                 groupEls.forEach(el => el.classList.add('is-dragging'));
                 drag = { wrapper, groupEls, ghost, offsetY: touch.clientY - rect.top };
+                _autoScroll.update(touch.clientY);
+                _autoScroll.start(document.getElementById('workout-view'));
                 document.addEventListener('touchmove', onMove, { passive: false });
                 document.addEventListener('touchend', onEnd, { passive: true });
             }
@@ -3697,6 +3732,7 @@
                 if (!drag) return;
                 e.preventDefault();
                 const touch = e.touches[0];
+                _autoScroll.update(touch.clientY);
                 const container = document.getElementById('workout-view');
                 const cRect = container.getBoundingClientRect();
                 const ghostY = Math.min(Math.max(touch.clientY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
@@ -3712,7 +3748,6 @@
                 }
 
                 const container2 = document.getElementById('workout-view');
-                // Anchor: button "Agregar grupo" is last child
                 const anchor = container2.lastElementChild;
                 if (insertBefore) {
                     drag.groupEls.forEach(el => container2.insertBefore(el, insertBefore));
@@ -3725,6 +3760,7 @@
 
             function onEnd() {
                 if (!drag) return;
+                _autoScroll.stop();
                 drag.ghost.remove();
                 drag.groupEls.forEach(el => el.classList.remove('is-dragging'));
                 allGroupWrappers().forEach(w => w.classList.remove('drag-insert-above', 'drag-insert-below'));
