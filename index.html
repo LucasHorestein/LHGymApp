@@ -3488,18 +3488,21 @@
         }
 
         // --- DRAG AUTO-SCROLL (zona 80px, velocidad progresiva) ---
+        // onTick(touchY) se llama en cada frame donde se hizo scroll,
+        // para re-evaluar la posición de inserción sin esperar touchmove.
         const _autoScroll = {
-            _raf: null, _touchY: 0, _container: null,
+            _raf: null, _touchY: 0, _container: null, _onTick: null,
             ZONE: 80, MAX_SPEED: 14,
-            start(container) {
+            start(container, onTick) {
                 this._container = container;
+                this._onTick = onTick || null;
                 if (this._raf) cancelAnimationFrame(this._raf);
                 this._tick();
             },
             update(touchY) { this._touchY = touchY; },
             stop() {
                 if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null; }
-                this._container = null;
+                this._container = null; this._onTick = null;
             },
             _tick() {
                 if (!this._container) return;
@@ -3507,11 +3510,15 @@
                 const y = this._touchY;
                 const distTop = y - rect.top;
                 const distBot = rect.bottom - y;
+                let scrolled = false;
                 if (distTop < this.ZONE && distTop > 0) {
                     this._container.scrollTop -= (1 - distTop / this.ZONE) * this.MAX_SPEED;
+                    scrolled = true;
                 } else if (distBot < this.ZONE && distBot > 0) {
                     this._container.scrollTop += (1 - distBot / this.ZONE) * this.MAX_SPEED;
+                    scrolled = true;
                 }
+                if (scrolled && this._onTick) this._onTick(this._touchY);
                 this._raf = requestAnimationFrame(() => this._tick());
             }
         };
@@ -3532,6 +3539,28 @@
                     .filter(el => el._exData);
             }
 
+            function doPlacement(touchY) {
+                if (!drag) return;
+                const container = document.getElementById('workout-view');
+                const cRect = container.getBoundingClientRect();
+                const ghostY = Math.min(Math.max(touchY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
+                drag.ghost.style.top = ghostY + 'px';
+                const sibs = draggableSiblings().filter(s => s !== drag.card);
+                draggableSiblings().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
+                let insertBefore = null;
+                for (const sib of sibs) {
+                    const r = sib.getBoundingClientRect();
+                    if (touchY < r.top + r.height / 2) { insertBefore = sib; break; }
+                }
+                if (insertBefore) {
+                    container.insertBefore(drag.card, insertBefore);
+                    insertBefore.classList.add('drag-insert-above');
+                } else {
+                    container.insertBefore(drag.card, null);
+                    if (sibs.length) sibs[sibs.length-1].classList.add('drag-insert-below');
+                }
+            }
+
             function startDrag(handle, touch) {
                 const card = handle.closest('.exercise-card');
                 if (!card) return;
@@ -3544,7 +3573,7 @@
                 card.classList.add('is-dragging');
                 drag = { card, ghost, offsetY: touch.clientY - rect.top };
                 _autoScroll.update(touch.clientY);
-                _autoScroll.start(document.getElementById('workout-view'));
+                _autoScroll.start(document.getElementById('workout-view'), doPlacement);
                 document.addEventListener('touchmove', onMove, { passive: false });
                 document.addEventListener('touchend',  onEnd,  { passive: true });
             }
@@ -3552,27 +3581,9 @@
             function onMove(e) {
                 if (!drag) return;
                 e.preventDefault();
-                const touch = e.touches[0];
-                _autoScroll.update(touch.clientY);
-                const container = document.getElementById('workout-view');
-                const cRect = container.getBoundingClientRect();
-                const ghostY = Math.min(Math.max(touch.clientY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
-                drag.ghost.style.top = ghostY + 'px';
-
-                const sibs = draggableSiblings().filter(s => s !== drag.card);
-                draggableSiblings().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
-                let insertBefore = null;
-                for (const sib of sibs) {
-                    const r = sib.getBoundingClientRect();
-                    if (touch.clientY < r.top + r.height / 2) { insertBefore = sib; break; }
-                }
-                if (insertBefore) {
-                    container.insertBefore(drag.card, insertBefore);
-                    insertBefore.classList.add('drag-insert-above');
-                } else {
-                    container.insertBefore(drag.card, null);
-                    if (sibs.length) sibs[sibs.length-1].classList.add('drag-insert-below');
-                }
+                const touchY = e.touches[0].clientY;
+                _autoScroll.update(touchY);
+                doPlacement(touchY);
             }
 
             function onEnd() {
@@ -3710,6 +3721,29 @@
                     .filter(el => el.classList.contains('muscle-group-wrapper'));
             }
 
+            function doGroupPlacement(touchY) {
+                if (!drag) return;
+                const container = document.getElementById('workout-view');
+                const cRect = container.getBoundingClientRect();
+                const ghostY = Math.min(Math.max(touchY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
+                drag.ghost.style.top = ghostY + 'px';
+                const others = allGroupWrappers().filter(w => w !== drag.wrapper);
+                others.forEach(w => w.classList.remove('drag-insert-above', 'drag-insert-below'));
+                let insertBefore = null;
+                for (const w of others) {
+                    const r = w.getBoundingClientRect();
+                    if (touchY < r.top + r.height / 2) { insertBefore = w; break; }
+                }
+                const anchor = container.lastElementChild;
+                if (insertBefore) {
+                    drag.groupEls.forEach(el => container.insertBefore(el, insertBefore));
+                    insertBefore.classList.add('drag-insert-above');
+                } else {
+                    drag.groupEls.forEach(el => container.insertBefore(el, anchor));
+                    if (others.length) others[others.length - 1].classList.add('drag-insert-below');
+                }
+            }
+
             function startDrag(handle, touch) {
                 const wrapper = handle.closest('.muscle-group-wrapper');
                 if (!wrapper) return;
@@ -3723,7 +3757,7 @@
                 groupEls.forEach(el => el.classList.add('is-dragging'));
                 drag = { wrapper, groupEls, ghost, offsetY: touch.clientY - rect.top };
                 _autoScroll.update(touch.clientY);
-                _autoScroll.start(document.getElementById('workout-view'));
+                _autoScroll.start(document.getElementById('workout-view'), doGroupPlacement);
                 document.addEventListener('touchmove', onMove, { passive: false });
                 document.addEventListener('touchend', onEnd, { passive: true });
             }
@@ -3731,31 +3765,9 @@
             function onMove(e) {
                 if (!drag) return;
                 e.preventDefault();
-                const touch = e.touches[0];
-                _autoScroll.update(touch.clientY);
-                const container = document.getElementById('workout-view');
-                const cRect = container.getBoundingClientRect();
-                const ghostY = Math.min(Math.max(touch.clientY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
-                drag.ghost.style.top = ghostY + 'px';
-
-                const others = allGroupWrappers().filter(w => w !== drag.wrapper);
-                others.forEach(w => w.classList.remove('drag-insert-above', 'drag-insert-below'));
-
-                let insertBefore = null;
-                for (const w of others) {
-                    const r = w.getBoundingClientRect();
-                    if (touch.clientY < r.top + r.height / 2) { insertBefore = w; break; }
-                }
-
-                const container2 = document.getElementById('workout-view');
-                const anchor = container2.lastElementChild;
-                if (insertBefore) {
-                    drag.groupEls.forEach(el => container2.insertBefore(el, insertBefore));
-                    insertBefore.classList.add('drag-insert-above');
-                } else {
-                    drag.groupEls.forEach(el => container2.insertBefore(el, anchor));
-                    if (others.length) others[others.length - 1].classList.add('drag-insert-below');
-                }
+                const touchY = e.touches[0].clientY;
+                _autoScroll.update(touchY);
+                doGroupPlacement(touchY);
             }
 
             function onEnd() {
