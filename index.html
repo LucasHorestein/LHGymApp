@@ -150,12 +150,12 @@
         .card.week-done .arrow { opacity: 0.4; }
         .done-overlay {
             position: absolute; inset: 0; border-radius: var(--radius);
-            background: rgba(10,7,4,0.55);
+            background: rgba(10,7,4,0.30);
             display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
             padding: 0 14px; gap: 3px; pointer-events: none; z-index: 1;
         }
         .done-badge {
-            font-size: 0.62rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+            font-size: 0.62rem; font-weight: 800; letter-spacing: 0.5px;
             padding: 3px 9px; border-radius: 99px;
             background: rgba(74,222,128,0.18); color: #4ade80;
             border: 1px solid rgba(74,222,128,0.3);
@@ -331,16 +331,25 @@
         .notes-row {
             padding: 8px 16px 12px;
             border-top: 1px dashed rgba(255,255,255,0.07);
+            position: relative;
         }
         .in-notes {
             width: 100%; background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
-            color: var(--muted); padding: 8px 12px; font-size: 0.82rem;
+            color: var(--muted); padding: 8px 28px 8px 12px; font-size: 0.82rem;
             resize: none; font-family: var(--font); outline: none; line-height: 1.5;
             transition: border-color 0.2s, color 0.2s;
         }
         .in-notes:focus { border-color: rgba(232,114,42,0.4); color: var(--text); background: rgba(255,255,255,0.06); }
         .in-notes::placeholder { color: rgba(245,237,228,0.2); }
+        .notes-close-btn {
+            position: absolute; top: 12px; right: 19px;
+            width: 19px; height: 19px; border-radius: 50%;
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13);
+            color: var(--muted); font-size: 0.6rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; padding: 0;
+        }
+        .notes-close-btn:active { background: rgba(255,255,255,0.16); }
 
         /* Extras (URL / imagen) */
         .extras-row {
@@ -864,6 +873,18 @@
             font-family: var(--font);
         }
 
+        /* ── DAY GROUP CHIPS ── */
+        .day-group-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
+        .day-group-chip {
+            padding: 5px 12px; border-radius: 99px; font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.3px; cursor: pointer; border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.06); color: var(--muted);
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            font-family: var(--font);
+        }
+        .day-group-chip.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .day-group-chip:active { opacity: 0.75; }
+
         /* ── GROUP MANAGER MODAL ── */
         #group-manager-modal {
             display: none; position: fixed; inset: 0; z-index: 2500;
@@ -1173,6 +1194,10 @@
                 <label class="day-modal-label" for="day-modal-muscles">Grupos musculares</label>
                 <input type="text" id="day-modal-muscles" class="day-modal-input" placeholder="ej: Pecho, Tríceps, Hombros" autocomplete="off">
             </div>
+            <div class="day-modal-field" id="day-modal-groups-section" style="display:none">
+                <label class="day-modal-label">Grupos del día</label>
+                <div class="day-group-chips" id="day-group-chips"></div>
+            </div>
             <button class="day-modal-save" onclick="saveDayModal()">Guardar</button>
             <button class="day-modal-secondary" id="day-modal-dup-btn" onclick="duplicateDayFromModal()">Duplicar este día</button>
             <button class="day-modal-del" id="day-modal-del-btn" onclick="deleteDayFromModal()">Eliminar día</button>
@@ -1237,7 +1262,7 @@
           {
             "dia": 3,
             "nombre": "Día 3 – Piernas Intenso + Potencia",
-            "musculos": "Cuádriceps, Isquios, Glúteos, Abdominales, Espinales",
+            "musculos": "Cuádriceps, Isquios, Glúteos, Gemelos, Abdominales, Espinales",
             "ejercicios": [
                 {"titulo": "Cuádriceps"},
                 {"n": "Sentadillas", "s": "4xFallo", "p": "25kg"},
@@ -1247,6 +1272,7 @@
                 {"n": "Isquio a un pie", "s": "3x15", "p": "12kg"},
                 {"n": "Isquio máquina individual", "s": "3xFallo", "p": "15kg"},
                 {"n": "Glúteos máquina", "s": "4x10", "p": "Peso"},
+                {"titulo": "Gemelos"},
                 {"n": "Gemelos máquina", "s": "3x15", "p": "15kg"},
                 {"n": "Gemelos equilibrio", "s": "4xFallo", "p": "BW"},
                 {"titulo": "Abdominales"},
@@ -1431,10 +1457,48 @@
             return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
         }
 
+        function migrateGemelos(data) {
+            return data.map(day => {
+                if (day.dia !== 3) return day;
+                const ejercicios = JSON.parse(JSON.stringify(day.ejercicios || []));
+                const groupIdx = ejercicios.findIndex(e => e.titulo === 'Isquios / Glúteos');
+                if (groupIdx === -1) return day;
+                let groupEnd = ejercicios.length;
+                for (let i = groupIdx + 1; i < ejercicios.length; i++) {
+                    if (ejercicios[i].titulo) { groupEnd = i; break; }
+                }
+                const gIdx = [];
+                for (let i = groupIdx + 1; i < groupEnd; i++) {
+                    if (ejercicios[i].n && ejercicios[i].n.toLowerCase().includes('gemelo')) gIdx.push(i);
+                }
+                if (!gIdx.length) return day;
+                const gExs = gIdx.map(i => ejercicios[i]);
+                for (let i = gIdx.length - 1; i >= 0; i--) ejercicios.splice(gIdx[i], 1);
+                let newEnd = ejercicios.length;
+                for (let i = groupIdx + 1; i < ejercicios.length; i++) {
+                    if (ejercicios[i].titulo) { newEnd = i; break; }
+                }
+                ejercicios.splice(newEnd, 0, { titulo: 'Gemelos' }, ...gExs);
+                const musculos = (day.musculos || '').split(',').map(m => m.trim()).filter(Boolean);
+                if (!musculos.includes('Gemelos')) {
+                    const glutIdx = musculos.findIndex(m => m.includes('Glúteos') || m.includes('Isquios'));
+                    if (glutIdx !== -1) musculos.splice(glutIdx + 1, 0, 'Gemelos');
+                    else musculos.push('Gemelos');
+                }
+                return { ...day, ejercicios, musculos: musculos.join(', ') };
+            });
+        }
+
         function loadRoutine() {
+            const storedV8 = localStorage.getItem('gym_routine_structure_v8');
+            if (storedV8) {
+                routineData = JSON.parse(storedV8);
+                return;
+            }
             const storedV7 = localStorage.getItem('gym_routine_structure_v7');
             if (storedV7) {
-                routineData = JSON.parse(storedV7);
+                routineData = migrateGemelos(JSON.parse(storedV7));
+                saveRoutineStructure();
                 return;
             }
             // Migrate from v6: no structural changes; active defaults to true via item.active !== false
@@ -1529,7 +1593,7 @@
             saveRoutineStructure();
         }
         function saveRoutineStructure() {
-            localStorage.setItem('gym_routine_structure_v7', JSON.stringify(routineData));
+            localStorage.setItem('gym_routine_structure_v8', JSON.stringify(routineData));
         }
 
         // --- INIT ---
@@ -1600,6 +1664,15 @@
             return ts; // legacy already in display format
         }
 
+        function formatLogDate(ts) {
+            if (!ts) return '';
+            const iso = ts.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+            if (iso) return `${parseInt(iso[3])}/${parseInt(iso[2])}/${iso[1]}`;
+            const leg = ts.match(/^(\d+)\/(\d+)/);
+            if (leg) return ts.split(' ')[0];
+            return '';
+        }
+
         function isWithin7Days(ts) {
             if (!ts) return false;
             const t = parseLogTimestamp(ts);
@@ -1665,7 +1738,7 @@
                         </span>
                     </div>
                     ${isDone ? `<div class="done-overlay">
-                        <span class="done-badge">✓ Hecho</span>
+                        <span class="done-badge">✓ ${formatLogDate(rawTs)}</span>
                         <span class="done-days-remaining">${daysLeft}d para reset</span>
                     </div>` : ''}
                 `;
@@ -1811,9 +1884,11 @@
             const notesSection = notesExpanded
                 ? `<div class="notes-row" id="notes-section-${safeId}">
                     <textarea class="in-notes" rows="2" placeholder="Anotaciones...">${defNotes}</textarea>
+                    <button class="notes-close-btn" onclick="closeNotesSection('${safeName}','${safeId}')" title="Cerrar">✕</button>
                   </div>`
                 : `<div class="notes-row" id="notes-section-${safeId}" style="display:none">
                     <textarea class="in-notes" rows="2" placeholder="Anotaciones...">${defNotes}</textarea>
+                    <button class="notes-close-btn" onclick="closeNotesSection('${safeName}','${safeId}')" title="Cerrar">✕</button>
                   </div>`;
             const linkSection = linkExpanded
                 ? `<div class="notes-row" id="link-section-${safeId}" style="padding:4px 16px 10px">
@@ -1976,6 +2051,13 @@
                     container.appendChild(el);
                 });
             });
+
+            const addGrpBtn = document.createElement('button');
+            addGrpBtn.className = 'add-ex-btn';
+            addGrpBtn.style.marginTop = '8px';
+            addGrpBtn.textContent = '＋ Agregar grupo muscular';
+            addGrpBtn.onclick = () => addNewGroup(currentDayIdx);
+            container.appendChild(addGrpBtn);
 
             setupAutoSave();
             updateFabVisibility();
@@ -2189,7 +2271,7 @@
         }
 
         function exportData() {
-            const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v7'];
+            const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v8'];
             const backup = {};
             keys.forEach(k => { const v = localStorage.getItem(k); if (v) backup[k] = JSON.parse(v); });
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -2208,7 +2290,8 @@
                 try {
                     const backup = JSON.parse(e.target.result);
                     const keys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v7'];
-                    keys.forEach(k => { if (backup[k] !== undefined) localStorage.setItem(k, JSON.stringify(backup[k])); });
+                    const importKeys = ['gym_data', 'gym_logs', 'gym_config', 'gym_routine_structure_v8'];
+                    importKeys.forEach(k => { if (backup[k] !== undefined) localStorage.setItem(k, JSON.stringify(backup[k])); });
                     showToast('✓ Datos importados');
                     setTimeout(() => location.reload(), 1500);
                 } catch {
@@ -2361,6 +2444,15 @@
             addNewExercise(dayIdx, tituloIdx);
         }
 
+        function addNewGroup(dayIdx) {
+            openEditModal('', groupName => {
+                if (!groupName) return;
+                routineData[dayIdx].ejercicios.push({ titulo: groupName });
+                saveRoutineStructure();
+                openWorkout(dayIdx);
+            });
+        }
+
         function moveItem(dayIdx, exIdx, dir) {
             const list = routineData[dayIdx].ejercicios;
             const newIdx = exIdx + dir;
@@ -2432,6 +2524,36 @@
         // --- DAY ABM ---
         let _dayModalIdx = -1; // -1 = new day
 
+        const MUSCLE_GROUP_PRESETS = ['Pecho','Tríceps','Hombros','Espalda','Bíceps','Cuádriceps','Isquios / Glúteos','Gemelos','Abdominales','Oblicuos','Core','Lumbares','Cardio','Movilidad','Potencia'];
+
+        function initDayGroupChips() {
+            const container = document.getElementById('day-group-chips');
+            container.innerHTML = '';
+            MUSCLE_GROUP_PRESETS.forEach(name => {
+                const chip = document.createElement('button');
+                chip.className = 'day-group-chip';
+                chip.textContent = name;
+                chip.type = 'button';
+                chip.onclick = () => chip.classList.toggle('selected');
+                container.appendChild(chip);
+            });
+            const addBtn = document.createElement('button');
+            addBtn.className = 'day-group-chip';
+            addBtn.textContent = '＋ Otro';
+            addBtn.type = 'button';
+            addBtn.onclick = () => {
+                const n = prompt('Nombre del grupo:');
+                if (!n || !n.trim()) return;
+                const chip = document.createElement('button');
+                chip.className = 'day-group-chip selected';
+                chip.textContent = n.trim();
+                chip.type = 'button';
+                chip.onclick = () => chip.classList.toggle('selected');
+                container.insertBefore(chip, addBtn);
+            };
+            container.appendChild(addBtn);
+        }
+
         function openDayModal(index) {
             _dayModalIdx = index;
             const modal = document.getElementById('day-modal');
@@ -2440,6 +2562,7 @@
             const musclesInput = document.getElementById('day-modal-muscles');
             const dupBtn = document.getElementById('day-modal-dup-btn');
             const delBtn = document.getElementById('day-modal-del-btn');
+            const groupsSection = document.getElementById('day-modal-groups-section');
 
             if (index === -1) {
                 title.textContent = 'Nuevo día';
@@ -2447,6 +2570,8 @@
                 musclesInput.value = '';
                 dupBtn.style.display = 'none';
                 delBtn.style.display = 'none';
+                groupsSection.style.display = '';
+                initDayGroupChips();
             } else {
                 const day = routineData[index];
                 title.textContent = `Editar: Día ${day.dia}`;
@@ -2454,6 +2579,7 @@
                 musclesInput.value = day.musculos || '';
                 dupBtn.style.display = '';
                 delBtn.style.display = '';
+                groupsSection.style.display = 'none';
             }
             modal.classList.add('open');
             setTimeout(() => nameInput.focus(), 80);
@@ -2474,11 +2600,15 @@
                 const newDia = routineData.length > 0
                     ? Math.max(...routineData.map(d => d.dia)) + 1
                     : 1;
+                const selectedGroups = Array.from(
+                    document.querySelectorAll('#day-group-chips .day-group-chip.selected')
+                ).map(c => c.textContent.trim());
+                const ejercicios = selectedGroups.map(g => ({ titulo: g }));
                 routineData.push({
                     dia: newDia,
                     nombre: `Día ${newDia} – ${name}`,
                     musculos: muscles,
-                    ejercicios: []
+                    ejercicios
                 });
             } else {
                 const day = routineData[_dayModalIdx];
@@ -3193,6 +3323,15 @@
             const inp    = card.querySelector('.in-weight') || card.querySelector('.in-w1');
             const deltaEl = document.getElementById('delta1-' + safeId);
             updateWeightDeltaEl(inp, deltaEl);
+        }
+
+        // --- NOTES CLOSE ---
+        function closeNotesSection(name, safeId) {
+            const section = document.getElementById('notes-section-' + safeId);
+            if (!section) return;
+            section.style.display = 'none';
+            if (expandedFields[name]) delete expandedFields[name].notes;
+            scheduleAutoSave();
         }
 
         // --- NOTES DOT ---
