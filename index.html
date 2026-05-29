@@ -769,17 +769,31 @@
         }
         /* date picker inside action sheet */
         #day-mark-done-row {
-            display: none; flex-direction: column; gap: 8px;
-            padding: 12px 16px; border-radius: 12px;
+            display: none; flex-direction: column; gap: 10px;
+            padding: 14px 16px; border-radius: 12px;
             background: rgba(255,255,255,0.04); border: 1px solid var(--border);
         }
         #day-mark-done-row.open { display: flex; }
-        #day-mark-done-row label { font-size: 0.78rem; color: var(--muted); }
+        #day-mark-done-row > label { font-size: 0.78rem; color: var(--muted); margin-bottom: 2px; }
+        .done-day-chips {
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .done-day-chip {
+            padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;
+            background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text);
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .done-day-chip.selected {
+            background: rgba(var(--accent-rgb),0.18);
+            border-color: var(--accent); color: var(--accent); font-weight: 700;
+        }
         #day-done-date-input {
+            display: none;
             background: rgba(255,255,255,0.07); border: 1px solid var(--border);
             border-radius: 8px; color: var(--text); padding: 9px 12px;
             font-size: 0.92rem; width: 100%; box-sizing: border-box;
         }
+        #day-done-date-input.visible { display: block; }
         #day-done-confirm-btn {
             padding: 12px; border-radius: 10px; background: var(--accent);
             border: none; color: #fff; font-weight: 800; font-size: 0.9rem; cursor: pointer;
@@ -1238,8 +1252,9 @@
 
             <!-- date picker, visible cuando se elige "marcar finalizado" -->
             <div id="day-mark-done-row">
-                <label>Fecha en que lo hiciste</label>
-                <input type="date" id="day-done-date-input">
+                <label>¿Cuándo lo hiciste?</label>
+                <div class="done-day-chips" id="done-day-chips"></div>
+                <input type="date" id="day-done-date-input" onchange="onDoneDateManual(this.value)">
                 <button id="day-done-confirm-btn" onclick="confirmMarkDone()">Guardar</button>
             </div>
 
@@ -2640,17 +2655,14 @@
             };
         }
 
+        let _doneDateSelected = null; // 'YYYY-MM-DD'
+
         function openDayActionSheet(index) {
             _dayActionIdx = index;
+            _doneDateSelected = null;
             const day = routineData[index];
             document.getElementById('day-action-label').textContent = day ? day.nombre : 'Opciones del día';
             document.getElementById('day-mark-done-row').classList.remove('open');
-            // default date = today
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm   = String(today.getMonth() + 1).padStart(2, '0');
-            const dd   = String(today.getDate()).padStart(2, '0');
-            document.getElementById('day-done-date-input').value = `${yyyy}-${mm}-${dd}`;
             document.getElementById('day-action-sheet').classList.add('open');
         }
 
@@ -2658,6 +2670,7 @@
             document.getElementById('day-action-sheet').classList.remove('open');
             document.getElementById('day-mark-done-row').classList.remove('open');
             _dayActionIdx = null;
+            _doneDateSelected = null;
         }
 
         function dayActionEdit() {
@@ -2667,14 +2680,59 @@
         }
 
         function dayActionMarkDone() {
+            // Build quick-pick chips: hoy, ayer, hace 2 días, hace 3 días, + "Otra fecha"
+            const chipsEl = document.getElementById('done-day-chips');
+            chipsEl.innerHTML = '';
+            const labels = ['Hoy', 'Ayer', 'Hace 2 días', 'Hace 3 días'];
+            labels.forEach((label, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                const chip = document.createElement('button');
+                chip.className = 'done-day-chip' + (i === 0 ? ' selected' : '');
+                chip.textContent = label;
+                chip.type = 'button';
+                chip.dataset.val = val;
+                chip.onclick = () => selectDoneChip(chip, val);
+                chipsEl.appendChild(chip);
+            });
+            // "Otra fecha" chip
+            const otherChip = document.createElement('button');
+            otherChip.className = 'done-day-chip';
+            otherChip.textContent = 'Otra fecha…';
+            otherChip.type = 'button';
+            otherChip.dataset.val = 'custom';
+            otherChip.onclick = () => selectDoneChip(otherChip, 'custom');
+            chipsEl.appendChild(otherChip);
+
+            // default = today
+            const today = new Date();
+            _doneDateSelected = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+            document.getElementById('day-done-date-input').value = _doneDateSelected;
+            document.getElementById('day-done-date-input').classList.remove('visible');
             document.getElementById('day-mark-done-row').classList.add('open');
         }
 
+        function selectDoneChip(chip, val) {
+            document.querySelectorAll('.done-day-chip').forEach(c => c.classList.remove('selected'));
+            chip.classList.add('selected');
+            const input = document.getElementById('day-done-date-input');
+            if (val === 'custom') {
+                input.classList.add('visible');
+                _doneDateSelected = input.value || null;
+            } else {
+                input.classList.remove('visible');
+                _doneDateSelected = val;
+            }
+        }
+
+        function onDoneDateManual(val) {
+            _doneDateSelected = val || null;
+        }
+
         function confirmMarkDone() {
-            if (_dayActionIdx === null) return;
-            const dateVal = document.getElementById('day-done-date-input').value;
-            if (!dateVal) return;
-            const [y, m, d] = dateVal.split('-');
+            if (_dayActionIdx === null || !_doneDateSelected) return;
+            const [y, m, d] = _doneDateSelected.split('-');
             const timestamp = `${y}-${m}-${d}T12:00`;
             const logs = getLogs();
             logs[routineData[_dayActionIdx].dia] = timestamp;
