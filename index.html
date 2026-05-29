@@ -200,16 +200,27 @@
 
         /* C1 — workout-day-header removed */
 
-        /* ── MUSCLE GROUP (D1 fixed, D2 inline + btn) ── */
+        /* ── MUSCLE GROUP ── */
         .muscle-group-wrapper {
-            display: flex; align-items: center; gap: 8px;
+            display: flex; align-items: center; gap: 6px;
             margin-top: 6px;
         }
         .mg-line { flex: 1; height: 1px; background: var(--border); }
         .muscle-group-header {
             font-size: 0.65rem; font-weight: 800; letter-spacing: 2.5px;
             text-transform: uppercase; color: var(--accent); padding: 0 4px;
+            cursor: pointer;
         }
+        .muscle-group-header:active { opacity: 0.7; }
+        .group-drag-handle {
+            width: 32px; height: 32px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: rgba(255,255,255,0.20);
+            cursor: grab; touch-action: none;
+            user-select: none; -webkit-user-select: none;
+        }
+        .group-drag-handle.hold-ready { color: var(--accent); }
+        .group-drag-handle:active { cursor: grabbing; }
 
         /* ── EXERCISE CARD ── */
         .exercise-card {
@@ -2032,14 +2043,17 @@
 
             groups.forEach(group => {
                 if (group.titulo) {
-                    // D1: fixed group — no drag, no delete; D2: inline + btn
                     const wrapper = document.createElement('div');
                     wrapper.className = 'muscle-group-wrapper';
+                    wrapper.dataset.tituloIdx = group.tituloIdx;
                     wrapper.innerHTML = `
+                        <span class="group-drag-handle">⠿</span>
                         <div class="mg-line"></div>
-                        <span class="muscle-group-header">${group.titulo}</span>
+                        <span class="muscle-group-header" onclick="editGroup(${currentDayIdx},${group.tituloIdx})">${group.titulo}</span>
                         <div class="mg-line"></div>
-                        <button class="ctrl-btn" style="font-size:1.1rem;" onclick="openGroupManager(${currentDayIdx},${group.tituloIdx})">＋</button>
+                        <button class="ctrl-btn" style="font-size:1.1rem;" title="Agregar ejercicio" onclick="openGroupManager(${currentDayIdx},${group.tituloIdx})">＋</button>
+                        <button class="ctrl-btn" title="Renombrar grupo" onclick="editGroup(${currentDayIdx},${group.tituloIdx})">✎</button>
+                        <button class="ctrl-btn btn-del" title="Eliminar grupo" onclick="deleteGroup(${currentDayIdx},${group.tituloIdx})">🗑</button>
                     `;
                     wrapper._exData = { titulo: group.titulo };
                     container.appendChild(wrapper);
@@ -2448,6 +2462,35 @@
             openEditModal('', groupName => {
                 if (!groupName) return;
                 routineData[dayIdx].ejercicios.push({ titulo: groupName });
+                saveRoutineStructure();
+                openWorkout(dayIdx);
+            });
+        }
+
+        function editGroup(dayIdx, tituloIdx) {
+            const item = routineData[dayIdx].ejercicios[tituloIdx];
+            openEditModal(item.titulo, newName => {
+                if (newName && newName !== item.titulo) {
+                    item.titulo = newName;
+                    saveRoutineStructure();
+                    openWorkout(dayIdx);
+                }
+            });
+        }
+
+        function deleteGroup(dayIdx, tituloIdx) {
+            const ejercicios = routineData[dayIdx].ejercicios;
+            const titulo = ejercicios[tituloIdx].titulo;
+            let count = 0;
+            for (let i = tituloIdx + 1; i < ejercicios.length; i++) {
+                if (ejercicios[i].titulo) break;
+                count++;
+            }
+            const msg = count > 0
+                ? `¿Eliminar "${titulo}" y sus ${count} ejercicio${count > 1 ? 's' : ''}?`
+                : `¿Eliminar el grupo "${titulo}"?`;
+            confirmModal(msg, () => {
+                ejercicios.splice(tituloIdx, 1 + count);
                 saveRoutineStructure();
                 openWorkout(dayIdx);
             });
@@ -3612,6 +3655,130 @@
             link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type:'application/json'}));
             document.head.appendChild(link);
         }
+
+        // --- GROUP DRAG & DROP (press & hold 250ms) ---
+        (function initGroupDragDrop() {
+            let drag = null;
+            let holdTimer = null;
+            let startX = 0, startY = 0;
+
+            function getGroupElements(wrapper) {
+                const result = [wrapper];
+                let next = wrapper.nextElementSibling;
+                while (next && next.classList.contains('exercise-card')) {
+                    result.push(next);
+                    next = next.nextElementSibling;
+                }
+                return result;
+            }
+
+            function allGroupWrappers() {
+                return Array.from(document.getElementById('workout-view').children)
+                    .filter(el => el.classList.contains('muscle-group-wrapper'));
+            }
+
+            function startDrag(handle, touch) {
+                const wrapper = handle.closest('.muscle-group-wrapper');
+                if (!wrapper) return;
+                const rect = wrapper.getBoundingClientRect();
+                const ghost = wrapper.cloneNode(true);
+                ghost.classList.add('drag-ghost');
+                ghost.style.top = rect.top + 'px';
+                ghost.style.height = rect.height + 'px';
+                document.body.appendChild(ghost);
+                const groupEls = getGroupElements(wrapper);
+                groupEls.forEach(el => el.classList.add('is-dragging'));
+                drag = { wrapper, groupEls, ghost, offsetY: touch.clientY - rect.top };
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onEnd, { passive: true });
+            }
+
+            function onMove(e) {
+                if (!drag) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                const container = document.getElementById('workout-view');
+                const cRect = container.getBoundingClientRect();
+                const ghostY = Math.min(Math.max(touch.clientY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
+                drag.ghost.style.top = ghostY + 'px';
+
+                const others = allGroupWrappers().filter(w => w !== drag.wrapper);
+                others.forEach(w => w.classList.remove('drag-insert-above', 'drag-insert-below'));
+
+                let insertBefore = null;
+                for (const w of others) {
+                    const r = w.getBoundingClientRect();
+                    if (touch.clientY < r.top + r.height / 2) { insertBefore = w; break; }
+                }
+
+                const container2 = document.getElementById('workout-view');
+                // Anchor: button "Agregar grupo" is last child
+                const anchor = container2.lastElementChild;
+                if (insertBefore) {
+                    drag.groupEls.forEach(el => container2.insertBefore(el, insertBefore));
+                    insertBefore.classList.add('drag-insert-above');
+                } else {
+                    drag.groupEls.forEach(el => container2.insertBefore(el, anchor));
+                    if (others.length) others[others.length - 1].classList.add('drag-insert-below');
+                }
+            }
+
+            function onEnd() {
+                if (!drag) return;
+                drag.ghost.remove();
+                drag.groupEls.forEach(el => el.classList.remove('is-dragging'));
+                allGroupWrappers().forEach(w => w.classList.remove('drag-insert-above', 'drag-insert-below'));
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onEnd);
+
+                if (currentDayIdx !== null) {
+                    const container = document.getElementById('workout-view');
+                    const newOrder = Array.from(container.children)
+                        .filter(el => el._exData)
+                        .map(el => el._exData)
+                        .filter(Boolean);
+                    if (newOrder.length) {
+                        routineData[currentDayIdx].ejercicios = newOrder;
+                        saveRoutineStructure();
+                        tempSaveInputs();
+                        openWorkout(currentDayIdx);
+                    }
+                }
+                drag = null;
+            }
+
+            document.addEventListener('touchstart', e => {
+                const handle = e.target.closest('.group-drag-handle');
+                if (!handle) return;
+                const touch = e.touches[0];
+                startX = touch.clientX; startY = touch.clientY;
+                handle.classList.add('hold-ready');
+                holdTimer = setTimeout(() => {
+                    holdTimer = null;
+                    handle.classList.remove('hold-ready');
+                    if (navigator.vibrate) navigator.vibrate(40);
+                    startDrag(handle, touch);
+                }, 250);
+            }, { passive: true });
+
+            document.addEventListener('touchmove', e => {
+                if (!holdTimer) return;
+                const touch = e.touches[0];
+                if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
+                    clearTimeout(holdTimer); holdTimer = null;
+                    const handle = e.target.closest('.group-drag-handle');
+                    if (handle) handle.classList.remove('hold-ready');
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', e => {
+                if (holdTimer) {
+                    clearTimeout(holdTimer); holdTimer = null;
+                    const handle = e.target.closest('.group-drag-handle');
+                    if (handle) handle.classList.remove('hold-ready');
+                }
+            }, { passive: true });
+        })();
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js');
