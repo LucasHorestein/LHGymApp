@@ -130,6 +130,7 @@
             cursor: pointer;
             transition: background 0.2s, transform 0.15s;
             position: relative; overflow: hidden;
+            user-select: none; -webkit-user-select: none;
         }
         .card:active { background: var(--surface-h); transform: scale(0.99); border-color: rgba(232,114,42,0.3); }
         .card.today {
@@ -144,25 +145,24 @@
             border-color: rgba(210,100,20,0.32);
         }
         .card.primary .day-badge { box-shadow: 0 4px 16px rgba(var(--accent-rgb),0.55); }
-        .card.week-done { position: relative; }
         .card.week-done .day-badge,
         .card.week-done .card-text,
-        .card.week-done .arrow { opacity: 0.4; }
+        .card.week-done .arrow { opacity: 0.45; }
         .done-overlay {
-            position: absolute; inset: 0; border-radius: var(--radius);
-            background: rgba(10,7,4,0.30);
+            flex-shrink: 0;
             display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
-            padding: 0 14px; gap: 3px; pointer-events: none; z-index: 1;
+            gap: 4px; pointer-events: none;
         }
         .done-badge {
             font-size: 0.62rem; font-weight: 800; letter-spacing: 0.5px;
             padding: 3px 9px; border-radius: 99px;
             background: rgba(74,222,128,0.18); color: #4ade80;
-            border: 1px solid rgba(74,222,128,0.3);
+            border: 1px solid rgba(74,222,128,0.3); white-space: nowrap;
         }
         .done-days-remaining {
             font-size: 0.58rem; font-weight: 600; letter-spacing: 0.5px;
             color: rgba(245,237,228,0.35); text-transform: uppercase; text-align: right;
+            white-space: nowrap;
         }
 
         .day-badge {
