@@ -3523,19 +3523,14 @@
             }
         };
 
-        // --- DRAG & DROP (J1-J3: 250ms hold, >10px cancel, exercise cards only) ---
-        (function initDragDrop() {
+        // --- DRAG & DROP UNIFICADO (ejercicios + grupos, 250ms hold) ---
+        (function initUnifiedDrag() {
             let drag = null;
             let holdTimer = null;
             let startX = 0, startY = 0;
             let activeHandle = null;
 
-            function draggableSiblings() {
-                return Array.from(document.getElementById('workout-view').children)
-                    .filter(el => el.classList.contains('exercise-card'));
-            }
-
-            function allOrderedItems() {
+            function allDraggables() {
                 return Array.from(document.getElementById('workout-view').children)
                     .filter(el => el._exData);
             }
@@ -3546,33 +3541,32 @@
                 const cRect = container.getBoundingClientRect();
                 const ghostY = Math.min(Math.max(touchY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
                 drag.ghost.style.top = ghostY + 'px';
-                const sibs = draggableSiblings().filter(s => s !== drag.card);
-                draggableSiblings().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
+                const sibs = allDraggables().filter(s => s !== drag.item);
+                allDraggables().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
                 let insertBefore = null;
                 for (const sib of sibs) {
                     const r = sib.getBoundingClientRect();
                     if (touchY < r.top + r.height / 2) { insertBefore = sib; break; }
                 }
+                const addBtn = container.querySelector('.add-ex-btn');
                 if (insertBefore) {
-                    container.insertBefore(drag.card, insertBefore);
+                    container.insertBefore(drag.item, insertBefore);
                     insertBefore.classList.add('drag-insert-above');
                 } else {
-                    container.insertBefore(drag.card, null);
-                    if (sibs.length) sibs[sibs.length-1].classList.add('drag-insert-below');
+                    container.insertBefore(drag.item, addBtn || null);
+                    if (sibs.length) sibs[sibs.length - 1].classList.add('drag-insert-below');
                 }
             }
 
-            function startDrag(handle, touch) {
-                const card = handle.closest('.exercise-card');
-                if (!card) return;
-                const rect = card.getBoundingClientRect();
-                const ghost = card.cloneNode(true);
+            function startDrag(handle, dragItem, touch) {
+                const rect = dragItem.getBoundingClientRect();
+                const ghost = dragItem.cloneNode(true);
                 ghost.classList.add('drag-ghost');
                 ghost.style.top    = rect.top + 'px';
                 ghost.style.height = rect.height + 'px';
                 document.body.appendChild(ghost);
-                card.classList.add('is-dragging');
-                drag = { card, ghost, offsetY: touch.clientY - rect.top };
+                dragItem.classList.add('is-dragging');
+                drag = { item: dragItem, ghost, offsetY: touch.clientY - rect.top };
                 _autoScroll.update(touch.clientY);
                 _autoScroll.start(document.getElementById('workout-view'), doPlacement);
                 document.addEventListener('touchmove',   onMove, { passive: false });
@@ -3592,26 +3586,28 @@
                 if (!drag) return;
                 _autoScroll.stop();
                 drag.ghost.remove();
-                drag.card.classList.remove('is-dragging');
-                draggableSiblings().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
+                drag.item.classList.remove('is-dragging');
+                allDraggables().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
                 document.removeEventListener('touchmove',   onMove);
                 document.removeEventListener('touchend',    onEnd);
                 document.removeEventListener('touchcancel', onEnd);
-                const newOrder = allOrderedItems().map(el => el._exData).filter(Boolean);
-                if (currentDayIdx !== null && newOrder.length) {
-                    routineData[currentDayIdx].ejercicios = newOrder;
-                    saveRoutineStructure();
-                    tempSaveInputs();
-                    openWorkout(currentDayIdx);
+                if (currentDayIdx !== null) {
+                    const newOrder = allDraggables().map(el => el._exData).filter(Boolean);
+                    if (newOrder.length) {
+                        routineData[currentDayIdx].ejercicios = newOrder;
+                        saveRoutineStructure();
+                        tempSaveInputs();
+                        openWorkout(currentDayIdx);
+                    }
                 }
                 drag = null;
             }
 
             document.addEventListener('touchstart', e => {
-                const handle = e.target.closest('.drag-handle');
+                const handle = e.target.closest('.drag-handle, .group-drag-handle');
                 if (!handle) return;
-                const card = handle.closest('.exercise-card');
-                if (!card) return;
+                const dragItem = handle.closest('.exercise-card, .muscle-group-wrapper');
+                if (!dragItem) return;
                 const touch = e.touches[0];
                 startX = touch.clientX; startY = touch.clientY;
                 activeHandle = handle;
@@ -3619,7 +3615,8 @@
                 holdTimer = setTimeout(() => {
                     holdTimer = null;
                     if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
-                    startDrag(handle, touch);
+                    if (navigator.vibrate) navigator.vibrate(40);
+                    startDrag(handle, dragItem, touch);
                 }, 250);
             }, { passive: true });
 
@@ -3709,142 +3706,6 @@
             document.head.appendChild(link);
         }
 
-        // --- GROUP DRAG & DROP (press & hold 250ms) ---
-        (function initGroupDragDrop() {
-            let drag = null;
-            let holdTimer = null;
-            let startX = 0, startY = 0;
-            let activeHandle = null;
-
-            function getGroupElements(wrapper) {
-                const result = [wrapper];
-                let next = wrapper.nextElementSibling;
-                while (next && next.classList.contains('exercise-card')) {
-                    result.push(next);
-                    next = next.nextElementSibling;
-                }
-                return result;
-            }
-
-            function allGroupWrappers() {
-                return Array.from(document.getElementById('workout-view').children)
-                    .filter(el => el.classList.contains('muscle-group-wrapper'));
-            }
-
-            function doGroupPlacement(touchY) {
-                if (!drag) return;
-                const container = document.getElementById('workout-view');
-                const cRect = container.getBoundingClientRect();
-                const ghostY = Math.min(Math.max(touchY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
-                drag.ghost.style.top = ghostY + 'px';
-                const others = allGroupWrappers().filter(w => w !== drag.wrapper);
-                others.forEach(w => w.classList.remove('drag-insert-above', 'drag-insert-below'));
-                let insertBefore = null;
-                for (const w of others) {
-                    const r = w.getBoundingClientRect();
-                    if (touchY < r.top + r.height / 2) { insertBefore = w; break; }
-                }
-                const anchor = container.lastElementChild;
-                if (insertBefore) {
-                    drag.groupEls.forEach(el => container.insertBefore(el, insertBefore));
-                    insertBefore.classList.add('drag-insert-above');
-                } else {
-                    drag.groupEls.forEach(el => container.insertBefore(el, anchor));
-                    if (others.length) others[others.length - 1].classList.add('drag-insert-below');
-                }
-            }
-
-            function startDrag(handle, touch) {
-                const wrapper = handle.closest('.muscle-group-wrapper');
-                if (!wrapper) return;
-                const rect = wrapper.getBoundingClientRect();
-                const ghost = wrapper.cloneNode(true);
-                ghost.classList.add('drag-ghost');
-                ghost.style.top = rect.top + 'px';
-                ghost.style.height = rect.height + 'px';
-                document.body.appendChild(ghost);
-                const groupEls = getGroupElements(wrapper);
-                groupEls.forEach(el => el.classList.add('is-dragging'));
-                drag = { wrapper, groupEls, ghost, offsetY: touch.clientY - rect.top };
-                _autoScroll.update(touch.clientY);
-                _autoScroll.start(document.getElementById('workout-view'), doGroupPlacement);
-                document.addEventListener('touchmove',   onMove, { passive: false });
-                document.addEventListener('touchend',    onEnd,  { passive: true });
-                document.addEventListener('touchcancel', onEnd,  { passive: true });
-            }
-
-            function onMove(e) {
-                if (!drag) return;
-                e.preventDefault();
-                const touchY = e.touches[0].clientY;
-                _autoScroll.update(touchY);
-                doGroupPlacement(touchY);
-            }
-
-            function onEnd() {
-                if (!drag) return;
-                _autoScroll.stop();
-                drag.ghost.remove();
-                drag.groupEls.forEach(el => el.classList.remove('is-dragging'));
-                allGroupWrappers().forEach(w => w.classList.remove('drag-insert-above', 'drag-insert-below'));
-                document.removeEventListener('touchmove',   onMove);
-                document.removeEventListener('touchend',    onEnd);
-                document.removeEventListener('touchcancel', onEnd);
-
-                if (currentDayIdx !== null) {
-                    const container = document.getElementById('workout-view');
-                    const newOrder = Array.from(container.children)
-                        .filter(el => el._exData)
-                        .map(el => el._exData)
-                        .filter(Boolean);
-                    if (newOrder.length) {
-                        routineData[currentDayIdx].ejercicios = newOrder;
-                        saveRoutineStructure();
-                        tempSaveInputs();
-                        openWorkout(currentDayIdx);
-                    }
-                }
-                drag = null;
-            }
-
-            document.addEventListener('touchstart', e => {
-                const handle = e.target.closest('.group-drag-handle');
-                if (!handle) return;
-                const touch = e.touches[0];
-                startX = touch.clientX; startY = touch.clientY;
-                activeHandle = handle;
-                handle.classList.add('hold-ready');
-                holdTimer = setTimeout(() => {
-                    holdTimer = null;
-                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
-                    if (navigator.vibrate) navigator.vibrate(40);
-                    startDrag(handle, touch);
-                }, 250);
-            }, { passive: true });
-
-            document.addEventListener('touchmove', e => {
-                if (!holdTimer) return;
-                const touch = e.touches[0];
-                if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
-                    clearTimeout(holdTimer); holdTimer = null;
-                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
-                }
-            }, { passive: true });
-
-            document.addEventListener('touchend', e => {
-                if (holdTimer) {
-                    clearTimeout(holdTimer); holdTimer = null;
-                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
-                }
-            }, { passive: true });
-
-            document.addEventListener('touchcancel', e => {
-                if (holdTimer) {
-                    clearTimeout(holdTimer); holdTimer = null;
-                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
-                }
-            }, { passive: true });
-        })();
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js');
