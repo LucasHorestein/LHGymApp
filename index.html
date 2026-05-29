@@ -735,6 +735,56 @@
         .search-input:focus { border-color: rgba(232,114,42,0.4); }
         .search-input::placeholder { color: rgba(245,237,228,0.25); }
 
+        /* ── DAY ACTION SHEET ── */
+        #day-action-sheet {
+            display: none; position: fixed; inset: 0; z-index: 3100;
+            background: rgba(0,0,0,0.72);
+            align-items: flex-end; justify-content: center;
+        }
+        #day-action-sheet.open { display: flex; }
+        #day-action-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px 20px 0 0; padding: 20px 16px 32px;
+            width: 100%; max-width: 480px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .day-action-title {
+            font-size: 0.8rem; color: var(--muted); text-align: center;
+            padding-bottom: 6px; border-bottom: 1px solid var(--border);
+            margin-bottom: 4px; letter-spacing: 0.04em; text-transform: uppercase;
+        }
+        .day-action-btn {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 16px; border-radius: 12px;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            color: var(--text); font-size: 0.95rem; cursor: pointer; text-align: left;
+        }
+        .day-action-btn:active { background: rgba(255,255,255,0.1); }
+        .day-action-btn .das-icon { font-size: 1.15rem; width: 24px; text-align: center; }
+        .day-action-btn.accent { border-color: rgba(var(--accent-rgb),0.4); color: var(--accent); }
+        .day-action-cancel {
+            padding: 13px; border-radius: 12px; background: none;
+            border: 1px solid var(--border); color: var(--muted);
+            font-size: 0.9rem; cursor: pointer; margin-top: 2px;
+        }
+        /* date picker inside action sheet */
+        #day-mark-done-row {
+            display: none; flex-direction: column; gap: 8px;
+            padding: 12px 16px; border-radius: 12px;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+        }
+        #day-mark-done-row.open { display: flex; }
+        #day-mark-done-row label { font-size: 0.78rem; color: var(--muted); }
+        #day-done-date-input {
+            background: rgba(255,255,255,0.07); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); padding: 9px 12px;
+            font-size: 0.92rem; width: 100%; box-sizing: border-box;
+        }
+        #day-done-confirm-btn {
+            padding: 12px; border-radius: 10px; background: var(--accent);
+            border: none; color: #fff; font-weight: 800; font-size: 0.9rem; cursor: pointer;
+        }
+
         /* ── CONFIRM MODAL ── */
         #confirm-modal {
             display: none; position: fixed; inset: 0; z-index: 3000;
@@ -1170,6 +1220,30 @@
         <div id="edit-modal-box">
             <input id="edit-modal-input" type="text" autocomplete="off" spellcheck="false">
             <button id="edit-modal-confirm" onclick="confirmEditModal()">Confirmar</button>
+        </div>
+    </div>
+
+    <!-- DAY ACTION SHEET -->
+    <div id="day-action-sheet" onclick="closeDayActionSheet()">
+        <div id="day-action-box" onclick="event.stopPropagation()">
+            <div class="day-action-title" id="day-action-label">Opciones del día</div>
+
+            <button class="day-action-btn" onclick="dayActionEdit()">
+                <span class="das-icon">✎</span> Editar día
+            </button>
+
+            <button class="day-action-btn accent" onclick="dayActionMarkDone()">
+                <span class="das-icon">✓</span> Marcar como finalizado
+            </button>
+
+            <!-- date picker, visible cuando se elige "marcar finalizado" -->
+            <div id="day-mark-done-row">
+                <label>Fecha en que lo hiciste</label>
+                <input type="date" id="day-done-date-input">
+                <button id="day-done-confirm-btn" onclick="confirmMarkDone()">Guardar</button>
+            </div>
+
+            <button class="day-action-cancel" onclick="closeDayActionSheet()">Cancelar</button>
         </div>
     </div>
 
@@ -2530,6 +2604,8 @@
 
         // --- LONG PRESS ---
         let _lpBlocked = false;
+        let _dayActionIdx = null;
+
         function attachLongPress(card, index) {
             let timer = null, sx = 0, sy = 0;
             card.addEventListener('touchstart', e => {
@@ -2541,7 +2617,7 @@
                     _lpBlocked = true;
                     card.classList.remove('pressing');
                     if (navigator.vibrate) navigator.vibrate(40);
-                    openDayModal(index);
+                    openDayActionSheet(index);
                 }, 500);
             }, { passive: true });
             card.addEventListener('touchmove', e => {
@@ -2562,6 +2638,50 @@
                 if (_lpBlocked) { _lpBlocked = false; return; }
                 openWorkout(index);
             };
+        }
+
+        function openDayActionSheet(index) {
+            _dayActionIdx = index;
+            const day = routineData[index];
+            document.getElementById('day-action-label').textContent = day ? day.nombre : 'Opciones del día';
+            document.getElementById('day-mark-done-row').classList.remove('open');
+            // default date = today
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm   = String(today.getMonth() + 1).padStart(2, '0');
+            const dd   = String(today.getDate()).padStart(2, '0');
+            document.getElementById('day-done-date-input').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('day-action-sheet').classList.add('open');
+        }
+
+        function closeDayActionSheet() {
+            document.getElementById('day-action-sheet').classList.remove('open');
+            document.getElementById('day-mark-done-row').classList.remove('open');
+            _dayActionIdx = null;
+        }
+
+        function dayActionEdit() {
+            const idx = _dayActionIdx;
+            closeDayActionSheet();
+            openDayModal(idx);
+        }
+
+        function dayActionMarkDone() {
+            document.getElementById('day-mark-done-row').classList.add('open');
+        }
+
+        function confirmMarkDone() {
+            if (_dayActionIdx === null) return;
+            const dateVal = document.getElementById('day-done-date-input').value;
+            if (!dateVal) return;
+            const [y, m, d] = dateVal.split('-');
+            const timestamp = `${y}-${m}-${d}T12:00`;
+            const logs = getLogs();
+            logs[routineData[_dayActionIdx].dia] = timestamp;
+            localStorage.setItem('gym_logs', JSON.stringify(logs));
+            closeDayActionSheet();
+            showToast('✓ Día marcado como finalizado');
+            renderDashboard();
         }
 
         // --- DAY ABM ---
@@ -2862,6 +2982,9 @@
 
         // --- BACK NAVIGATION (Android gesture + hardware back) ---
         window.addEventListener('popstate', (e) => {
+            if (document.getElementById('day-action-sheet').classList.contains('open')) {
+                closeDayActionSheet(); return;
+            }
             if (document.getElementById('confirm-modal').classList.contains('open')) {
                 closeConfirmModal(); return;
             }
