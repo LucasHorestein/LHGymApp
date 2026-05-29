@@ -3528,6 +3528,7 @@
             let drag = null;
             let holdTimer = null;
             let startX = 0, startY = 0;
+            let activeHandle = null;
 
             function draggableSiblings() {
                 return Array.from(document.getElementById('workout-view').children)
@@ -3574,8 +3575,9 @@
                 drag = { card, ghost, offsetY: touch.clientY - rect.top };
                 _autoScroll.update(touch.clientY);
                 _autoScroll.start(document.getElementById('workout-view'), doPlacement);
-                document.addEventListener('touchmove', onMove, { passive: false });
-                document.addEventListener('touchend',  onEnd,  { passive: true });
+                document.addEventListener('touchmove',   onMove, { passive: false });
+                document.addEventListener('touchend',    onEnd,  { passive: true });
+                document.addEventListener('touchcancel', onEnd,  { passive: true });
             }
 
             function onMove(e) {
@@ -3592,8 +3594,9 @@
                 drag.ghost.remove();
                 drag.card.classList.remove('is-dragging');
                 draggableSiblings().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
-                document.removeEventListener('touchmove', onMove);
-                document.removeEventListener('touchend',  onEnd);
+                document.removeEventListener('touchmove',   onMove);
+                document.removeEventListener('touchend',    onEnd);
+                document.removeEventListener('touchcancel', onEnd);
                 const newOrder = allOrderedItems().map(el => el._exData).filter(Boolean);
                 if (currentDayIdx !== null && newOrder.length) {
                     routineData[currentDayIdx].ejercicios = newOrder;
@@ -3611,10 +3614,11 @@
                 if (!card) return;
                 const touch = e.touches[0];
                 startX = touch.clientX; startY = touch.clientY;
+                activeHandle = handle;
                 handle.classList.add('hold-ready');
                 holdTimer = setTimeout(() => {
                     holdTimer = null;
-                    handle.classList.remove('hold-ready');
+                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
                     startDrag(handle, touch);
                 }, 250);
             }, { passive: true });
@@ -3624,16 +3628,21 @@
                 const touch = e.touches[0];
                 if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
                     clearTimeout(holdTimer); holdTimer = null;
-                    const handle = e.target.closest('.drag-handle');
-                    if (handle) handle.classList.remove('hold-ready');
+                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
                 }
             }, { passive: true });
 
             document.addEventListener('touchend', e => {
                 if (holdTimer) {
                     clearTimeout(holdTimer); holdTimer = null;
-                    const handle = e.target.closest('.drag-handle');
-                    if (handle) handle.classList.remove('hold-ready');
+                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchcancel', e => {
+                if (holdTimer) {
+                    clearTimeout(holdTimer); holdTimer = null;
+                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
                 }
             }, { passive: true });
         })();
@@ -3705,6 +3714,7 @@
             let drag = null;
             let holdTimer = null;
             let startX = 0, startY = 0;
+            let activeHandle = null;
 
             function getGroupElements(wrapper) {
                 const result = [wrapper];
@@ -3758,8 +3768,9 @@
                 drag = { wrapper, groupEls, ghost, offsetY: touch.clientY - rect.top };
                 _autoScroll.update(touch.clientY);
                 _autoScroll.start(document.getElementById('workout-view'), doGroupPlacement);
-                document.addEventListener('touchmove', onMove, { passive: false });
-                document.addEventListener('touchend', onEnd, { passive: true });
+                document.addEventListener('touchmove',   onMove, { passive: false });
+                document.addEventListener('touchend',    onEnd,  { passive: true });
+                document.addEventListener('touchcancel', onEnd,  { passive: true });
             }
 
             function onMove(e) {
@@ -3776,8 +3787,9 @@
                 drag.ghost.remove();
                 drag.groupEls.forEach(el => el.classList.remove('is-dragging'));
                 allGroupWrappers().forEach(w => w.classList.remove('drag-insert-above', 'drag-insert-below'));
-                document.removeEventListener('touchmove', onMove);
-                document.removeEventListener('touchend', onEnd);
+                document.removeEventListener('touchmove',   onMove);
+                document.removeEventListener('touchend',    onEnd);
+                document.removeEventListener('touchcancel', onEnd);
 
                 if (currentDayIdx !== null) {
                     const container = document.getElementById('workout-view');
@@ -3800,10 +3812,11 @@
                 if (!handle) return;
                 const touch = e.touches[0];
                 startX = touch.clientX; startY = touch.clientY;
+                activeHandle = handle;
                 handle.classList.add('hold-ready');
                 holdTimer = setTimeout(() => {
                     holdTimer = null;
-                    handle.classList.remove('hold-ready');
+                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
                     if (navigator.vibrate) navigator.vibrate(40);
                     startDrag(handle, touch);
                 }, 250);
@@ -3814,16 +3827,21 @@
                 const touch = e.touches[0];
                 if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
                     clearTimeout(holdTimer); holdTimer = null;
-                    const handle = e.target.closest('.group-drag-handle');
-                    if (handle) handle.classList.remove('hold-ready');
+                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
                 }
             }, { passive: true });
 
             document.addEventListener('touchend', e => {
                 if (holdTimer) {
                     clearTimeout(holdTimer); holdTimer = null;
-                    const handle = e.target.closest('.group-drag-handle');
-                    if (handle) handle.classList.remove('hold-ready');
+                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchcancel', e => {
+                if (holdTimer) {
+                    clearTimeout(holdTimer); holdTimer = null;
+                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
                 }
             }, { passive: true });
         })();
