@@ -247,13 +247,14 @@
             white-space: normal; word-break: break-word; line-height: 1.3;
         }
         .ex-row-1-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; padding-top: 2px; }
-        .ex-done-check {
-            width: 24px; height: 24px; border-radius: 50%;
-            border: 1.5px solid rgba(232,114,42,0.3); background: transparent;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.72rem; color: transparent; flex-shrink: 0; cursor: default;
+        /* ex-done-check removed */
+        .ex-options-btn {
+            width: 32px; height: 32px; border-radius: 8px; font-size: 1.1rem; font-weight: 700;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            color: var(--muted); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0; letter-spacing: 1px;
         }
-        .ex-done-check.done { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .ex-options-btn:active { background: rgba(255,255,255,0.12); }
         .ex-row-2 {
             padding: 4px 10px 10px 4px;
             display: flex; align-items: center; gap: 4px;
@@ -660,7 +661,60 @@
         }
         .fallo-check.checked { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-        /* ── FIELD ICON BTNS (en ex-row-1-right) ── */
+        /* ── GROUP MENU ── */
+        .group-menu-wrap { position: relative; }
+        .group-dropdown {
+            display: none; position: absolute; right: 0; top: calc(100% + 4px); z-index: 500;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            min-width: 180px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .group-dropdown.open { display: block; }
+        .group-dropdown-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; font-size: 0.9rem; color: var(--text);
+            background: none; border: none; width: 100%; text-align: left; cursor: pointer;
+        }
+        .group-dropdown-item:active { background: rgba(255,255,255,0.08); }
+        .group-dropdown-item .gdi-icon { font-size: 1rem; width: 20px; text-align: center; }
+        .group-dropdown-item.danger { color: #f87171; }
+
+        /* ── EX OPTIONS MODAL ── */
+        #ex-options-modal {
+            display: none; position: fixed; inset: 0; z-index: 3200;
+            background: rgba(0,0,0,0.80); justify-content: center; align-items: center;
+        }
+        #ex-options-modal.open { display: flex; }
+        #ex-options-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 18px; padding: 20px 16px 16px;
+            width: min(340px, 90vw); display: flex; flex-direction: column; gap: 6px;
+        }
+        .ex-options-title {
+            font-size: 0.78rem; color: var(--muted); text-align: center;
+            padding-bottom: 10px; border-bottom: 1px solid var(--border);
+            margin-bottom: 4px; letter-spacing: 0.04em; text-transform: uppercase;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .ex-option-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 13px 14px; border-radius: 10px;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            color: var(--text); cursor: pointer; text-align: left;
+        }
+        .ex-option-item:active { background: rgba(255,255,255,0.10); }
+        .ex-option-item .eoi-icon { font-size: 1.15rem; width: 26px; text-align: center; flex-shrink: 0; }
+        .ex-option-item .eoi-label { font-size: 0.9rem; font-weight: 600; }
+        .ex-option-item .eoi-desc { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+        .ex-option-item .eoi-text { display: flex; flex-direction: column; }
+        .ex-option-item.danger { border-color: rgba(248,113,113,0.25); }
+        .ex-option-item.danger .eoi-label { color: #f87171; }
+        .ex-options-cancel {
+            padding: 12px; border-radius: 10px; background: none;
+            border: 1px solid var(--border); color: var(--muted);
+            font-size: 0.9rem; cursor: pointer; margin-top: 4px;
+        }
+
+        /* ── FIELD ICON BTNS (legacy, mantenido para compatibilidad) ── */
         .field-icon-btn {
             width: 30px; height: 30px; border-radius: 8px; font-size: 0.95rem;
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
@@ -1234,6 +1288,34 @@
         <div id="edit-modal-box">
             <input id="edit-modal-input" type="text" autocomplete="off" spellcheck="false">
             <button id="edit-modal-confirm" onclick="confirmEditModal()">Confirmar</button>
+        </div>
+    </div>
+
+    <!-- EX OPTIONS MODAL -->
+    <div id="ex-options-modal" onclick="closeExOptions()">
+        <div id="ex-options-box" onclick="event.stopPropagation()">
+            <div class="ex-options-title" id="ex-options-title">Opciones</div>
+            <button class="ex-option-item" id="ex-opt-notes" onclick="exOptNotes()">
+                <span class="eoi-icon">📝</span>
+                <span class="eoi-text"><span class="eoi-label">Observaciones</span><span class="eoi-desc">Agregar anotaciones al ejercicio</span></span>
+            </button>
+            <button class="ex-option-item" id="ex-opt-link" onclick="exOptLink()">
+                <span class="eoi-icon">🔗</span>
+                <span class="eoi-text"><span class="eoi-label">Agregar video</span><span class="eoi-desc">Link de YouTube u otro video</span></span>
+            </button>
+            <button class="ex-option-item" id="ex-opt-photo">
+                <span class="eoi-icon">📷</span>
+                <span class="eoi-text"><span class="eoi-label">Agregar foto</span><span class="eoi-desc">Foto de referencia o progreso</span></span>
+            </button>
+            <button class="ex-option-item" id="ex-opt-rename" onclick="exOptRename()">
+                <span class="eoi-icon">✎</span>
+                <span class="eoi-text"><span class="eoi-label">Renombrar</span><span class="eoi-desc">Cambiar el nombre del ejercicio</span></span>
+            </button>
+            <button class="ex-option-item danger" id="ex-opt-delete" onclick="exOptDelete()">
+                <span class="eoi-icon">🗑</span>
+                <span class="eoi-text"><span class="eoi-label">Eliminar</span><span class="eoi-desc">Borrar este ejercicio del día</span></span>
+            </button>
+            <button class="ex-options-cancel" onclick="closeExOptions()">Cancelar</button>
         </div>
     </div>
 
@@ -1896,7 +1978,8 @@
             return groups;
         }
 
-        function buildExerciseCard(item, exIdx, savedData, isMediaDay, isUrlDay) {
+        function buildExerciseCard(item, exIdx, savedData) {
+            const isMediaDay = true; const isUrlDay = true; // always available
             let defSets = "", defReps = "", defWeight = "", defWeight2 = "", defLink = "", defImg = "", defFalloData = [], defNotes = "", defComboData = [];
             let defCombined = false;
             let prevWeight = "", prevWeight2 = "";
@@ -2024,20 +2107,15 @@
                 <div class="ex-row-1">
                     <span class="ex-name">${item.n}${hasDot ? '<span class="notes-dot"></span>' : ''}</span>
                     <div class="ex-row-1-right">
-                        <button class="field-icon-btn" title="Notas" onclick="expandField(this,'notes','${safeName}','${safeId}')">📝</button>
-                        ${(isUrlDay) ? `<button class="field-icon-btn" title="Link" onclick="expandField(this,'link','${safeName}','${safeId}')">🔗</button>` : ''}
-                        ${(isMediaDay) ? `<div class="field-icon-btn" title="Foto"><label>📷<input type="file" accept="image/*" class="file-input" onchange="handleImageUpload(this,'${safeName}')"></label></div>` : ''}
-                        <div class="ex-done-check${isDone ? ' done' : ''}">✓</div>
+                        <button class="ex-options-btn" title="Opciones" onclick="openExOptions('${safeName}','${safeId}',${currentDayIdx},${exIdx})">···</button>
                     </div>
                 </div>
                 <div class="ex-row-2">
                     <span class="drag-handle">⠿</span>
                     <div style="flex:1"></div>
                     <div class="ex-controls">
-                        <button class="ctrl-btn${defCombined ? ' active' : ''}" title="Combinado" onclick="toggleCombined(this)">⇄</button>
-                        <div class="card-clock-wrap"><button class="ctrl-btn" id="clock-btn-${safeId}" title="Reloj" onclick="openClockPopover(this,'${safeName}')">🕐</button></div>
-                        <button class="ctrl-btn" title="Renombrar" onclick="editItemName(${currentDayIdx},${exIdx})">✎</button>
-                        <button class="ctrl-btn btn-del" title="Borrar" onclick="deleteItem(${currentDayIdx},${exIdx})">🗑</button>
+                        <button class="ctrl-btn${defCombined ? ' active' : ''}" title="Ejercicio combinado (A+B)" onclick="toggleCombined(this)">A+B</button>
+                        <div class="card-clock-wrap"><button class="ctrl-btn" id="clock-btn-${safeId}" title="Timer de descanso" onclick="openClockPopover(this,'${safeName}')">🕐</button></div>
                     </div>
                 </div>
                 <div class="stats-grid" ${defCombined ? 'style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)"' : ''}>
@@ -2111,8 +2189,6 @@
             const container = document.getElementById('workout-view');
             container.innerHTML = '';
 
-            const isMediaDay = dayData.dia === 7 || dayData.nombre.toLowerCase().includes('abs');
-            const isUrlDay   = dayData.dia === 4 || dayData.dia === 7 || dayData.nombre.toLowerCase().includes('abs');
             const exerciseCount = dayData.ejercicios.filter(e => !e.titulo).length;
 
             // C1: no workout-day-header
@@ -2135,14 +2211,26 @@
                     const wrapper = document.createElement('div');
                     wrapper.className = 'muscle-group-wrapper';
                     wrapper.dataset.tituloIdx = group.tituloIdx;
+                    const di = currentDayIdx, ti = group.tituloIdx;
                     wrapper.innerHTML = `
                         <span class="group-drag-handle">⠿</span>
                         <div class="mg-line"></div>
-                        <span class="muscle-group-header" onclick="editGroup(${currentDayIdx},${group.tituloIdx})">${group.titulo}</span>
+                        <span class="muscle-group-header" onclick="editGroup(${di},${ti})">${group.titulo}</span>
                         <div class="mg-line"></div>
-                        <button class="ctrl-btn" style="font-size:1.1rem;" title="Agregar ejercicio" onclick="openGroupManager(${currentDayIdx},${group.tituloIdx})">＋</button>
-                        <button class="ctrl-btn" title="Renombrar grupo" onclick="editGroup(${currentDayIdx},${group.tituloIdx})">✎</button>
-                        <button class="ctrl-btn btn-del" title="Eliminar grupo" onclick="deleteGroup(${currentDayIdx},${group.tituloIdx})">🗑</button>
+                        <div class="group-menu-wrap">
+                            <button class="ctrl-btn" title="Opciones del grupo" onclick="toggleGroupMenu(this,${di},${ti})">⋯</button>
+                            <div class="group-dropdown" id="gmenu-${di}-${ti}">
+                                <button class="group-dropdown-item" onclick="closeGroupMenu();openGroupManager(${di},${ti})">
+                                    <span class="gdi-icon">＋</span> Agregar ejercicio
+                                </button>
+                                <button class="group-dropdown-item" onclick="closeGroupMenu();editGroup(${di},${ti})">
+                                    <span class="gdi-icon">✎</span> Renombrar grupo
+                                </button>
+                                <button class="group-dropdown-item danger" onclick="closeGroupMenu();deleteGroup(${di},${ti})">
+                                    <span class="gdi-icon">🗑</span> Eliminar grupo
+                                </button>
+                            </div>
+                        </div>
                     `;
                     wrapper._exData = { titulo: group.titulo };
                     container.appendChild(wrapper);
@@ -2150,7 +2238,7 @@
 
                 group.exercises.forEach(({ item, originalIdx }) => {
                     if (item.active === false) return;
-                    const el = buildExerciseCard(item, originalIdx, savedData, isMediaDay, isUrlDay);
+                    const el = buildExerciseCard(item, originalIdx, savedData);
                     container.appendChild(el);
                 });
             });
@@ -2164,6 +2252,22 @@
 
             setupAutoSave();
             updateFabVisibility();
+            // Restore active timer display after re-render
+            if (activeTimer) {
+                const safeId = activeTimer.name.replace(/[^a-zA-Z0-9]/g,'_');
+                const timerRow = document.getElementById('timer-row-' + safeId);
+                if (timerRow) {
+                    timerRow.style.display = 'flex';
+                    timerRow.dataset.mode = activeTimer.mode;
+                    if (activeTimer.mode === 'timer') {
+                        buildTimerModeRow(activeTimer.name, safeId, activeTimer.configured);
+                    }
+                    const disp = document.getElementById('tdisp-' + safeId);
+                    if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
+                    const pb = document.getElementById('tpause-' + safeId);
+                    if (pb) pb.textContent = activeTimer.running ? '⏸' : '▶';
+                }
+            }
             // C2: no workout timer
         }
 
@@ -2742,6 +2846,80 @@
             renderDashboard();
         }
 
+        // --- GROUP MENU ---
+        let _openGroupMenuEl = null;
+        function toggleGroupMenu(btn, dayIdx, tituloIdx) {
+            const dropdown = document.getElementById(`gmenu-${dayIdx}-${tituloIdx}`);
+            if (!dropdown) return;
+            const isOpen = dropdown.classList.contains('open');
+            closeGroupMenu();
+            if (!isOpen) {
+                dropdown.classList.add('open');
+                _openGroupMenuEl = dropdown;
+                setTimeout(() => document.addEventListener('click', _closeGroupMenuOnOutside), 0);
+            }
+        }
+        function _closeGroupMenuOnOutside(e) {
+            if (_openGroupMenuEl && !_openGroupMenuEl.contains(e.target) && !e.target.closest('.group-menu-wrap')) {
+                closeGroupMenu();
+            }
+        }
+        function closeGroupMenu() {
+            if (_openGroupMenuEl) { _openGroupMenuEl.classList.remove('open'); _openGroupMenuEl = null; }
+            document.removeEventListener('click', _closeGroupMenuOnOutside);
+        }
+
+        // --- EX OPTIONS MODAL ---
+        let _exOptCtx = null; // { name, safeId, dayIdx, exIdx }
+        function openExOptions(name, safeId, dayIdx, exIdx) {
+            _exOptCtx = { name, safeId, dayIdx, exIdx };
+            document.getElementById('ex-options-title').textContent = name;
+            // wire photo button with hidden file input
+            const photoBtn = document.getElementById('ex-opt-photo');
+            photoBtn.onclick = null;
+            photoBtn.innerHTML = `
+                <span class="eoi-icon">📷</span>
+                <span class="eoi-text">
+                    <span class="eoi-label">Agregar foto</span>
+                    <span class="eoi-desc">Foto de referencia o progreso</span>
+                </span>
+                <label style="position:absolute;inset:0;cursor:pointer;opacity:0;overflow:hidden">
+                    <input type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0" onchange="handleImageUpload(this,'${name.replace(/'/g,"\\'")}');closeExOptions()">
+                </label>`;
+            photoBtn.style.position = 'relative';
+            document.getElementById('ex-options-modal').classList.add('open');
+        }
+        function closeExOptions() {
+            document.getElementById('ex-options-modal').classList.remove('open');
+            _exOptCtx = null;
+        }
+        function exOptNotes() {
+            if (!_exOptCtx) return;
+            const { name, safeId } = _exOptCtx;
+            closeExOptions();
+            const section = document.getElementById('notes-section-' + safeId);
+            if (section) { section.style.display = ''; section.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+        }
+        function exOptLink() {
+            if (!_exOptCtx) return;
+            const { name, safeId } = _exOptCtx;
+            closeExOptions();
+            const section = document.getElementById('link-section-' + safeId);
+            if (section) { section.style.display = ''; section.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+        }
+        function exOptRename() {
+            if (!_exOptCtx) return;
+            const { dayIdx, exIdx } = _exOptCtx;
+            closeExOptions();
+            editItemName(dayIdx, exIdx);
+        }
+        function exOptDelete() {
+            if (!_exOptCtx) return;
+            const { dayIdx, exIdx } = _exOptCtx;
+            closeExOptions();
+            deleteItem(dayIdx, exIdx);
+        }
+
         // --- DAY ABM ---
         let _dayModalIdx = -1; // -1 = new day
 
@@ -3040,6 +3218,9 @@
 
         // --- BACK NAVIGATION (Android gesture + hardware back) ---
         window.addEventListener('popstate', (e) => {
+            if (document.getElementById('ex-options-modal').classList.contains('open')) {
+                closeExOptions(); return;
+            }
             if (document.getElementById('day-action-sheet').classList.contains('open')) {
                 closeDayActionSheet(); return;
             }
@@ -3213,18 +3394,19 @@
                 activeTimer.running = true; activeTimer.everStarted = true;
                 btn.textContent = '⏸';
                 const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
-                const disp = document.getElementById('tdisp-' + safeId);
                 if (activeTimer.mode === 'timer') {
                     activeTimer.interval = setInterval(() => {
                         if (!activeTimer || !activeTimer.running) return;
                         activeTimer.seconds--;
+                        const disp = document.getElementById('tdisp-' + safeId);
                         if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
                         if (activeTimer.seconds <= 0) {
                             clearInterval(activeTimer.interval);
                             activeTimer.interval = null; activeTimer.running = false;
                             playTimerAlert();
                             activeTimer.seconds = activeTimer.configured;
-                            if (disp) disp.textContent = fmtTimer(activeTimer.configured);
+                            const disp2 = document.getElementById('tdisp-' + safeId);
+                            if (disp2) disp2.textContent = fmtTimer(activeTimer.configured);
                             const pb = document.getElementById('tpause-' + safeId);
                             if (pb) pb.textContent = '▶';
                         }
@@ -3233,6 +3415,7 @@
                     activeTimer.interval = setInterval(() => {
                         if (!activeTimer || !activeTimer.running) return;
                         activeTimer.seconds++;
+                        const disp = document.getElementById('tdisp-' + safeId);
                         if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
                     }, 1000);
                 }
@@ -3267,8 +3450,7 @@
             checks.forEach((c, i) => c.classList.toggle('checked', i < newCount));
             const isDone = newCount >= numSets && numSets > 0;
             card.classList.toggle('completed', isDone);
-            const doneCheck = card.querySelector('.ex-done-check');
-            if (doneCheck) doneCheck.classList.toggle('done', isDone);
+            // ex-done-check removed
             if (isDone) {
                 saveCurrentWorkoutState();
                 // Stop timer on exercise completion
@@ -3286,7 +3468,7 @@
                         break;
                     }
                 }
-            } else if (wasChecking && activeTimer && activeTimer.name === name && activeTimer.everStarted && !activeTimer.running) {
+            } else if (wasChecking && activeTimer && activeTimer.name === name && !activeTimer.running) {
                 // Auto-start timer after completing a set (not the last one)
                 const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
                 activeTimer.seconds = activeTimer.mode === 'timer' ? activeTimer.configured : 0;
@@ -3362,8 +3544,7 @@
             Array.from(card.querySelectorAll('.series-check')).forEach((c, i) => c.classList.toggle('checked', i < newCount));
             const isDone = newCount >= numSets && numSets > 0;
             card.classList.toggle('completed', isDone);
-            const doneCheck = card.querySelector('.ex-done-check');
-            if (doneCheck) doneCheck.classList.toggle('done', isDone);
+            // ex-done-check removed
             if (isDone) {
                 saveCurrentWorkoutState();
                 if (activeTimer && activeTimer.name === name) {
@@ -3380,7 +3561,7 @@
                         break;
                     }
                 }
-            } else if (wasChecking && activeTimer && activeTimer.name === name && activeTimer.everStarted && !activeTimer.running) {
+            } else if (wasChecking && activeTimer && activeTimer.name === name && !activeTimer.running) {
                 const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
                 activeTimer.seconds = activeTimer.mode === 'timer' ? activeTimer.configured : 0;
                 const disp = document.getElementById('tdisp-' + safeId);
