@@ -2350,7 +2350,7 @@
                 <div class="rsv-header">
                     <span class="rsv-title">Rutina Actual</span>
                     <span class="rsv-print-date">${dateStr}</span>
-                    <button class="rsv-pdf-btn" onclick="window.print()">Exportar PDF</button>
+                    <button class="rsv-pdf-btn" onclick="exportRoutinePdf()">Exportar PDF</button>
                 </div>
             `;
 
@@ -2391,6 +2391,85 @@
             }
 
             container.innerHTML = html;
+        }
+
+        function exportRoutinePdf() {
+            const exData = getExData();
+            const dateStr = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
+            const accentColor = getConfig().accentColor || '#e8722a';
+
+            const activeDays = routineData.filter(day =>
+                day.ejercicios.some(e => !e.titulo && e.active !== false)
+            );
+
+            let rows = '';
+            activeDays.forEach(day => {
+                const groups = groupExercises(day.ejercicios);
+                rows += `<div class="day">
+                    <div class="day-header">${day.nombre}</div>`;
+                groups.forEach(group => {
+                    const activeExs = group.exercises.filter(({ item }) => item.active !== false);
+                    if (!activeExs.length) return;
+                    if (group.titulo) rows += `<div class="group-title">${group.titulo}</div>`;
+                    activeExs.forEach(({ item }) => {
+                        const lastWeight = exData[item.n]?.weight;
+                        const weight = lastWeight ? `${lastWeight} kg` : (item.p || '—');
+                        rows += `<div class="ex-row">
+                            <span class="ex-name">${item.n}</span>
+                            <span class="ex-meta">${item.s || ''}</span>
+                            <span class="ex-weight">${weight}</span>
+                        </div>`;
+                    });
+                });
+                rows += `</div>`;
+            });
+
+            const printHtml = `<!DOCTYPE html><html lang="es"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rutina – ${dateStr}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: #fff; color: #111; padding: 24px 20px; }
+  h1 { font-size: 1.1rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
+       color: ${accentColor}; margin-bottom: 4px; }
+  .date { font-size: 0.75rem; color: #666; margin-bottom: 24px; }
+  .day { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;
+         page-break-inside: avoid; }
+  .day-header { background: #f5f5f5; padding: 8px 14px; font-size: 0.82rem;
+                font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #222; }
+  .group-title { padding: 6px 14px 2px; font-size: 0.68rem; font-weight: 800;
+                 letter-spacing: 2px; text-transform: uppercase; color: ${accentColor};
+                 border-top: 1px solid #eee; }
+  .ex-row { display: flex; align-items: center; gap: 8px; padding: 7px 14px;
+            border-top: 1px solid #f0f0f0; }
+  .ex-name { flex: 1; font-size: 0.82rem; font-weight: 600; }
+  .ex-meta { font-size: 0.75rem; color: #666; white-space: nowrap; }
+  .ex-weight { font-size: 0.78rem; font-weight: 700; color: #333; white-space: nowrap;
+               min-width: 60px; text-align: right; }
+  @media print {
+    body { padding: 12px 10px; }
+    .day { page-break-inside: avoid; }
+  }
+</style>
+</head><body>
+<h1>Rutina de entrenamiento</h1>
+<div class="date">${dateStr}</div>
+${rows}
+<script>window.onload = function(){ window.print(); };<\/script>
+</body></html>`;
+
+            const blob = new Blob([printHtml], { type: 'text/html' });
+            const url  = URL.createObjectURL(blob);
+            const win  = window.open(url, '_blank');
+            if (!win) {
+                // fallback: direct download
+                const a = document.createElement('a');
+                a.href = url; a.download = `rutina_${new Date().toISOString().slice(0,10)}.html`;
+                a.click();
+            }
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
         }
 
         function buildColorSwatches(currentHex) {
