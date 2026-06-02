@@ -2397,8 +2397,11 @@
             const exData = getExData();
             const dateStr = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
             const accentColor = getConfig().accentColor || '#e8722a';
+            const logs = getLogs();
 
+            // Only days that were ever finalized (have a log entry)
             const activeDays = routineData.filter(day =>
+                logs[day.dia] &&
                 day.ejercicios.some(e => !e.titulo && e.active !== false)
             );
 
@@ -2423,6 +2426,11 @@
                 });
                 rows += `</div>`;
             });
+
+            if (activeDays.length === 0) {
+                showToast('No hay días finalizados para exportar');
+                return;
+            }
 
             const printHtml = `<!DOCTYPE html><html lang="es" style="background:#fff;color:#111"><head>
 <meta charset="UTF-8">
