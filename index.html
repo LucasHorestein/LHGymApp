@@ -3134,7 +3134,29 @@ ${rows}
             const day = routineData[idx];
             closeDayModal();                    // close day modal first
             confirmModal(`¿Eliminar "${day.nombre.replace(/^Día \d+ – /, '')}"? Se borrarán todos sus ejercicios.`, () => {
+                // Remove log for deleted day
+                const logs = getLogs();
+                delete logs[day.dia];
+
                 routineData.splice(idx, 1);
+
+                // Renumber all days sequentially and remap logs
+                const newLogs = {};
+                routineData.forEach((d, i) => {
+                    const oldDia = d.dia;
+                    const newDia = i + 1;
+                    if (oldDia !== newDia) {
+                        // remap log entry to new number
+                        if (logs[oldDia] !== undefined) newLogs[newDia] = logs[oldDia];
+                        // update day name if it contains the old number
+                        d.nombre = d.nombre.replace(/^Día \d+/, `Día ${newDia}`);
+                        d.dia = newDia;
+                    } else {
+                        if (logs[oldDia] !== undefined) newLogs[newDia] = logs[oldDia];
+                    }
+                });
+                localStorage.setItem('gym_logs', JSON.stringify(newLogs));
+
                 saveRoutineStructure();
                 renderDashboard();
                 showToast('Día eliminado');
