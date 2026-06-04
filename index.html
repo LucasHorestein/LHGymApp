@@ -277,16 +277,19 @@
         .ctrl-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
         .btn-del { color: var(--danger) !important; }
 
-        /* Stats grid */
-        .stats-grid {
-            display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); gap: 0;
+        /* Stats wrap */
+        .stats-wrap { display: flex; flex-direction: column; }
+        .stats-row {
+            display: flex;
+            border-bottom: 1px solid var(--border);
         }
-        .stat-box {
-            display: flex; flex-direction: column; align-items: center;
-            padding: 16px 6px 14px; border-right: 1px solid var(--border); gap: 8px;
+        .stats-row:last-child { border-bottom: none; }
+        .stat-cell {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 18px 12px 16px; gap: 10px;
         }
-        .stat-box:last-child { border-right: none; }
-        .stat-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+        .stat-cell + .stat-cell { border-left: 1px solid var(--border); }
+        .stat-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: var(--muted); }
 
         /* Selector de reps */
         select.reps-select {
@@ -332,7 +335,7 @@
             transition: border-color 0.2s;
         }
         input:focus { border-color: var(--accent); background: rgba(255,255,255,0.1); }
-        input.weight-input { color: var(--accent); border-color: rgba(232,114,42,0.3); background: rgba(232,114,42,0.06); max-width: 53px; }
+        input.weight-input { color: var(--accent); border-color: rgba(232,114,42,0.3); background: rgba(232,114,42,0.06); }
         /* ── SIN SPINNERS NATIVOS ── */
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { display: none; }
@@ -528,16 +531,16 @@
             justify-content: center;
         }
         .stepper-box input {
-            flex: 1; min-width: 36px; width: auto;
+            flex: 1; min-width: 50px; width: auto;
             padding-left: 0; padding-right: 0;
-            font-size: 1.1rem; font-weight: 700;
+            font-size: 1.35rem; font-weight: 800;
             font-variant-numeric: tabular-nums;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.5px; text-align: center;
         }
         .stepper-btn {
-            width: 26px; height: 44px; flex-shrink: 0; border-radius: 6px;
+            width: 36px; height: 46px; flex-shrink: 0; border-radius: 9px;
             background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-            color: var(--muted); font-size: 1.2rem; font-weight: 700;
+            color: var(--muted); font-size: 1.3rem; font-weight: 300;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
             transition: background 0.15s, color 0.15s;
         }
@@ -1971,7 +1974,7 @@
 
         function buildExerciseCard(item, exIdx, savedData) {
             const isMediaDay = true; const isUrlDay = true; // always available
-            let defSets = "", defReps = "", defWeight = "", defWeight2 = "", defLink = "", defImg = "", defFalloData = [], defNotes = "", defComboData = [];
+            let defSets = "", defReps = "", defReps2 = "", defWeight = "", defWeight2 = "", defLink = "", defImg = "", defFalloData = [], defNotes = "", defComboData = [];
             let defCombined = false;
             let prevWeight = "", prevWeight2 = "";
             if (item.s && item.s.includes('x')) {
@@ -1986,6 +1989,7 @@
                 prevWeight2  = sd.weight2   || "";
                 defSets      = sd.sets      || defSets;
                 defReps      = sd.reps      || defReps;
+                defReps2     = sd.reps2     || "";
                 defWeight    = sd.weight    || "";
                 defWeight2   = sd.weight2   || "";
                 defCombined  = !!sd.combined;
@@ -2109,35 +2113,67 @@
                         <div class="card-clock-wrap"><button class="ctrl-btn" id="clock-btn-${safeId}" title="Timer de descanso" onclick="openClockPopover(this,'${safeName}')">🕐</button></div>
                     </div>
                 </div>
-                <div class="stats-grid" ${defCombined ? 'style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)"' : ''}>
-                    <div class="stat-box">
-                        <label class="stat-label">Series</label>
-                        <div class="stepper-box">
-                            <button class="stepper-btn" onclick="stepSets(this,-1)">−</button>
-                            <input type="number" inputmode="numeric" min="1" class="in-sets" value="${defSets}">
-                            <button class="stepper-btn" onclick="stepSets(this,1)">＋</button>
+                <div class="stats-wrap">
+                    ${defCombined ? `
+                    <div class="stats-row">
+                        <div class="stat-cell">
+                            <label class="stat-label">Series</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepSets(this,-1)">−</button>
+                                <input type="number" inputmode="numeric" min="1" class="in-sets" value="${defSets}">
+                                <button class="stepper-btn" onclick="stepSets(this,1)">＋</button>
+                            </div>
                         </div>
                     </div>
-                    ${defCombined
-                        ? `<div class="stat-box">
-                            <label class="stat-label">Peso 1</label>
+                    <div class="stats-row">
+                        <div class="stat-cell">
+                            <label class="stat-label">Reps A</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
+                                <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="${numReps||''}">
+                                <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
+                            </div>
+                        </div>
+                        <div class="stat-cell">
+                            <label class="stat-label">Reps B</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepReps2(this,-1)">−</button>
+                                <input type="number" inputmode="numeric" min="1" max="99" class="in-reps2-num" value="${defReps2||''}">
+                                <button class="stepper-btn" onclick="stepReps2(this,1)">＋</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-row">
+                        <div class="stat-cell">
+                            <label class="stat-label">Peso A kg</label>
                             <div class="stepper-box">
                                 <button class="stepper-btn" onclick="stepWeight1(this,-2.5)">−</button>
                                 <input type="number" inputmode="decimal" min="0" step="any" class="in-w1 weight-input" placeholder="0" value="${defWeight}" data-prev="${prevWeight}">
                                 <button class="stepper-btn" onclick="stepWeight1(this,2.5)">＋</button>
                             </div>
                             ${deltaHtml}
-                           </div>
-                           <div class="stat-box" style="border-right:none">
-                            <label class="stat-label">Peso 2</label>
+                        </div>
+                        <div class="stat-cell">
+                            <label class="stat-label">Peso B kg</label>
                             <div class="stepper-box">
                                 <button class="stepper-btn" onclick="stepWeight2(this,-2.5)">−</button>
                                 <input type="number" inputmode="decimal" min="0" step="any" class="in-w2 weight-input" placeholder="0" value="${defWeight2}" data-prev="${prevWeight2}">
                                 <button class="stepper-btn" onclick="stepWeight2(this,2.5)">＋</button>
                             </div>
                             ${delta2Html}
-                           </div>`
-                        : `<div class="stat-box">
+                        </div>
+                    </div>
+                    ` : `
+                    <div class="stats-row">
+                        <div class="stat-cell">
+                            <label class="stat-label">Series</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepSets(this,-1)">−</button>
+                                <input type="number" inputmode="numeric" min="1" class="in-sets" value="${defSets}">
+                                <button class="stepper-btn" onclick="stepSets(this,1)">＋</button>
+                            </div>
+                        </div>
+                        <div class="stat-cell">
                             <label class="stat-label">Reps</label>
                             <div class="reps-stepper-wrap">
                                 <div class="stepper-box"${isFallo ? ' style="display:none"' : ''}>
@@ -2147,8 +2183,10 @@
                                 </div>
                                 <button class="fallo-toggle${isFallo ? ' active expanded' : ''}" onclick="toggleFallo(this)">Fallo</button>
                             </div>
-                           </div>
-                           <div class="stat-box peso-box">
+                        </div>
+                    </div>
+                    <div class="stats-row">
+                        <div class="stat-cell">
                             <label class="stat-label">Peso kg</label>
                             <div class="stepper-box">
                                 <button class="stepper-btn" onclick="stepWeight(this,-2.5)">−</button>
@@ -2156,8 +2194,9 @@
                                 <button class="stepper-btn" onclick="stepWeight(this,2.5)">＋</button>
                             </div>
                             ${deltaHtml}
-                           </div>`
-                    }
+                        </div>
+                    </div>
+                    `}
                 </div>
                 <div class="fallo-grid" style="${(isFallo && !defCombined) ? 'display:flex' : 'display:none'}">${falloRowsHtml}</div>
                 <div class="combo-grid" style="${defCombined ? 'display:flex' : 'display:none'}">${comboRowsHtml}</div>
@@ -3200,7 +3239,7 @@ ${rows}
 
             const relevant = t.classList.contains('in-sets') || t.classList.contains('in-weight') ||
                 t.classList.contains('in-w1') || t.classList.contains('in-w2') ||
-                t.classList.contains('in-reps-num') || t.classList.contains('in-link') ||
+                t.classList.contains('in-reps-num') || t.classList.contains('in-reps2-num') || t.classList.contains('in-link') ||
                 t.classList.contains('fallo-input') || t.classList.contains('combo-input') ||
                 t.classList.contains('in-notes');
             if (!relevant) return;
@@ -3246,8 +3285,10 @@ ${rows}
                 const combBtn   = card.querySelector('.ctrl-btn[title="Combinado"]');
                 const isFallo   = falloBtn && falloBtn.classList.contains('active');
                 const isCombined = combBtn && combBtn.classList.contains('active');
-                const repsNumEl = card.querySelector('.in-reps-num');
-                const reps      = isFallo ? 'Fallo' : (repsNumEl ? repsNumEl.value.trim() : '');
+                const repsNumEl  = card.querySelector('.in-reps-num');
+                const reps2NumEl = card.querySelector('.in-reps2-num');
+                const reps       = isFallo ? 'Fallo' : (repsNumEl ? repsNumEl.value.trim() : '');
+                const reps2Save  = reps2NumEl ? reps2NumEl.value.trim() : '';
                 const weightEl  = card.querySelector('.in-weight') || card.querySelector('.in-w1');
                 const weight    = weightEl ? weightEl.value.trim() : '';
                 const w2El      = card.querySelector('.in-w2');
@@ -3267,7 +3308,7 @@ ${rows}
                 const notes   = notesEl ? notesEl.value.trim() : '';
                 const img     = (allData[name] || {}).img || '';
                 if (sets || reps || weight || weight2 || link || img || notes || falloData.some(v=>v) || comboData.some(r=>r[0]||r[1])) {
-                    allData[name] = { sets, reps, weight, weight2, combined: isCombined, falloData, comboData, link, img, notes, fecha: today };
+                    allData[name] = { sets, reps, reps2: reps2Save, weight, weight2, combined: isCombined, falloData, comboData, link, img, notes, fecha: today };
                 }
                 const histEl = card.querySelector('.mini-history');
                 if (histEl) {
@@ -3681,74 +3722,106 @@ ${rows}
                 const falloBtn = card.querySelector('.fallo-toggle');
                 if (falloBtn && falloBtn.classList.contains('active')) toggleFallo(falloBtn);
             }
-            const statsGrid = card.querySelector('.stats-grid');
+            const statsWrap = card.querySelector('.stats-wrap');
             const falloGrid = card.querySelector('.fallo-grid');
             const comboGrid = card.querySelector('.combo-grid');
-            const name     = card.dataset.name;
-            const safeId   = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const name    = card.dataset.name;
+            const safeId  = name.replace(/[^a-zA-Z0-9]/g,'_');
 
             if (isCombined) {
-                const curW  = card.querySelector('.in-weight')?.value || '';
-                const prevW = card.querySelector('.in-weight')?.dataset.prev || '';
-                // Capture boxes before any DOM mutation
-                const boxes = Array.from(statsGrid.querySelectorAll(':scope > .stat-box'));
-                const repsBox = boxes[1];
-                const pesoBox = boxes[2];
-                // Col 2 → Peso 1
-                if (repsBox) repsBox.outerHTML = `<div class="stat-box">
-                    <label class="stat-label">Peso 1</label>
-                    <div class="stepper-box">
-                        <button class="stepper-btn" onclick="stepWeight1(this,-2.5)">−</button>
-                        <input type="number" inputmode="decimal" min="0" step="any" class="in-w1 weight-input" placeholder="0" value="${curW}" data-prev="${prevW}">
-                        <button class="stepper-btn" onclick="stepWeight1(this,2.5)">＋</button>
+                const setsVal = card.querySelector('.in-sets')?.value || '4';
+                const curW    = card.querySelector('.in-weight')?.value || '';
+                const prevW   = card.querySelector('.in-weight')?.dataset.prev || '';
+                statsWrap.innerHTML = `
+                    <div class="stats-row">
+                        <div class="stat-cell">
+                            <label class="stat-label">Series</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepSets(this,-1)">−</button>
+                                <input type="number" inputmode="numeric" min="1" class="in-sets" value="${setsVal}">
+                                <button class="stepper-btn" onclick="stepSets(this,1)">＋</button>
+                            </div>
+                        </div>
                     </div>
-                    <span class="weight-delta eq" id="delta1-${safeId}" style="${prevW?'':'display:none'}">${prevW?'= '+prevW+'kg':''}</span>
-                </div>`;
-                // Col 3 → Peso 2
-                if (pesoBox) pesoBox.outerHTML = `<div class="stat-box" style="border-right:none">
-                    <label class="stat-label">Peso 2</label>
-                    <div class="stepper-box">
-                        <button class="stepper-btn" onclick="stepWeight2(this,-2.5)">−</button>
-                        <input type="number" inputmode="decimal" min="0" step="any" class="in-w2 weight-input" placeholder="0" value="" data-prev="">
-                        <button class="stepper-btn" onclick="stepWeight2(this,2.5)">＋</button>
+                    <div class="stats-row">
+                        <div class="stat-cell">
+                            <label class="stat-label">Reps A</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
+                                <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="">
+                                <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
+                            </div>
+                        </div>
+                        <div class="stat-cell">
+                            <label class="stat-label">Reps B</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepReps2(this,-1)">−</button>
+                                <input type="number" inputmode="numeric" min="1" max="99" class="in-reps2-num" value="">
+                                <button class="stepper-btn" onclick="stepReps2(this,1)">＋</button>
+                            </div>
+                        </div>
                     </div>
-                    <span class="weight-delta eq" id="delta2-${safeId}" style="display:none"></span>
-                </div>`;
-                // 3 equal columns
-                statsGrid.style.gridTemplateColumns = 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)';
+                    <div class="stats-row">
+                        <div class="stat-cell">
+                            <label class="stat-label">Peso A kg</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepWeight1(this,-2.5)">−</button>
+                                <input type="number" inputmode="decimal" min="0" step="any" class="in-w1 weight-input" placeholder="0" value="${curW}" data-prev="${prevW}">
+                                <button class="stepper-btn" onclick="stepWeight1(this,2.5)">＋</button>
+                            </div>
+                            <span class="weight-delta eq" id="delta1-${safeId}" style="${prevW?'':'display:none'}">${prevW?'= '+prevW+'kg':''}</span>
+                        </div>
+                        <div class="stat-cell">
+                            <label class="stat-label">Peso B kg</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepWeight2(this,-2.5)">−</button>
+                                <input type="number" inputmode="decimal" min="0" step="any" class="in-w2 weight-input" placeholder="0" value="" data-prev="">
+                                <button class="stepper-btn" onclick="stepWeight2(this,2.5)">＋</button>
+                            </div>
+                            <span class="weight-delta eq" id="delta2-${safeId}" style="display:none"></span>
+                        </div>
+                    </div>`;
                 if (falloGrid) falloGrid.style.display = 'none';
                 const seriesChecksC = card.querySelector('.series-checks');
                 if (seriesChecksC) seriesChecksC.style.display = 'none';
                 if (comboGrid) { rebuildComboGrid(card); comboGrid.style.display = 'flex'; }
             } else {
-                // Capture boxes (now: [0]=Series, [1]=Peso1, [2]=Peso2)
-                const boxes = Array.from(statsGrid.querySelectorAll(':scope > .stat-box'));
-                const w1Box = boxes[1];
-                const w2Box = boxes[2];
-                // Col 2 → Reps
-                if (w1Box) w1Box.outerHTML = `<div class="stat-box">
-                    <label class="stat-label">Reps</label>
-                    <div class="reps-stepper-wrap">
-                        <div class="stepper-box">
-                            <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
-                            <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="">
-                            <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
+                const setsVal = card.querySelector('.in-sets')?.value || '4';
+                const curW1   = card.querySelector('.in-w1')?.value || '';
+                const prevW1  = card.querySelector('.in-w1')?.dataset.prev || '';
+                statsWrap.innerHTML = `
+                    <div class="stats-row">
+                        <div class="stat-cell">
+                            <label class="stat-label">Series</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepSets(this,-1)">−</button>
+                                <input type="number" inputmode="numeric" min="1" class="in-sets" value="${setsVal}">
+                                <button class="stepper-btn" onclick="stepSets(this,1)">＋</button>
+                            </div>
                         </div>
-                        <button class="fallo-toggle" onclick="toggleFallo(this)">Fallo</button>
+                        <div class="stat-cell">
+                            <label class="stat-label">Reps</label>
+                            <div class="reps-stepper-wrap">
+                                <div class="stepper-box">
+                                    <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
+                                    <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="">
+                                    <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
+                                </div>
+                                <button class="fallo-toggle" onclick="toggleFallo(this)">Fallo</button>
+                            </div>
+                        </div>
                     </div>
-                </div>`;
-                // Col 3 → Peso
-                if (w2Box) w2Box.outerHTML = `<div class="stat-box peso-box">
-                    <label class="stat-label">Peso kg</label>
-                    <div class="stepper-box">
-                        <button class="stepper-btn" onclick="stepWeight(this,-2.5)">−</button>
-                        <input type="number" inputmode="decimal" min="0" step="any" class="in-weight weight-input" placeholder="0" value="" data-prev="">
-                        <button class="stepper-btn" onclick="stepWeight(this,2.5)">＋</button>
-                    </div>
-                    <span class="weight-delta eq" id="delta1-${safeId}" style="display:none"></span>
-                </div>`;
-                // Restore original grid proportions
-                statsGrid.style.gridTemplateColumns = '';
+                    <div class="stats-row">
+                        <div class="stat-cell">
+                            <label class="stat-label">Peso kg</label>
+                            <div class="stepper-box">
+                                <button class="stepper-btn" onclick="stepWeight(this,-2.5)">−</button>
+                                <input type="number" inputmode="decimal" min="0" step="any" class="in-weight weight-input" placeholder="0" value="${curW1}" data-prev="${prevW1}">
+                                <button class="stepper-btn" onclick="stepWeight(this,2.5)">＋</button>
+                            </div>
+                            <span class="weight-delta eq" id="delta1-${safeId}" style="${prevW1?'':'display:none'}">${prevW1?'= '+prevW1+'kg':''}</span>
+                        </div>
+                    </div>`;
                 if (comboGrid) comboGrid.style.display = 'none';
                 const seriesChecksOff = card.querySelector('.series-checks');
                 if (seriesChecksOff) seriesChecksOff.style.display = '';
@@ -3902,6 +3975,14 @@ ${rows}
         function stepReps(btn, delta) {
             const card  = btn.closest('.exercise-card');
             const input = card.querySelector('.in-reps-num');
+            if (!input || input.disabled) return;
+            input.value = Math.max(1, Math.min(99, (parseInt(input.value) || 1) + delta));
+            scheduleAutoSave();
+        }
+
+        function stepReps2(btn, delta) {
+            const card  = btn.closest('.exercise-card');
+            const input = card.querySelector('.in-reps2-num');
             if (!input || input.disabled) return;
             input.value = Math.max(1, Math.min(99, (parseInt(input.value) || 1) + delta));
             scheduleAutoSave();
