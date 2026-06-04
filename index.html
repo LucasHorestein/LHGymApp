@@ -150,9 +150,9 @@
         .card.week-done .card-text,
         .card.week-done .arrow { opacity: 0.45; }
         .done-overlay {
-            flex-shrink: 0;
-            display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
-            gap: 4px; pointer-events: none;
+            position: absolute; top: 10px; right: 12px;
+            display: flex; flex-direction: column; align-items: flex-end;
+            gap: 3px; pointer-events: none;
         }
         .done-badge {
             font-size: 0.62rem; font-weight: 800; letter-spacing: 0.5px;
@@ -561,11 +561,12 @@
         }
         .series-check {
             width: 32px; height: 32px; border-radius: 50%;
-            border: 1.5px solid rgba(232,114,42,0.3);
+            border: 2px solid var(--accent);
             background: transparent; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             font-size: 0.85rem; color: transparent;
             transition: background 0.15s, border-color 0.15s, color 0.15s;
+            box-shadow: 0 0 6px rgba(232,114,42,0.35);
         }
         .series-check:active { background: rgba(232,114,42,0.15); }
         .series-check.checked {
@@ -659,10 +660,11 @@
         }
         .fallo-check {
             width: 32px; height: 32px; border-radius: 50%;
-            border: 1.5px solid rgba(232,114,42,0.3); background: transparent;
+            border: 2px solid var(--accent); background: transparent;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             font-size: 0.85rem; color: transparent; flex-shrink: 0;
             transition: background 0.15s, border-color 0.15s, color 0.15s;
+            box-shadow: 0 0 6px rgba(232,114,42,0.35);
         }
         .fallo-check.checked { background: var(--accent); border-color: var(--accent); color: #fff; }
 
@@ -1880,22 +1882,6 @@
             container.innerHTML = '';
             const logs = getLogs();
 
-            // Weekly progress bar
-            const completedCount = routineData.filter(d => isWithin7Days(logs[d.dia])).length;
-            const total = routineData.length;
-            const pct = total ? Math.round(completedCount / total * 100) : 0;
-            const progressEl = document.createElement('div');
-            progressEl.className = 'weekly-progress';
-            progressEl.innerHTML = `
-                <div class="weekly-progress-header">
-                    <span class="weekly-progress-label">Últimos 7 días</span>
-                    <span class="weekly-progress-count">${completedCount}/${total} días</span>
-                </div>
-                <div class="weekly-progress-bar-wrap">
-                    <div class="weekly-progress-bar" style="width:${pct}%"></div>
-                </div>
-            `;
-            container.appendChild(progressEl);
 
             routineData.forEach((day, index) => {
                 const card = document.createElement('div');
