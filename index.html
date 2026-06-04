@@ -149,11 +149,9 @@
         .card.week-done .day-badge,
         .card.week-done .card-text,
         .card.week-done .arrow { opacity: 0.45; }
-        .card.week-done .card-text { padding-right: 80px; }
         .done-overlay {
-            position: absolute; top: 10px; right: 12px;
-            display: flex; flex-direction: column; align-items: flex-end;
-            gap: 3px; pointer-events: none;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 2px; margin-top: 5px;
         }
         .done-badge {
             font-size: 0.62rem; font-weight: 800; letter-spacing: 0.5px;
@@ -163,7 +161,7 @@
         }
         .done-days-remaining {
             font-size: 0.58rem; font-weight: 600; letter-spacing: 0.5px;
-            color: rgba(245,237,228,0.35); text-transform: uppercase; text-align: right;
+            color: rgba(245,237,228,0.35); text-transform: uppercase; text-align: center;
             white-space: nowrap;
         }
 
@@ -1911,14 +1909,13 @@
                     <div class="card-text">
                         <div class="day-title">${day.nombre.replace(/^Día \d+ – /, '')}</div>
                         <div class="muscles-chips">${muscleChips}</div>
-                        <span class="last-log ${rawTs ? '' : 'pending'}">
+                        ${isDone ? `<div class="done-overlay">
+                            <span class="done-badge">✓ ${formatLogDate(rawTs)}</span>
+                            <span class="done-days-remaining">${daysLeft}d para reset</span>
+                        </div>` : `<span class="last-log ${rawTs ? '' : 'pending'}">
                             ${rawTs ? '✓ ' + displayTs : 'Sin registros'}
-                        </span>
+                        </span>`}
                     </div>
-                    ${isDone ? `<div class="done-overlay">
-                        <span class="done-badge">✓ ${formatLogDate(rawTs)}</span>
-                        <span class="done-days-remaining">${daysLeft}d para reset</span>
-                    </div>` : ''}
                 `;
 
                 attachLongPress(card, index);
@@ -1973,6 +1970,12 @@
             return groups;
         }
 
+        function parseJsonWeight(p) {
+            if (!p) return '';
+            const m = String(p).match(/(\d+(\.\d+)?)/);
+            return m ? m[1] : '';
+        }
+
         function buildExerciseCard(item, exIdx, savedData) {
             const isMediaDay = true; const isUrlDay = true; // always available
             let defSets = "", defReps = "", defReps2 = "", defWeight = "", defWeight2 = "", defLink = "", defImg = "", defFalloData = [], defNotes = "", defComboData = [];
@@ -1983,6 +1986,9 @@
                 defSets = parts[0].trim(); defReps = parts[1].trim();
             } else { defReps = item.s || ""; }
 
+            // Pre-load weight from JSON if no saved data
+            defWeight = parseJsonWeight(item.p);
+
             let historyLabel = `Meta: ${item.p || '0'}`;
             if (savedData[item.n]) {
                 const sd     = savedData[item.n];
@@ -1991,7 +1997,7 @@
                 defSets      = sd.sets      || defSets;
                 defReps      = sd.reps      || defReps;
                 defReps2     = sd.reps2     || "";
-                defWeight    = sd.weight    || "";
+                defWeight    = sd.weight    || defWeight;
                 defWeight2   = sd.weight2   || "";
                 defCombined  = !!sd.combined;
                 defComboData = sd.comboData || [];
