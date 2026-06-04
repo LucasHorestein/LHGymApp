@@ -1342,6 +1342,10 @@
                 <span class="das-icon">✓</span> Marcar como finalizado
             </button>
 
+            <button class="day-action-btn" id="day-unmark-btn" onclick="dayActionUnmark()" style="display:none">
+                <span class="das-icon">✕</span> Desmarcar día realizado
+            </button>
+
             <!-- date picker, visible cuando se elige "marcar finalizado" -->
             <div id="day-mark-done-row">
                 <label>¿Cuándo lo hiciste?</label>
@@ -2895,7 +2899,23 @@ ${rows}
             const day = routineData[index];
             document.getElementById('day-action-label').textContent = day ? day.nombre : 'Opciones del día';
             document.getElementById('day-mark-done-row').classList.remove('open');
+            // Show unmark button only if day is already logged
+            const logs = getLogs();
+            const isDone = day && logs[day.dia];
+            document.getElementById('day-unmark-btn').style.display = isDone ? '' : 'none';
             document.getElementById('day-action-sheet').classList.add('open');
+        }
+
+        function dayActionUnmark() {
+            const idx = _dayActionIdx;
+            closeDayActionSheet();
+            if (idx === null) return;
+            const day = routineData[idx];
+            if (!day) return;
+            const logs = getLogs();
+            delete logs[day.dia];
+            localStorage.setItem('gym_logs', JSON.stringify(logs));
+            renderDashboard();
         }
 
         function closeDayActionSheet() {
