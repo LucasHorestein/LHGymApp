@@ -1280,9 +1280,9 @@
             </div>
             <button class="add-ex-btn" style="border-color:var(--danger); color:var(--danger); margin-top:10px;" onclick="resetApp()">Borrar todos los datos</button>
 
-            <!-- Recordatorio de agua -->
+            <!-- Recordatorio para tomar agua -->
             <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
-                <h3 style="color:var(--text); margin-bottom:14px; font-size:0.85rem; letter-spacing:1px; text-align:left;">💧 RECORDATORIO DE AGUA</h3>
+                <h3 style="color:var(--text); margin-bottom:14px; font-size:0.85rem; letter-spacing:1px; text-align:left;">💧 RECORDATORIO PARA TOMAR AGUA</h3>
 
                 <!-- Toggle on/off -->
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
@@ -1297,11 +1297,22 @@
                 <div style="margin-bottom:14px;">
                     <div style="font-size:0.75rem; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Cada cuánto tiempo</div>
                     <div class="water-interval-grid" id="water-interval-grid">
-                        <button class="water-chip sel" data-min="15" onclick="selectWaterInterval(this)">15 min</button>
+                        <button class="water-chip" data-min="15" onclick="selectWaterInterval(this)">15 min</button>
                         <button class="water-chip" data-min="20" onclick="selectWaterInterval(this)">20 min</button>
                         <button class="water-chip" data-min="30" onclick="selectWaterInterval(this)">30 min</button>
                         <button class="water-chip" data-min="45" onclick="selectWaterInterval(this)">45 min</button>
                         <button class="water-chip" data-min="60" onclick="selectWaterInterval(this)">1 hora</button>
+                        <button class="water-chip" data-min="90" onclick="selectWaterInterval(this)">1.5 h</button>
+                        <button class="water-chip" data-min="120" onclick="selectWaterInterval(this)">2 horas</button>
+                    </div>
+                    <!-- Custom interval -->
+                    <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                        <span style="font-size:0.82rem; color:var(--muted); white-space:nowrap;">Personalizado:</span>
+                        <input id="water-custom-input" type="number" inputmode="numeric" min="1" max="480"
+                            placeholder="min"
+                            style="width:70px; padding:6px 8px; font-size:0.9rem; border-radius:8px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.14); color:var(--text); text-align:center; outline:none;"
+                            oninput="onWaterCustomInput(this)">
+                        <span style="font-size:0.82rem; color:var(--muted);">minutos</span>
                     </div>
                 </div>
 
@@ -2634,10 +2645,11 @@ ${rows}
             return JSON.parse(localStorage.getItem('gym_water') || '{"enabled":false,"interval":30,"sound":true}');
         }
         function saveWaterSettings() {
-            const enabled  = document.getElementById('water-enabled')?.checked || false;
-            const sound    = document.getElementById('water-sound')?.checked ?? true;
-            const selChip  = document.querySelector('.water-chip.sel');
-            const interval = selChip ? parseInt(selChip.dataset.min) : 30;
+            const enabled   = document.getElementById('water-enabled')?.checked || false;
+            const sound     = document.getElementById('water-sound')?.checked ?? true;
+            const selChip   = document.querySelector('.water-chip.sel');
+            const customVal = parseInt(document.getElementById('water-custom-input')?.value) || 0;
+            const interval  = customVal > 0 ? customVal : (selChip ? parseInt(selChip.dataset.min) : 30);
             const s = { enabled, interval, sound };
             localStorage.setItem('gym_water', JSON.stringify(s));
             applyWaterReminder(s);
@@ -2645,6 +2657,14 @@ ${rows}
         function selectWaterInterval(btn) {
             document.querySelectorAll('.water-chip').forEach(c => c.classList.remove('sel'));
             btn.classList.add('sel');
+            const customInput = document.getElementById('water-custom-input');
+            if (customInput) customInput.value = '';
+            saveWaterSettings();
+        }
+        function onWaterCustomInput(input) {
+            if (input.value) {
+                document.querySelectorAll('.water-chip').forEach(c => c.classList.remove('sel'));
+            }
             saveWaterSettings();
         }
         function initWaterUI() {
@@ -2653,10 +2673,15 @@ ${rows}
             const soundEl   = document.getElementById('water-sound');
             if (enabledEl) enabledEl.checked = s.enabled;
             if (soundEl)   soundEl.checked   = s.sound;
+            // Mark chip if interval matches a preset, else show in custom input
+            const presets = [15, 20, 30, 45, 60, 90, 120];
+            const isPreset = presets.includes(s.interval);
             document.querySelectorAll('.water-chip').forEach(c => {
-                c.classList.toggle('sel', parseInt(c.dataset.min) === s.interval);
+                c.classList.toggle('sel', isPreset && parseInt(c.dataset.min) === s.interval);
             });
-            applyWaterReminder(s);
+            const customInput = document.getElementById('water-custom-input');
+            if (customInput) customInput.value = isPreset ? '' : s.interval;
+            if (s.enabled) applyWaterReminder(s);
         }
         function applyWaterReminder(s) {
             clearInterval(_waterTimer);
