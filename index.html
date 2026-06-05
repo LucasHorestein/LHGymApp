@@ -1970,6 +1970,7 @@
                 defImg       = sd.img       || item.img || "";
                 defFalloData = sd.falloData || [];
                 defNotes     = sd.notes     || "";
+                if (sd.completed) completedSets[item.n] = sd.completed;
                 if (defCombined && sd.fecha) {
                     const w1 = sd.weight || '?'; const w2 = sd.weight2 || '?';
                     historyLabel = `Último: <span>${w1}kg + ${w2}kg</span>`;
@@ -3294,9 +3295,10 @@ ${rows}
                 const link    = linkEl ? linkEl.value.trim() : '';
                 const notesEl = card.querySelector('.in-notes');
                 const notes   = notesEl ? notesEl.value.trim() : '';
-                const img     = (allData[name] || {}).img || '';
-                if (sets || reps || weight || weight2 || link || img || notes || falloData.some(v=>v) || comboData.some(r=>r[0]||r[1])) {
-                    allData[name] = { sets, reps, reps2: reps2Save, weight, weight2, combined: isCombined, falloData, comboData, link, img, notes, fecha: today };
+                const img       = (allData[name] || {}).img || '';
+                const completed = completedSets[name] || 0;
+                if (sets || reps || weight || weight2 || link || img || notes || completed || falloData.some(v=>v) || comboData.some(r=>r[0]||r[1])) {
+                    allData[name] = { sets, reps, reps2: reps2Save, weight, weight2, combined: isCombined, falloData, comboData, link, img, notes, completed, fecha: today };
                 }
                 const histEl = card.querySelector('.mini-history');
                 if (histEl) {
@@ -3412,21 +3414,19 @@ ${rows}
 
         function openClockPopover(btn, name) {
             closeClockPopover();
-            const wrap = btn.parentElement;
             const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
             const timerRow = document.getElementById('timer-row-' + safeId);
-            const curMode = timerRow?.dataset.mode || null;
             const isOpen = timerRow && timerRow.style.display !== 'none';
-            const pop = document.createElement('div');
-            pop.id = 'clock-popover';
-            pop.className = 'clock-popover';
-            pop.innerHTML = `
-                <button class="clock-pop-opt${curMode==='stopwatch'&&isOpen?' cur':''}"
-                    onclick="activateClockMode('${name}','stopwatch');closeClockPopover()">🕐 Cronómetro</button>
-                <button class="clock-pop-opt${curMode==='timer'&&isOpen?' cur':''}"
-                    onclick="activateClockMode('${name}','timer');closeClockPopover()">⏱ Timer</button>`;
-            wrap.appendChild(pop);
-            setTimeout(() => document.addEventListener('click', closeClockPopover, { once: true }), 10);
+            if (isOpen) {
+                // Toggle off
+                timerRow.style.display = 'none';
+                if (activeTimer && activeTimer.name === name) {
+                    clearInterval(activeTimer.interval);
+                    activeTimer = null;
+                }
+            } else {
+                activateClockMode(name, 'timer');
+            }
         }
 
         function closeClockPopover() {
