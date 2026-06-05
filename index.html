@@ -1284,6 +1284,10 @@
             <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
                 <h3 style="color:var(--text); margin-bottom:14px; font-size:0.85rem; letter-spacing:1px; text-align:left;">💧 RECORDATORIO PARA TOMAR AGUA</h3>
 
+                <!-- Permiso -->
+                <button id="water-perm-btn" class="add-ex-btn" style="width:100%; margin-bottom:14px; display:none;" onclick="requestWaterPermission()">🔔 Permitir notificaciones</button>
+                <div id="water-perm-status" style="font-size:0.78rem; color:var(--muted); margin-bottom:14px; display:none;"></div>
+
                 <!-- Toggle on/off -->
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
                     <span style="font-size:0.9rem; color:var(--text);">Activar recordatorio</span>
@@ -1299,7 +1303,7 @@
                     <div class="water-interval-grid" id="water-interval-grid">
                         <button class="water-chip" data-min="15" onclick="selectWaterInterval(this)">15 min</button>
                         <button class="water-chip" data-min="20" onclick="selectWaterInterval(this)">20 min</button>
-                        <button class="water-chip" data-min="30" onclick="selectWaterInterval(this)">30 min</button>
+                        <button class="water-chip sel" data-min="30" onclick="selectWaterInterval(this)">30 min</button>
                         <button class="water-chip" data-min="45" onclick="selectWaterInterval(this)">45 min</button>
                         <button class="water-chip" data-min="60" onclick="selectWaterInterval(this)">1 hora</button>
                         <button class="water-chip" data-min="90" onclick="selectWaterInterval(this)">1.5 h</button>
@@ -1308,7 +1312,7 @@
                 </div>
 
                 <!-- Sonido -->
-                <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
                     <span style="font-size:0.9rem; color:var(--text);">Con sonido</span>
                     <label class="water-toggle-wrap">
                         <input type="checkbox" id="water-sound" onchange="saveWaterSettings()" checked>
@@ -1316,7 +1320,10 @@
                     </label>
                 </div>
 
-                <div id="water-status" style="margin-top:12px; font-size:0.75rem; color:var(--muted); text-align:center;"></div>
+                <!-- Probar -->
+                <button class="add-ex-btn" style="width:100%;" onclick="testWaterNotification()">💧 Probar ahora</button>
+
+                <div id="water-status" style="margin-top:12px; font-size:0.78rem; color:var(--muted); text-align:center;"></div>
             </div>
         </div>
     </div>
@@ -2630,17 +2637,15 @@ ${rows}
 
         // ── WATER REMINDER ──
         let _waterTimer = null;
-        let _waterAudio = null;
 
         function getWaterSettings() {
             return JSON.parse(localStorage.getItem('gym_water') || '{"enabled":false,"interval":30,"sound":true}');
         }
         function saveWaterSettings() {
-            const enabled   = document.getElementById('water-enabled')?.checked || false;
-            const sound     = document.getElementById('water-sound')?.checked ?? true;
-            const selChip   = document.querySelector('.water-chip.sel');
-            const customVal = parseInt(document.getElementById('water-custom-input')?.value) || 0;
-            const interval  = customVal > 0 ? customVal : (selChip ? parseInt(selChip.dataset.min) : 30);
+            const enabled  = document.getElementById('water-enabled')?.checked || false;
+            const sound    = document.getElementById('water-sound')?.checked ?? true;
+            const selChip  = document.querySelector('.water-chip.sel');
+            const interval = selChip ? parseInt(selChip.dataset.min) : 30;
             const s = { enabled, interval, sound };
             localStorage.setItem('gym_water', JSON.stringify(s));
             applyWaterReminder(s);
@@ -2648,14 +2653,6 @@ ${rows}
         function selectWaterInterval(btn) {
             document.querySelectorAll('.water-chip').forEach(c => c.classList.remove('sel'));
             btn.classList.add('sel');
-            const customInput = document.getElementById('water-custom-input');
-            if (customInput) customInput.value = '';
-            saveWaterSettings();
-        }
-        function onWaterCustomInput(input) {
-            if (input.value) {
-                document.querySelectorAll('.water-chip').forEach(c => c.classList.remove('sel'));
-            }
             saveWaterSettings();
         }
         function initWaterUI() {
@@ -2664,15 +2661,47 @@ ${rows}
             const soundEl   = document.getElementById('water-sound');
             if (enabledEl) enabledEl.checked = s.enabled;
             if (soundEl)   soundEl.checked   = s.sound;
-            // Mark chip if interval matches a preset, else show in custom input
-            const presets = [15, 20, 30, 45, 60, 90, 120];
-            const isPreset = presets.includes(s.interval);
             document.querySelectorAll('.water-chip').forEach(c => {
-                c.classList.toggle('sel', isPreset && parseInt(c.dataset.min) === s.interval);
+                c.classList.toggle('sel', parseInt(c.dataset.min) === s.interval);
             });
-            const customInput = document.getElementById('water-custom-input');
-            if (customInput) customInput.value = isPreset ? '' : s.interval;
+            updateWaterPermUI();
             if (s.enabled) applyWaterReminder(s);
+        }
+        function updateWaterPermUI() {
+            const permBtn    = document.getElementById('water-perm-btn');
+            const permStatus = document.getElementById('water-perm-status');
+            if (!permBtn || !permStatus) return;
+            if (!('Notification' in window)) {
+                permStatus.textContent = '⚠️ Tu navegador no soporta notificaciones';
+                permStatus.style.color = 'var(--muted)';
+                permStatus.style.display = 'block';
+                permBtn.style.display = 'none';
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                permStatus.textContent = '✓ Notificaciones permitidas';
+                permStatus.style.color = '#4ade80';
+                permStatus.style.display = 'block';
+                permBtn.style.display = 'none';
+            } else if (Notification.permission === 'denied') {
+                permStatus.textContent = '❌ Bloqueadas — habilitá en Configuración > Apps > Chrome > Notificaciones';
+                permStatus.style.color = '#f87171';
+                permStatus.style.display = 'block';
+                permBtn.style.display = 'none';
+            } else {
+                permBtn.style.display = 'block';
+                permStatus.style.display = 'none';
+            }
+        }
+        function requestWaterPermission() {
+            if (!('Notification' in window)) return;
+            Notification.requestPermission().then(p => {
+                updateWaterPermUI();
+                if (p === 'granted') {
+                    const s = getWaterSettings();
+                    if (s.enabled) startWaterTimer(s);
+                }
+            });
         }
         function applyWaterReminder(s) {
             clearInterval(_waterTimer);
@@ -2682,38 +2711,56 @@ ${rows}
                 if (statusEl) statusEl.textContent = '';
                 return;
             }
-            // Request notification permission
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission().then(p => {
-                    if (p === 'granted') startWaterTimer(s);
-                    else if (statusEl) statusEl.textContent = '⚠️ Permiso de notificación denegado';
-                });
-            } else if ('Notification' in window && Notification.permission === 'granted') {
-                startWaterTimer(s);
-            } else {
+            if (!('Notification' in window)) {
                 if (statusEl) statusEl.textContent = '⚠️ Tu navegador no soporta notificaciones';
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                startWaterTimer(s);
+            } else if (Notification.permission === 'default') {
+                if (statusEl) statusEl.textContent = 'Tocá "Permitir notificaciones" para activar';
+                updateWaterPermUI();
+            } else {
+                if (statusEl) statusEl.textContent = '❌ Notificaciones bloqueadas';
             }
         }
         function startWaterTimer(s) {
-            const statusEl = document.getElementById('water-status');
-            if (statusEl) statusEl.textContent = `✓ Recordatorio activo cada ${s.interval} min`;
             clearInterval(_waterTimer);
-            _waterTimer = setInterval(() => sendWaterNotification(s), s.interval * 60 * 1000);
+            const statusEl = document.getElementById('water-status');
+            const label = s.interval >= 60 ? (s.interval === 60 ? '1 hora' : s.interval === 90 ? '1.5 horas' : '2 horas') : s.interval + ' min';
+            if (statusEl) statusEl.textContent = `✓ Activo — recordatorio cada ${label}`;
+            _waterTimer = setInterval(() => {
+                if (!getWaterSettings().enabled) { clearInterval(_waterTimer); return; }
+                showWaterNotification(getWaterSettings().sound);
+            }, s.interval * 60 * 1000);
         }
-        function sendWaterNotification(s) {
-            if (!getWaterSettings().enabled) { clearInterval(_waterTimer); return; }
-            // Show notification
+        function showWaterNotification(sound) {
             if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({ type: 'WATER_NOTIF', sound: s.sound });
+                navigator.serviceWorker.controller.postMessage({ type: 'WATER_NOTIF', sound });
             } else if ('Notification' in window && Notification.permission === 'granted') {
                 new Notification('💧 ¡Tomá agua dale!', {
-                    body: 'Ya pasaron ' + s.interval + ' minutos. Hidratate.',
+                    body: 'Hidratate. Tu cuerpo te lo agradece 💪',
                     icon: '/icon.png',
-                    silent: !s.sound
+                    silent: !sound,
+                    tag: 'water-reminder',
+                    renotify: true
                 });
             }
-            // Play sound if enabled and no SW
-            if (s.sound) playWaterSound();
+            if (sound) playWaterSound();
+        }
+        function testWaterNotification() {
+            if (!('Notification' in window)) { showToast('Tu navegador no soporta notificaciones'); return; }
+            if (Notification.permission === 'denied') {
+                showToast('❌ Bloqueadas — habilitá en Configuración del teléfono');
+                return;
+            }
+            if (Notification.permission === 'default') {
+                requestWaterPermission();
+                return;
+            }
+            const s = getWaterSettings();
+            showWaterNotification(s.sound);
+            showToast('💧 Notificación enviada');
         }
         function playWaterSound() {
             try {
