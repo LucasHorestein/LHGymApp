@@ -457,29 +457,6 @@
             background: var(--surface); border: 1px solid var(--border);
             border-radius: var(--radius); padding: 20px;
         }
-        /* Water reminder toggle */
-        .water-toggle-wrap { position: relative; width: 48px; height: 26px; cursor: pointer; }
-        .water-toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
-        .water-toggle-track {
-            position: absolute; inset: 0; border-radius: 99px;
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
-            transition: background 0.2s;
-        }
-        .water-toggle-track::after {
-            content: ''; position: absolute; top: 3px; left: 3px;
-            width: 18px; height: 18px; border-radius: 50%;
-            background: rgba(255,255,255,0.4); transition: transform 0.2s, background 0.2s;
-        }
-        .water-toggle-wrap input:checked + .water-toggle-track { background: var(--accent); border-color: var(--accent); }
-        .water-toggle-wrap input:checked + .water-toggle-track::after { transform: translateX(22px); background: #fff; }
-        /* Water interval chips */
-        .water-interval-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-        .water-chip {
-            padding: 7px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; cursor: pointer;
-            background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--muted);
-            transition: background 0.15s, border-color 0.15s, color 0.15s;
-        }
-        .water-chip.sel { background: rgba(var(--accent-rgb),0.18); border-color: var(--accent); color: var(--accent); }
 
         /* ── MODAL ── */
         .modal {
@@ -1280,51 +1257,6 @@
             </div>
             <button class="add-ex-btn" style="border-color:var(--danger); color:var(--danger); margin-top:10px;" onclick="resetApp()">Borrar todos los datos</button>
 
-            <!-- Recordatorio para tomar agua -->
-            <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
-                <h3 style="color:var(--text); margin-bottom:14px; font-size:0.85rem; letter-spacing:1px; text-align:left;">💧 RECORDATORIO PARA TOMAR AGUA</h3>
-
-                <!-- Permiso -->
-                <button id="water-perm-btn" class="add-ex-btn" style="width:100%; margin-bottom:14px; display:none;" onclick="requestWaterPermission()">🔔 Permitir notificaciones</button>
-                <div id="water-perm-status" style="font-size:0.78rem; color:var(--muted); margin-bottom:14px; display:none;"></div>
-
-                <!-- Toggle on/off -->
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-                    <span style="font-size:0.9rem; color:var(--text);">Activar recordatorio</span>
-                    <label class="water-toggle-wrap">
-                        <input type="checkbox" id="water-enabled" onchange="saveWaterSettings()">
-                        <span class="water-toggle-track"></span>
-                    </label>
-                </div>
-
-                <!-- Intervalo -->
-                <div style="margin-bottom:14px;">
-                    <div style="font-size:0.75rem; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Cada cuánto tiempo</div>
-                    <div class="water-interval-grid" id="water-interval-grid">
-                        <button class="water-chip" data-min="15" onclick="selectWaterInterval(this)">15 min</button>
-                        <button class="water-chip" data-min="20" onclick="selectWaterInterval(this)">20 min</button>
-                        <button class="water-chip sel" data-min="30" onclick="selectWaterInterval(this)">30 min</button>
-                        <button class="water-chip" data-min="45" onclick="selectWaterInterval(this)">45 min</button>
-                        <button class="water-chip" data-min="60" onclick="selectWaterInterval(this)">1 hora</button>
-                        <button class="water-chip" data-min="90" onclick="selectWaterInterval(this)">1.5 h</button>
-                        <button class="water-chip" data-min="120" onclick="selectWaterInterval(this)">2 horas</button>
-                    </div>
-                </div>
-
-                <!-- Sonido -->
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-                    <span style="font-size:0.9rem; color:var(--text);">Con sonido</span>
-                    <label class="water-toggle-wrap">
-                        <input type="checkbox" id="water-sound" onchange="saveWaterSettings()" checked>
-                        <span class="water-toggle-track"></span>
-                    </label>
-                </div>
-
-                <!-- Probar -->
-                <button class="add-ex-btn" style="width:100%;" onclick="testWaterNotification()">💧 Probar ahora</button>
-
-                <div id="water-status" style="margin-top:12px; font-size:0.78rem; color:var(--muted); text-align:center;"></div>
-            </div>
         </div>
     </div>
     </div><!-- #app-content -->
@@ -1845,9 +1777,6 @@
             if (config.accentColor) { applyAccentColor(config.accentColor, false); }
             updateManifest();
             renderDashboard();
-            // Start water reminder if it was active
-            const ws = getWaterSettings();
-            if (ws.enabled) applyWaterReminder(ws);
         }
 
         function applyTheme(base64Img) {
@@ -2381,7 +2310,6 @@
             }
             // Build color swatches
             buildColorSwatches(config.accentColor || '#e8722a');
-            initWaterUI();
         }
 
         // --- ROUTINE SNAPSHOT ---
@@ -2633,147 +2561,6 @@ ${rows}
                 document.getElementById('current-bg-container').innerHTML = `<img src="${dataUrl}" class="current-logo"><br><span>Tocar para cambiar</span>`;
                 showToast('✓ Fondo actualizado');
             });
-        }
-
-        // ── WATER REMINDER ──
-        let _waterTimer = null;
-
-        function getWaterSettings() {
-            return JSON.parse(localStorage.getItem('gym_water') || '{"enabled":false,"interval":30,"sound":true}');
-        }
-        function saveWaterSettings() {
-            const enabled  = document.getElementById('water-enabled')?.checked || false;
-            const sound    = document.getElementById('water-sound')?.checked ?? true;
-            const selChip  = document.querySelector('.water-chip.sel');
-            const interval = selChip ? parseInt(selChip.dataset.min) : 30;
-            const s = { enabled, interval, sound };
-            localStorage.setItem('gym_water', JSON.stringify(s));
-            applyWaterReminder(s);
-        }
-        function selectWaterInterval(btn) {
-            document.querySelectorAll('.water-chip').forEach(c => c.classList.remove('sel'));
-            btn.classList.add('sel');
-            saveWaterSettings();
-        }
-        function initWaterUI() {
-            const s = getWaterSettings();
-            const enabledEl = document.getElementById('water-enabled');
-            const soundEl   = document.getElementById('water-sound');
-            if (enabledEl) enabledEl.checked = s.enabled;
-            if (soundEl)   soundEl.checked   = s.sound;
-            document.querySelectorAll('.water-chip').forEach(c => {
-                c.classList.toggle('sel', parseInt(c.dataset.min) === s.interval);
-            });
-            updateWaterPermUI();
-            if (s.enabled) applyWaterReminder(s);
-        }
-        function updateWaterPermUI() {
-            const permBtn    = document.getElementById('water-perm-btn');
-            const permStatus = document.getElementById('water-perm-status');
-            if (!permBtn || !permStatus) return;
-            if (!('Notification' in window)) {
-                permStatus.textContent = '⚠️ Tu navegador no soporta notificaciones';
-                permStatus.style.color = 'var(--muted)';
-                permStatus.style.display = 'block';
-                permBtn.style.display = 'none';
-                return;
-            }
-            if (Notification.permission === 'granted') {
-                permStatus.textContent = '✓ Notificaciones permitidas';
-                permStatus.style.color = '#4ade80';
-                permStatus.style.display = 'block';
-                permBtn.style.display = 'none';
-            } else if (Notification.permission === 'denied') {
-                permStatus.textContent = '❌ Bloqueadas — habilitá en Configuración > Apps > Chrome > Notificaciones';
-                permStatus.style.color = '#f87171';
-                permStatus.style.display = 'block';
-                permBtn.style.display = 'none';
-            } else {
-                permBtn.style.display = 'block';
-                permStatus.style.display = 'none';
-            }
-        }
-        function requestWaterPermission() {
-            if (!('Notification' in window)) return;
-            Notification.requestPermission().then(p => {
-                updateWaterPermUI();
-                if (p === 'granted') {
-                    const s = getWaterSettings();
-                    if (s.enabled) startWaterTimer(s);
-                }
-            });
-        }
-        function applyWaterReminder(s) {
-            clearInterval(_waterTimer);
-            _waterTimer = null;
-            const statusEl = document.getElementById('water-status');
-            if (!s.enabled) {
-                if (statusEl) statusEl.textContent = '';
-                return;
-            }
-            if (!('Notification' in window)) {
-                if (statusEl) statusEl.textContent = '⚠️ Tu navegador no soporta notificaciones';
-                return;
-            }
-            if (Notification.permission === 'granted') {
-                startWaterTimer(s);
-            } else if (Notification.permission === 'default') {
-                if (statusEl) statusEl.textContent = 'Tocá "Permitir notificaciones" para activar';
-                updateWaterPermUI();
-            } else {
-                if (statusEl) statusEl.textContent = '❌ Notificaciones bloqueadas';
-            }
-        }
-        function startWaterTimer(s) {
-            clearInterval(_waterTimer);
-            const statusEl = document.getElementById('water-status');
-            const label = s.interval >= 60 ? (s.interval === 60 ? '1 hora' : s.interval === 90 ? '1.5 horas' : '2 horas') : s.interval + ' min';
-            if (statusEl) statusEl.textContent = `✓ Activo — recordatorio cada ${label}`;
-            _waterTimer = setInterval(() => {
-                if (!getWaterSettings().enabled) { clearInterval(_waterTimer); return; }
-                showWaterNotification(getWaterSettings().sound);
-            }, s.interval * 60 * 1000);
-        }
-        function showWaterNotification(sound) {
-            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({ type: 'WATER_NOTIF', sound });
-            } else if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification('💧 ¡Tomá agua dale!', {
-                    body: 'Hidratate. Tu cuerpo te lo agradece 💪',
-                    icon: '/icon.png',
-                    silent: !sound,
-                    tag: 'water-reminder',
-                    renotify: true
-                });
-            }
-            if (sound) playWaterSound();
-        }
-        function testWaterNotification() {
-            if (!('Notification' in window)) { showToast('Tu navegador no soporta notificaciones'); return; }
-            if (Notification.permission === 'denied') {
-                showToast('❌ Bloqueadas — habilitá en Configuración del teléfono');
-                return;
-            }
-            if (Notification.permission === 'default') {
-                requestWaterPermission();
-                return;
-            }
-            const s = getWaterSettings();
-            showWaterNotification(s.sound);
-            showToast('💧 Notificación enviada');
-        }
-        function playWaterSound() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc.frequency.setValueAtTime(880, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-                osc.start(); osc.stop(ctx.currentTime + 0.5);
-            } catch(e) {}
         }
 
         function resetApp() {
