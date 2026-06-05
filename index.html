@@ -454,10 +454,13 @@
         /* ── SETTINGS ── */
         .settings-container { text-align: center; padding: 20px; }
         .logo-upload-area {
-            border: 1px solid var(--border); padding: 30px; border-radius: var(--radius);
-            margin-bottom: 20px; cursor: pointer;
-            background: var(--surface);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 14px 16px; border-radius: 12px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text); font-size: 0.95rem; cursor: pointer;
+            margin-bottom: 12px; text-align: center;
         }
+        .logo-upload-area:active { background: rgba(255,255,255,0.1); }
         .current-logo {
             width: 100px; height: 100px; object-fit: cover; border-radius: 50%;
             border: 2px solid var(--accent); margin-bottom: 10px;
@@ -1244,21 +1247,21 @@
             <h3 style="color:var(--text); margin-bottom:10px; font-size:0.85rem; letter-spacing:1px; text-align:left;">LOGO E ÍCONO</h3>
             <p style="margin-bottom:12px; font-size:0.82rem; color:var(--muted); text-align:left;">Reemplaza el logo del header y el ícono de la app.</p>
             <label class="logo-upload-area">
-                <div id="current-logo-container">
-                    <div style="font-size:2rem; margin-bottom:10px;">🏋️</div>
-                    <span>Tocar para subir logo/ícono</span>
-                </div>
+                <span id="current-logo-container" style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:1.4rem;">🏋️</span>
+                    <span>Subir logo/ícono</span>
+                </span>
                 <input type="file" accept="image/*" class="file-input" onchange="handleIconUpload(this)">
             </label>
 
             <!-- Imagen de fondo -->
             <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
                 <h3 style="color:var(--text); margin-bottom:10px; font-size:0.85rem; letter-spacing:1px; text-align:left;">IMAGEN DE FONDO</h3>
-                <label class="logo-upload-area" style="padding:16px;">
-                    <div id="current-bg-container">
-                        <div style="font-size:1.6rem; margin-bottom:8px;">🖼️</div>
-                        <span style="font-size:0.82rem;">Toca para subir fondo</span>
-                    </div>
+                <label class="logo-upload-area">
+                    <span id="current-bg-container" style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:1.4rem;">🖼️</span>
+                        <span>Subir imagen de fondo</span>
+                    </span>
                     <input type="file" accept="image/*" class="file-input" onchange="handleLogoUpload(this)">
                 </label>
             </div>
@@ -2339,12 +2342,12 @@
             // Populate icon preview
             const iconContainer = document.getElementById('current-logo-container');
             if (config.appIcon) {
-                iconContainer.innerHTML = `<img src="${config.appIcon}" class="current-logo"><br><span>Tocar para cambiar</span>`;
+                iconContainer.innerHTML = `<img src="${config.appIcon}" class="current-logo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"><span>Cambiar logo/ícono</span>`;
             }
             // Populate bg preview
             const bgContainer = document.getElementById('current-bg-container');
             if (config.logo) {
-                bgContainer.innerHTML = `<img src="${config.logo}" class="current-logo"><br><span>Tocar para cambiar</span>`;
+                bgContainer.innerHTML = `<img src="${config.logo}" class="current-logo" style="width:32px;height:32px;border-radius:6px;object-fit:cover;"><span>Cambiar imagen de fondo</span>`;
             }
             // Build color swatches
             buildColorSwatches(config.accentColor || '#e8722a');

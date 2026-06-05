@@ -1,4 +1,4 @@
-const CACHE = 'gym-v16';
+const CACHE = 'gym-v17';
 const ASSETS = ['/', '/index.html', '/icon.png', '/pelota.png'];
 
 self.addEventListener('install', e => {
