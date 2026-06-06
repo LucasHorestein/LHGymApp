@@ -1914,7 +1914,9 @@
             document.getElementById('add-day-btn').classList.add('hidden');
 
             const fab = document.getElementById('finish-btn');
-            fab.style.display = 'block';
+            const logs = getLogs();
+            const alreadyDone = !!logs[dayData.dia];
+            fab.style.display = alreadyDone ? 'none' : 'block';
             fab.classList.remove('visible');
 
             renderExerciseList(dayData, savedData);
