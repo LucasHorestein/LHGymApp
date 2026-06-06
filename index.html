@@ -37,6 +37,7 @@
         html {
             height: 100%;
             overflow: hidden;
+            overscroll-behavior: none;
         }
 
         body {
@@ -1770,7 +1771,9 @@
 
         // --- INIT ---
         function init() {
+            // Two dashboard entries so back gesture never exits the app
             history.replaceState({ page: 'dashboard' }, '');
+            history.pushState({ page: 'dashboard' }, '');
             loadRoutine();
             const config = getConfig();
             if (config.logo) { applyBgImage(config.logo); }
@@ -3332,6 +3335,7 @@ ${rows}
         }
 
         function goHome() {
+            history.replaceState({ page: 'dashboard' }, '');
             if (activeTimer) { clearInterval(activeTimer.interval); activeTimer = null; }
             completedSets = {};
             expandedFields = {};
