@@ -2061,10 +2061,16 @@
                     </div>
                    </div>`;
 
+            // Auto-thumbnail from YouTube if no custom image
+            function getYtId(url) { const m = (url||'').match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : null; }
+            const ytId = !defImg && defLink ? getYtId(defLink) : null;
+            const autoThumb = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : null;
+            const displayImg = defImg || autoThumb || '';
+
             let photoSection = '';
-            if (defImg) {
+            if (displayImg) {
                 photoSection = `<div class="photo-preview-wrap" id="photo-wrap-${safeId}">
-                    <div class="photo-preview-thumb" onclick="showModal('${defImg}')"><img src="${defImg}"></div>
+                    <div class="photo-preview-thumb" onclick="showModal('${displayImg}')"><img src="${displayImg}"></div>
                     <button class="photo-del-btn" onclick="deletePhoto(this,'${safeName}')">✕</button>
                 </div>`;
             } else {
@@ -2181,7 +2187,7 @@
                 <div class="combo-grid" style="${defCombined ? 'display:flex' : 'display:none'}">${comboRowsHtml}</div>
                 ${checksHtml}
                 <div class="mini-history">${historyLabel}</div>
-                ${defImg ? `<div class="photo-wrap-row">${photoSection}</div>` : photoSection}
+                ${displayImg ? `<div class="photo-wrap-row">${photoSection}</div>` : photoSection}
                 ${notesSection}
                 ${linkSection}
                 <div class="card-timer-row" id="timer-row-${safeId}" style="display:none">
