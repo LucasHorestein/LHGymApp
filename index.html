@@ -1770,6 +1770,7 @@
 
         // --- INIT ---
         function init() {
+            history.replaceState({ page: 'dashboard' }, '');
             loadRoutine();
             const config = getConfig();
             if (config.logo) { applyBgImage(config.logo); }
@@ -3352,6 +3353,11 @@ ${rows}
 
         // --- BACK NAVIGATION (Android gesture + hardware back) ---
         window.addEventListener('popstate', (e) => {
+            // If already on dashboard, push a new state to block back navigation
+            if (document.getElementById('dashboard-view').classList.contains('active')) {
+                history.pushState({ page: 'dashboard' }, '');
+                return;
+            }
             if (document.getElementById('ex-options-modal').classList.contains('open')) {
                 closeExOptions(); return;
             }
