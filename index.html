@@ -79,7 +79,7 @@
             background: rgba(13,10,7,0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            position: sticky; top: 0; z-index: 100;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 500;
             border-bottom: 1px solid var(--border);
         }
         .header-inner {
@@ -92,7 +92,12 @@
             height: 68px; width: auto; object-fit: contain;
             filter: drop-shadow(0 3px 14px rgba(200,90,20,0.6));
             position: absolute; left: 50%; transform: translateX(-50%);
-            pointer-events: none; transition: opacity 0.2s;
+            pointer-events: none; transition: height 0.2s, opacity 0.2s, transform 0.2s, left 0.2s;
+        }
+        /* Logo en day view: derecha, más pequeño */
+        header.day-view .logo-img {
+            height: 36px;
+            left: auto; right: 60px; transform: none;
         }
         #header-right-placeholder { display: none !important; }
         .header-btn {
@@ -107,6 +112,7 @@
         .view { display: none; padding: 16px; animation: fadeIn 0.25s ease; max-width: 640px; margin: 0 auto; width: 100%; }
         .view.active {
             display: flex; flex-direction: column; gap: 10px;
+            margin-top: 72px;
             height: calc(100vh - 72px);
             height: calc(100dvh - 72px);
             overflow-y: auto;
@@ -199,7 +205,7 @@
         }
         .mg-line { flex: 1; height: 1px; background: var(--border); }
         .muscle-group-header {
-            font-size: 0.9rem; font-weight: 800; letter-spacing: 1px;
+            font-size: 1.4rem; font-weight: 800; letter-spacing: 1px;
             color: var(--accent); padding: 0 4px;
             cursor: pointer;
         }
@@ -1914,6 +1920,7 @@
             document.getElementById('settings-view').classList.remove('active');
             document.getElementById('routine-view').classList.remove('active');
             document.getElementById('workout-view').classList.add('active');
+            document.querySelector('header').classList.add('day-view');
 
             document.getElementById('back-btn').classList.remove('hidden');
             document.getElementById('settings-btn').classList.add('hidden');
@@ -3345,6 +3352,7 @@ ${rows}
             if (activeTimer) { clearInterval(activeTimer.interval); activeTimer = null; }
             completedSets = {};
             expandedFields = {};
+            document.querySelector('header').classList.remove('day-view');
             document.getElementById('workout-view').classList.remove('active');
             document.getElementById('settings-view').classList.remove('active');
             document.getElementById('routine-view').classList.remove('active');
