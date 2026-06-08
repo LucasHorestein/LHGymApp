@@ -268,12 +268,29 @@
 
         /* Stats wrap */
         .stats-wrap { display: flex; flex-direction: column; }
-        .stats-row {
-            display: flex;
+        .stats-row { display: flex; }
+
+        /* ── GRID LAYOUT: Series | Reps | Peso (sin negative margins) ── */
+        .ex-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+            justify-items: center;
+            row-gap: 10px;
+            padding: 14px 12px 14px;
         }
-        .stats-row.peso-solo-row { margin-top: -45px; }
-        /* Primera fila (Series+Reps+Fallo) siempre por encima del peso superpuesto */
-        .stats-wrap > .stats-row:not(.peso-solo-row) { position: relative; z-index: 1; }
+        .sgl-series-lbl  { grid-column: 1; grid-row: 1; }
+        .sgl-reps-lbl    { grid-column: 2; grid-row: 1; }
+        .sgl-series-step { grid-column: 1; grid-row: 2; }
+        .sgl-reps-wrap   { grid-column: 2; grid-row: 2; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .sgl-fallo       { grid-column: 2; grid-row: 3; }
+        .sgl-peso-lbl    { grid-column: 3; grid-row: 3; }
+        .sgl-peso-cell   { grid-column: 3; grid-row: 4; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        /* Fallo expandido ocupa todo el ancho en su fila */
+        .sgl-fallo.expanded { grid-column: 1 / -1; }
+        /* Cuando Fallo está expandido, Peso baja una fila */
+        .sgl-fallo.expanded ~ .sgl-peso-lbl  { grid-row: 4; }
+        .sgl-fallo.expanded ~ .sgl-peso-cell { grid-row: 5; }
         .stat-cell {
             flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             padding: 16px 12px 14px; gap: 10px;
@@ -2147,30 +2164,24 @@
                         </div>
                     </div>
                     ` : `
-                    <div class="stats-row">
-                        <div class="stat-cell">
-                            <label class="stat-label">Series</label>
-                            <div class="stepper-box">
-                                <button class="stepper-btn" onclick="stepSets(this,-1)">−</button>
-                                <input type="number" inputmode="numeric" min="1" class="in-sets" value="${defSets}">
-                                <button class="stepper-btn" onclick="stepSets(this,1)">＋</button>
+                    <div class="ex-stats-grid">
+                        <label class="stat-label sgl-series-lbl">Series</label>
+                        <label class="stat-label sgl-reps-lbl">Reps</label>
+                        <div class="stepper-box sgl-series-step">
+                            <button class="stepper-btn" onclick="stepSets(this,-1)">−</button>
+                            <input type="number" inputmode="numeric" min="1" class="in-sets" value="${defSets}">
+                            <button class="stepper-btn" onclick="stepSets(this,1)">＋</button>
+                        </div>
+                        <div class="reps-stepper-wrap sgl-reps-wrap">
+                            <div class="stepper-box"${isFallo ? ' style="display:none"' : ''}>
+                                <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
+                                <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="${isFallo ? '' : (numReps||'')}" ${isFallo ? 'disabled' : ''}>
+                                <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
                             </div>
                         </div>
-                        <div class="stat-cell">
-                            <label class="stat-label">Reps</label>
-                            <div class="reps-stepper-wrap">
-                                <div class="stepper-box"${isFallo ? ' style="display:none"' : ''}>
-                                    <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
-                                    <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="${isFallo ? '' : (numReps||'')}" ${isFallo ? 'disabled' : ''}>
-                                    <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
-                                </div>
-                                <button class="fallo-toggle${isFallo ? ' active expanded' : ''}" onclick="toggleFallo(this)">Fallo</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stats-row peso-solo-row">
-                        <div class="stat-cell">
-                            <label class="stat-label">Peso kg</label>
+                        <button class="fallo-toggle sgl-fallo${isFallo ? ' active expanded' : ''}" onclick="toggleFallo(this)">Fallo</button>
+                        <label class="stat-label sgl-peso-lbl">Peso kg</label>
+                        <div class="sgl-peso-cell">
                             <div class="stepper-box">
                                 <button class="stepper-btn" onclick="stepWeight(this,-2.5)">−</button>
                                 <input type="number" inputmode="decimal" min="0" step="any" class="in-weight weight-input" placeholder="0" value="${defWeight}" data-prev="${prevWeight}">
@@ -3798,30 +3809,24 @@ ${rows}
                 const curW1   = card.querySelector('.in-w1')?.value || '';
                 const prevW1  = card.querySelector('.in-w1')?.dataset.prev || '';
                 statsWrap.innerHTML = `
-                    <div class="stats-row">
-                        <div class="stat-cell">
-                            <label class="stat-label">Series</label>
+                    <div class="ex-stats-grid">
+                        <label class="stat-label sgl-series-lbl">Series</label>
+                        <label class="stat-label sgl-reps-lbl">Reps</label>
+                        <div class="stepper-box sgl-series-step">
+                            <button class="stepper-btn" onclick="stepSets(this,-1)">−</button>
+                            <input type="number" inputmode="numeric" min="1" class="in-sets" value="${setsVal}">
+                            <button class="stepper-btn" onclick="stepSets(this,1)">＋</button>
+                        </div>
+                        <div class="reps-stepper-wrap sgl-reps-wrap">
                             <div class="stepper-box">
-                                <button class="stepper-btn" onclick="stepSets(this,-1)">−</button>
-                                <input type="number" inputmode="numeric" min="1" class="in-sets" value="${setsVal}">
-                                <button class="stepper-btn" onclick="stepSets(this,1)">＋</button>
+                                <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
+                                <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="">
+                                <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
                             </div>
                         </div>
-                        <div class="stat-cell">
-                            <label class="stat-label">Reps</label>
-                            <div class="reps-stepper-wrap">
-                                <div class="stepper-box">
-                                    <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
-                                    <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="">
-                                    <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
-                                </div>
-                                <button class="fallo-toggle" onclick="toggleFallo(this)">Fallo</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stats-row">
-                        <div class="stat-cell">
-                            <label class="stat-label">Peso kg</label>
+                        <button class="fallo-toggle sgl-fallo" onclick="toggleFallo(this)">Fallo</button>
+                        <label class="stat-label sgl-peso-lbl">Peso kg</label>
+                        <div class="sgl-peso-cell">
                             <div class="stepper-box">
                                 <button class="stepper-btn" onclick="stepWeight(this,-2.5)">−</button>
                                 <input type="number" inputmode="decimal" min="0" step="any" class="in-weight weight-input" placeholder="0" value="${curW1}" data-prev="${prevW1}">
