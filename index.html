@@ -94,7 +94,11 @@
             height: 68px; width: auto; object-fit: contain;
             filter: drop-shadow(0 3px 14px rgba(200,90,20,0.6));
             position: absolute; left: 50%; transform: translateX(-50%);
-            pointer-events: none; transition: opacity 0.2s;
+            pointer-events: none; transition: opacity 0.2s, height 0.25s, left 0.25s, right 0.25s, transform 0.25s;
+        }
+        header.day-view .logo-img {
+            height: 48px;
+            left: auto; right: 14px; transform: none;
         }
         #header-right-placeholder { display: none !important; }
         .header-btn {
@@ -112,6 +116,7 @@
             margin-top: 72px;
             height: calc(100vh - 72px);
             height: calc(100dvh - 72px);
+            transition: margin-top 0.3s ease, height 0.3s ease;
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
@@ -1917,6 +1922,7 @@
             document.getElementById('settings-view').classList.remove('active');
             document.getElementById('routine-view').classList.remove('active');
             document.getElementById('workout-view').classList.add('active');
+            document.querySelector('header').classList.add('day-view');
 
             document.getElementById('back-btn').classList.remove('hidden');
             document.getElementById('settings-btn').classList.add('hidden');
@@ -3348,6 +3354,7 @@ ${rows}
             if (activeTimer) { clearInterval(activeTimer.interval); activeTimer = null; }
             completedSets = {};
             expandedFields = {};
+            document.querySelector('header').classList.remove('day-view');
             document.getElementById('workout-view').classList.remove('active');
             document.getElementById('settings-view').classList.remove('active');
             document.getElementById('routine-view').classList.remove('active');
@@ -4300,12 +4307,12 @@ ${rows}
             const header = document.querySelector('header');
             let lastST = 0;
             function onScroll(e) {
-                const st = e.currentTarget.scrollTop;
-                if (st > lastST && st > 80) {
-                    header.classList.add('header-hidden');
-                } else {
-                    header.classList.remove('header-hidden');
-                }
+                const view = e.currentTarget;
+                const st = view.scrollTop;
+                const hiding = st > lastST && st > 80;
+                header.classList.toggle('header-hidden', hiding);
+                view.style.marginTop = hiding ? '0' : '72px';
+                view.style.height    = hiding ? '100dvh' : 'calc(100dvh - 72px)';
                 lastST = Math.max(0, st);
             }
             document.querySelectorAll('.view').forEach(v => {
