@@ -2159,7 +2159,7 @@
                         <div class="stat-cell">
                             <label class="stat-label">Reps</label>
                             <div class="reps-stepper-wrap">
-                                <div class="stepper-box"${isFallo ? ' style="display:none"' : ''}>
+                                <div class="stepper-box"${isFallo ? ' style="visibility:hidden"' : ''}>
                                     <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
                                     <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="${isFallo ? '' : (numReps||'')}" ${isFallo ? 'disabled' : ''}>
                                     <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
@@ -3667,13 +3667,13 @@ ${rows}
             const falloGrid  = card.querySelector('.fallo-grid');
             const seriesChecks = card.querySelector('.series-checks');
             if (isFallo) {
-                if (stepperBox) stepperBox.style.display = 'none';
+                if (stepperBox) stepperBox.style.visibility = 'hidden';
                 btn.classList.add('expanded');
                 if (repsInput) repsInput.disabled = true;
                 if (seriesChecks) seriesChecks.style.display = 'none';
                 if (falloGrid) { rebuildFalloGrid(card); falloGrid.style.display = 'flex'; }
             } else {
-                if (stepperBox) stepperBox.style.display = '';
+                if (stepperBox) stepperBox.style.visibility = '';
                 btn.classList.remove('expanded');
                 if (repsInput) { repsInput.disabled = false; repsInput.style.opacity = ''; }
                 if (seriesChecks) seriesChecks.style.display = '';
