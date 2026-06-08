@@ -233,7 +233,7 @@
             display: flex; align-items: center;
         }
         .ex-name {
-            font-size: 1.18rem; font-weight: 800;
+            font-size: 1.32rem; font-weight: 800;
             letter-spacing: 0.3px;
             color: var(--text);
             width: 100%; text-align: center;
@@ -253,9 +253,9 @@
         .ex-options-btn:active { background: rgba(255,255,255,0.12); }
         .ex-row-2 {
             padding: 4px 10px 10px 4px;
-            display: flex; align-items: center; gap: 4px;
+            display: flex; align-items: center; justify-content: center; gap: 4px;
         }
-        .ex-controls { display: flex; gap: 4px; flex-shrink: 0; position: relative; z-index: 1; }
+        .ex-controls { display: flex; gap: 14px; flex-shrink: 0; position: relative; z-index: 1; }
         .ctrl-btn {
             width: 44px; height: 44px; border-radius: 10px;
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
@@ -271,11 +271,12 @@
         .stats-row {
             display: flex;
         }
+        .stats-row.peso-solo-row { margin-top: -61px; }
         .stat-cell {
             flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             padding: 16px 12px 14px; gap: 10px;
         }
-        .stat-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; color: var(--muted); }
+        .stat-label { font-size: 0.82rem; font-weight: 700; letter-spacing: 0.5px; color: var(--muted); }
 
         /* Selector de reps */
         select.reps-select {
@@ -521,15 +522,15 @@
             justify-content: center;
         }
         .stepper-box input {
-            width: 62px !important; height: 48px; flex: none;
+            width: 70px !important; height: 54px; flex: none;
             padding-left: 0; padding-right: 0;
-            font-size: 1.42rem; font-weight: 800;
+            font-size: 1.6rem; font-weight: 800;
             font-variant-numeric: tabular-nums;
             letter-spacing: 0.5px; text-align: center;
             border-radius: 11px;
         }
         .stepper-btn {
-            width: 40px; height: 40px; flex-shrink: 0; border-radius: 11px;
+            width: 46px; height: 46px; flex-shrink: 0; border-radius: 11px;
             background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
             color: var(--muted); font-size: 1.3rem; font-weight: 300;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -2088,7 +2089,6 @@
                     </div>
                 </div>
                 <div class="ex-row-2">
-                    <div style="flex:1"></div>
                     <div class="ex-controls">
                         <button class="ctrl-btn${defCombined ? ' active' : ''}" title="Ejercicio combinado (A+B)" onclick="toggleCombined(this)">A+B</button>
                         <div class="card-clock-wrap"><button class="ctrl-btn" id="clock-btn-${safeId}" title="Timer de descanso" onclick="openClockPopover(this,'${safeName}')">🕐</button></div>
@@ -2166,7 +2166,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="stats-row">
+                    <div class="stats-row peso-solo-row">
                         <div class="stat-cell">
                             <label class="stat-label">Peso kg</label>
                             <div class="stepper-box">
