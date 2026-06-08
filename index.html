@@ -271,9 +271,8 @@
         .stats-row {
             display: flex;
         }
-        .stats-row.peso-solo-row { margin-top: -45px; }
-        /* Primera fila (Series+Reps+Fallo) siempre por encima del peso superpuesto */
-        .stats-wrap > .stats-row:not(.peso-solo-row) { position: relative; z-index: 1; }
+        .stats-row.peso-solo-row { margin-top: -45px; pointer-events: none; }
+        .stats-row.peso-solo-row * { pointer-events: auto; }
         .stat-cell {
             flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             padding: 16px 12px 14px; gap: 10px;
