@@ -81,7 +81,9 @@
             -webkit-backdrop-filter: blur(20px);
             position: fixed; top: 0; left: 0; right: 0; z-index: 500;
             border-bottom: 1px solid var(--border);
+            transition: transform 0.3s ease;
         }
+        header.header-hidden { transform: translateY(-100%); }
         .header-inner {
             max-width: 640px; margin: 0 auto;
             height: 72px; padding: 0 18px;
@@ -92,12 +94,7 @@
             height: 68px; width: auto; object-fit: contain;
             filter: drop-shadow(0 3px 14px rgba(200,90,20,0.6));
             position: absolute; left: 50%; transform: translateX(-50%);
-            pointer-events: none; transition: height 0.2s, opacity 0.2s, transform 0.2s, left 0.2s;
-        }
-        /* Logo en day view: derecha, más pequeño */
-        header.day-view .logo-img {
-            height: 36px;
-            left: auto; right: 60px; transform: none;
+            pointer-events: none; transition: opacity 0.2s;
         }
         #header-right-placeholder { display: none !important; }
         .header-btn {
@@ -1920,7 +1917,6 @@
             document.getElementById('settings-view').classList.remove('active');
             document.getElementById('routine-view').classList.remove('active');
             document.getElementById('workout-view').classList.add('active');
-            document.querySelector('header').classList.add('day-view');
 
             document.getElementById('back-btn').classList.remove('hidden');
             document.getElementById('settings-btn').classList.add('hidden');
@@ -3352,7 +3348,6 @@ ${rows}
             if (activeTimer) { clearInterval(activeTimer.interval); activeTimer = null; }
             completedSets = {};
             expandedFields = {};
-            document.querySelector('header').classList.remove('day-view');
             document.getElementById('workout-view').classList.remove('active');
             document.getElementById('settings-view').classList.remove('active');
             document.getElementById('routine-view').classList.remove('active');
@@ -4299,6 +4294,24 @@ ${rows}
         }, 0);
 
         document.getElementById('splash').addEventListener('touchstart', hideSplash, { once: true, passive: true });
+
+        // ── HEADER: hide on scroll down, show on scroll up ──
+        (() => {
+            const header = document.querySelector('header');
+            let lastST = 0;
+            function onScroll(e) {
+                const st = e.currentTarget.scrollTop;
+                if (st > lastST && st > 80) {
+                    header.classList.add('header-hidden');
+                } else {
+                    header.classList.remove('header-hidden');
+                }
+                lastST = Math.max(0, st);
+            }
+            document.querySelectorAll('.view').forEach(v => {
+                v.addEventListener('scroll', onScroll, { passive: true });
+            });
+        })();
     </script>
 </body>
 </html>
