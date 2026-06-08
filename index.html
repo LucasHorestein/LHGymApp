@@ -271,9 +271,6 @@
         .stats-row {
             display: flex;
         }
-        .stats-row.peso-solo-row { margin-top: -45px; pointer-events: none; }
-        .stats-row.peso-solo-row button,
-        .stats-row.peso-solo-row input { pointer-events: auto; }
         .stat-cell {
             flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             padding: 16px 12px 14px; gap: 10px;
@@ -2159,7 +2156,7 @@
                         <div class="stat-cell">
                             <label class="stat-label">Reps</label>
                             <div class="reps-stepper-wrap">
-                                <div class="stepper-box"${isFallo ? ' style="visibility:hidden"' : ''}>
+                                <div class="stepper-box"${isFallo ? ' style="display:none"' : ''}>
                                     <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
                                     <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="${isFallo ? '' : (numReps||'')}" ${isFallo ? 'disabled' : ''}>
                                     <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
@@ -3667,13 +3664,13 @@ ${rows}
             const falloGrid  = card.querySelector('.fallo-grid');
             const seriesChecks = card.querySelector('.series-checks');
             if (isFallo) {
-                if (stepperBox) stepperBox.style.visibility = 'hidden';
+                if (stepperBox) stepperBox.style.display = 'none';
                 btn.classList.add('expanded');
                 if (repsInput) repsInput.disabled = true;
                 if (seriesChecks) seriesChecks.style.display = 'none';
                 if (falloGrid) { rebuildFalloGrid(card); falloGrid.style.display = 'flex'; }
             } else {
-                if (stepperBox) stepperBox.style.visibility = '';
+                if (stepperBox) stepperBox.style.display = '';
                 btn.classList.remove('expanded');
                 if (repsInput) { repsInput.disabled = false; repsInput.style.opacity = ''; }
                 if (seriesChecks) seriesChecks.style.display = '';
