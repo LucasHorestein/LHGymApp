@@ -128,7 +128,7 @@
         /* ── DASHBOARD CARDS ── */
         .card {
             background: var(--surface);
-            border: 1px solid var(--border);
+            border: 1px solid rgba(var(--accent-rgb),0.45);
             border-radius: var(--radius);
             padding: 18px 20px;
             display: flex; align-items: center; gap: 18px;
@@ -139,15 +139,15 @@
         }
         .card:active { background: var(--surface-h); transform: scale(0.99); border-color: rgba(232,114,42,0.3); }
         .card.today {
-            border-color: rgba(232,114,42,0.45);
-            background: rgba(232,114,42,0.08);
-            box-shadow: 0 0 0 1px rgba(232,114,42,0.18), 0 6px 28px rgba(196,90,16,0.18);
+            border-color: rgba(var(--accent-rgb),0.75);
+            background: rgba(var(--accent-rgb),0.08);
+            box-shadow: 0 0 0 1px rgba(var(--accent-rgb),0.25), 0 6px 28px rgba(var(--accent-rgb),0.18);
         }
         .card.today .arrow { border-color: var(--accent); color: var(--accent); }
         /* ── JERARQUÍA VISUAL DASHBOARD ── */
         .card.primary {
             background: rgba(28,18,10,0.78);
-            border-color: rgba(210,100,20,0.32);
+            border-color: rgba(var(--accent-rgb),0.45);
         }
         .card.primary .day-badge { box-shadow: 0 4px 16px rgba(var(--accent-rgb),0.55); }
         .done-overlay {
