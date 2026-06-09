@@ -2043,8 +2043,8 @@
             }
 
             // Weight delta chips
-            const deltaHtml  = prevWeight  !== '' ? `<span class="weight-delta eq" id="delta1-${safeId}">= ${prevWeight}kg</span>`  : `<span class="weight-delta eq" id="delta1-${safeId}" style="display:none"></span>`;
-            const delta2Html = prevWeight2 !== '' ? `<span class="weight-delta eq" id="delta2-${safeId}">= ${prevWeight2}kg</span>` : `<span class="weight-delta eq" id="delta2-${safeId}" style="display:none"></span>`;
+            const deltaHtml  = prevWeight  !== '' ? `<span class="weight-delta eq" id="delta1-${safeId}">Último peso: ${prevWeight}kg</span>`  : `<span class="weight-delta eq" id="delta1-${safeId}" style="display:none"></span>`;
+            const delta2Html = prevWeight2 !== '' ? `<span class="weight-delta eq" id="delta2-${safeId}">Último peso: ${prevWeight2}kg</span>` : `<span class="weight-delta eq" id="delta2-${safeId}" style="display:none"></span>`;
 
             // Series checks
             let checksHtml = `<div class="series-checks"${(isFallo || defCombined) ? ' style="display:none"' : ''}>`;
@@ -3936,7 +3936,7 @@ ${rows}
             const fmt  = v => Number.isInteger(v) ? String(v) : v.toFixed(1);
             if (diff > 0)      { deltaEl.className = 'weight-delta up';   deltaEl.textContent = `↑ +${fmt(diff)}kg`; }
             else if (diff < 0) { deltaEl.className = 'weight-delta down'; deltaEl.textContent = `↓ ${fmt(diff)}kg`; }
-            else               { deltaEl.className = 'weight-delta eq';   deltaEl.textContent = `= ${fmt(prev)}kg`; }
+            else               { deltaEl.className = 'weight-delta eq';   deltaEl.textContent = `Último peso: ${fmt(prev)}kg`; }
         }
 
         function updateWeightDelta(card) {
