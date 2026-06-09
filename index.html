@@ -210,10 +210,11 @@
         .muscle-group-header {
             font-size: 1.4rem; font-weight: 800; letter-spacing: 1px;
             color: var(--accent); padding: 0 4px;
-            cursor: pointer; text-align: center; white-space: nowrap;
-            flex-shrink: 1; min-width: 0;
+            cursor: pointer; text-align: center;
+            white-space: normal; word-break: break-word;
+            max-width: 55%; flex-shrink: 1;
         }
-        .mg-line { flex: 1; min-width: 12px; height: 1px; background: var(--border); }
+        .mg-line { flex: 1; min-width: 10px; height: 1px; background: var(--border); }
         .muscle-group-header:active { opacity: 0.7; }
         .group-drag-handle {
             width: 32px; height: 32px; flex-shrink: 0;
@@ -1999,11 +2000,11 @@
                     const w1 = sd.weight || '?'; const w2 = sd.weight2 || '?';
                     historyLabel = `Último: <span>${w1}kg + ${w2}kg</span>`;
                 } else if (sd.fecha && sd.weight) {
-                    historyLabel = `Actualizado: <span>${sd.fecha} · ${sd.weight}kg</span>`;
+                    historyLabel = `Actualizado: <span>${sd.fecha}</span>`;
                 } else if (sd.falloData && sd.falloData.some(v=>v)) {
                     historyLabel = `Actualizado: <span>${sd.fecha} · Fallo</span>`;
                 } else if (sd.weight) {
-                    historyLabel = `Último: <span>${sd.weight}kg</span>`;
+                    historyLabel = ``;
                 }
             }
             if (!defLink && item.url) defLink = item.url;
@@ -2190,6 +2191,7 @@
                                 <input type="number" inputmode="decimal" min="0" step="any" class="in-weight weight-input" placeholder="0" value="${defWeight}" data-prev="${prevWeight}">
                                 <button class="stepper-btn" onclick="stepWeight(this,2.5)">＋</button>
                             </div>
+                            ${deltaHtml}
                         </div>
                     </div>
                     `}
