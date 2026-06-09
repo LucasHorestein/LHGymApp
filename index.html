@@ -3443,8 +3443,46 @@ ${rows}
 
         // --- CLOCK / TIMER SYSTEM ---
         function fmtTimer(s) {
-            s = Math.max(0, s);
+            s = Math.max(0, Math.floor(s));
             return String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+        }
+
+        // ── TIMER PERSISTENCE (survives phone lock + browser unload) ──
+        function saveTimerState() {
+            if (!activeTimer || !activeTimer.running) return;
+            localStorage.setItem('gym_timer', JSON.stringify({
+                name:         activeTimer.name,
+                mode:         activeTimer.mode,
+                configured:   activeTimer.configured,
+                startTime:    activeTimer.startTime,
+                startSeconds: activeTimer.startSeconds
+            }));
+        }
+        function clearTimerState() { localStorage.removeItem('gym_timer'); }
+        function restoreTimerState() {
+            const raw = localStorage.getItem('gym_timer');
+            if (!raw) return;
+            try {
+                const t = JSON.parse(raw);
+                const elapsed = (Date.now() - t.startTime) / 1000;
+                const seconds = t.mode === 'timer'
+                    ? Math.max(0, t.startSeconds - elapsed)
+                    : t.startSeconds + elapsed;
+                activeTimer = {
+                    name: t.name, mode: t.mode, configured: t.configured,
+                    seconds, startTime: t.startTime, startSeconds: t.startSeconds,
+                    running: false, interval: null, everStarted: true
+                };
+                const safeId = t.name.replace(/[^a-zA-Z0-9]/g,'_');
+                const timerRow = document.getElementById('timer-row-' + safeId);
+                if (timerRow) {
+                    timerRow.style.display = 'flex';
+                    const disp = document.getElementById('tdisp-' + safeId);
+                    if (disp) disp.textContent = fmtTimer(seconds);
+                    const pb = document.getElementById('tpause-' + safeId);
+                    if (pb) pb.textContent = '▶';
+                }
+            } catch(e) { clearTimerState(); }
         }
 
         let _audioCtx = null;
@@ -3589,6 +3627,7 @@ ${rows}
                 // Anchor real-clock start
                 activeTimer.startTime    = Date.now();
                 activeTimer.startSeconds = activeTimer.seconds;
+                saveTimerState();
                 activeTimer.interval = setInterval(() => {
                     if (!activeTimer || !activeTimer.running) return;
                     const elapsed = (Date.now() - activeTimer.startTime) / 1000;
@@ -3599,6 +3638,7 @@ ${rows}
                             clearInterval(activeTimer.interval);
                             activeTimer.interval = null; activeTimer.running = false;
                             activeTimer.seconds = activeTimer.configured;
+                            clearTimerState();
                             playTimerAlert();
                             if (disp) disp.textContent = fmtTimer(activeTimer.configured);
                             const pb = document.getElementById('tpause-' + safeId);
@@ -4337,19 +4377,25 @@ ${rows}
 
         document.getElementById('splash').addEventListener('touchstart', hideSplash, { once: true, passive: true });
 
-        // ── TIMER: sync display when returning from locked screen ──
+        // ── TIMER: sync when returning from locked screen (5+ min) ──
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden || !activeTimer || !activeTimer.running) return;
+            if (document.hidden) return;
+            // If timer lost from memory (long lock), restore from localStorage
+            if (!activeTimer) restoreTimerState();
+            if (!activeTimer) return;
             const elapsed = (Date.now() - activeTimer.startTime) / 1000;
             const safeId  = activeTimer.name.replace(/[^a-zA-Z0-9]/g,'_');
             const disp    = document.getElementById('tdisp-' + safeId);
             if (activeTimer.mode === 'timer') {
                 const remaining = Math.max(0, activeTimer.startSeconds - elapsed);
                 if (disp) disp.textContent = fmtTimer(remaining);
-                if (remaining <= 0 && activeTimer.running) {
-                    clearInterval(activeTimer.interval);
-                    activeTimer.interval = null; activeTimer.running = false;
-                    activeTimer.seconds  = activeTimer.configured;
+                if (remaining <= 0) {
+                    if (activeTimer.running) {
+                        clearInterval(activeTimer.interval);
+                        activeTimer.interval = null; activeTimer.running = false;
+                    }
+                    activeTimer.seconds = activeTimer.configured;
+                    clearTimerState();
                     playTimerAlert();
                     if (disp) disp.textContent = fmtTimer(activeTimer.configured);
                     const pb = document.getElementById('tpause-' + safeId);
