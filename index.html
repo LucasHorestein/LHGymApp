@@ -3572,6 +3572,13 @@ ${rows}
             if (!activeTimer || activeTimer.name !== name) return;
             if (_audioCtx && _audioCtx.state === 'suspended') _audioCtx.resume();
             if (activeTimer.running) {
+                // Pause: snapshot real elapsed time before clearing
+                const elapsed = (Date.now() - activeTimer.startTime) / 1000;
+                if (activeTimer.mode === 'timer') {
+                    activeTimer.seconds = Math.max(0, activeTimer.startSeconds - elapsed);
+                } else {
+                    activeTimer.seconds = activeTimer.startSeconds + elapsed;
+                }
                 clearInterval(activeTimer.interval);
                 activeTimer.interval = null; activeTimer.running = false;
                 btn.textContent = '▶';
@@ -3579,31 +3586,32 @@ ${rows}
                 activeTimer.running = true; activeTimer.everStarted = true;
                 btn.textContent = '⏸';
                 const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
-                if (activeTimer.mode === 'timer') {
-                    activeTimer.interval = setInterval(() => {
-                        if (!activeTimer || !activeTimer.running) return;
-                        activeTimer.seconds--;
-                        const disp = document.getElementById('tdisp-' + safeId);
-                        if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
-                        if (activeTimer.seconds <= 0) {
+                // Anchor real-clock start
+                activeTimer.startTime    = Date.now();
+                activeTimer.startSeconds = activeTimer.seconds;
+                activeTimer.interval = setInterval(() => {
+                    if (!activeTimer || !activeTimer.running) return;
+                    const elapsed = (Date.now() - activeTimer.startTime) / 1000;
+                    const disp = document.getElementById('tdisp-' + safeId);
+                    if (activeTimer.mode === 'timer') {
+                        const remaining = activeTimer.startSeconds - elapsed;
+                        if (remaining <= 0) {
                             clearInterval(activeTimer.interval);
                             activeTimer.interval = null; activeTimer.running = false;
-                            playTimerAlert();
                             activeTimer.seconds = activeTimer.configured;
-                            const disp2 = document.getElementById('tdisp-' + safeId);
-                            if (disp2) disp2.textContent = fmtTimer(activeTimer.configured);
+                            playTimerAlert();
+                            if (disp) disp.textContent = fmtTimer(activeTimer.configured);
                             const pb = document.getElementById('tpause-' + safeId);
                             if (pb) pb.textContent = '▶';
+                        } else {
+                            activeTimer.seconds = remaining;
+                            if (disp) disp.textContent = fmtTimer(remaining);
                         }
-                    }, 1000);
-                } else {
-                    activeTimer.interval = setInterval(() => {
-                        if (!activeTimer || !activeTimer.running) return;
-                        activeTimer.seconds++;
-                        const disp = document.getElementById('tdisp-' + safeId);
+                    } else {
+                        activeTimer.seconds = activeTimer.startSeconds + elapsed;
                         if (disp) disp.textContent = fmtTimer(activeTimer.seconds);
-                    }, 1000);
-                }
+                    }
+                }, 250); // 250ms tick — display stays sharp, accuracy from real clock
             }
         }
 
@@ -4328,6 +4336,31 @@ ${rows}
         }, 0);
 
         document.getElementById('splash').addEventListener('touchstart', hideSplash, { once: true, passive: true });
+
+        // ── TIMER: sync display when returning from locked screen ──
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden || !activeTimer || !activeTimer.running) return;
+            const elapsed = (Date.now() - activeTimer.startTime) / 1000;
+            const safeId  = activeTimer.name.replace(/[^a-zA-Z0-9]/g,'_');
+            const disp    = document.getElementById('tdisp-' + safeId);
+            if (activeTimer.mode === 'timer') {
+                const remaining = Math.max(0, activeTimer.startSeconds - elapsed);
+                if (disp) disp.textContent = fmtTimer(remaining);
+                if (remaining <= 0 && activeTimer.running) {
+                    clearInterval(activeTimer.interval);
+                    activeTimer.interval = null; activeTimer.running = false;
+                    activeTimer.seconds  = activeTimer.configured;
+                    playTimerAlert();
+                    if (disp) disp.textContent = fmtTimer(activeTimer.configured);
+                    const pb = document.getElementById('tpause-' + safeId);
+                    if (pb) pb.textContent = '▶';
+                }
+            } else {
+                const total = activeTimer.startSeconds + elapsed;
+                activeTimer.seconds = total;
+                if (disp) disp.textContent = fmtTimer(total);
+            }
+        });
 
         // ── HEADER: hide on scroll down, show on scroll up ──
         (() => {
