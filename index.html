@@ -2907,12 +2907,14 @@ ${rows}
             const logs = getLogs();
             delete logs[day.dia];
             localStorage.setItem('gym_logs', JSON.stringify(logs));
-            // Reset all series circles for this day
+            // Reset completed circles for every exercise in this day
             const data = JSON.parse(localStorage.getItem('gym_data') || '{}');
-            if (data[day.dia]) {
-                Object.values(data[day.dia]).forEach(ex => { ex.checked = 0; });
-                localStorage.setItem('gym_data', JSON.stringify(data));
-            }
+            let changed = false;
+            (day.ejercicios || []).forEach(ex => {
+                if (ex.titulo) return; // skip group headers
+                if (data[ex.n]) { data[ex.n].completed = 0; changed = true; }
+            });
+            if (changed) localStorage.setItem('gym_data', JSON.stringify(data));
             renderDashboard();
             showToast('✕ Día desmarcado');
         }
