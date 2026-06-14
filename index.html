@@ -33,13 +33,163 @@
         }
         [data-theme="light"] {
             --bg:        #f2ebe1;
-            --surface:   rgba(235,222,205,0.80);
-            --surface-h: rgba(220,205,185,0.90);
-            --border:    rgba(180,80,10,0.20);
+            --surface:   rgba(210,190,165,0.55);
+            --surface-h: rgba(195,172,145,0.70);
+            --border:    rgba(140,70,10,0.20);
             --danger:    #b5394f;
             --text:      #1c0e05;
             --muted:     rgba(28,14,5,0.48);
         }
+        /* ── LIGHT MODE: component-level overrides ── */
+        [data-theme="light"] header {
+            background: rgba(242,235,225,0.88);
+            border-bottom-color: rgba(140,70,10,0.15);
+        }
+        [data-theme="light"] input,
+        [data-theme="light"] select.reps-select {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.12);
+            color: var(--text);
+        }
+        [data-theme="light"] input:focus,
+        [data-theme="light"] select.reps-select:focus {
+            background: rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] select.reps-select option {
+            background: #f2ebe1;
+            color: #1c0e05;
+        }
+        [data-theme="light"] .ctrl-btn,
+        [data-theme="light"] .ex-options-btn,
+        [data-theme="light"] .stepper-btn,
+        [data-theme="light"] .header-btn {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.10);
+            color: var(--muted);
+        }
+        [data-theme="light"] .ctrl-btn:active,
+        [data-theme="light"] .ex-options-btn:active,
+        [data-theme="light"] .header-btn:active {
+            background: rgba(0,0,0,0.12);
+        }
+        [data-theme="light"] .in-notes {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.09);
+            color: var(--muted);
+        }
+        [data-theme="light"] .in-notes:focus {
+            background: rgba(0,0,0,0.07);
+            color: var(--text);
+        }
+        [data-theme="light"] .in-notes::placeholder { color: rgba(28,14,5,0.25); }
+        [data-theme="light"] .in-link {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.09);
+        }
+        [data-theme="light"] .drag { color: rgba(28,14,5,0.20); }
+        [data-theme="light"] .last-log.pending {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.09);
+        }
+        [data-theme="light"] .mg-line { background: rgba(28,14,5,0.12); }
+        [data-theme="light"] .add-ex-btn {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.12);
+            color: var(--text);
+        }
+        [data-theme="light"] .add-ex-btn:active { background: rgba(0,0,0,0.10); }
+        [data-theme="light"] .fallo-toggle {
+            border-color: rgba(var(--accent-rgb),0.30);
+            color: var(--muted);
+        }
+        [data-theme="light"] .fallo-toggle.active { color: var(--accent); }
+        [data-theme="light"] .card-timer-row {
+            background: rgba(var(--accent-rgb),0.06);
+            border-top-color: rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .timer-preset-btn {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.10);
+            color: var(--muted);
+        }
+        [data-theme="light"] .timer-preset-btn.sel {
+            background: var(--accent);
+            color: #fff;
+        }
+        [data-theme="light"] .timer-action-btn {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.10);
+            color: var(--text);
+        }
+        [data-theme="light"] .timer-manual-input {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.10);
+            color: var(--text);
+        }
+        [data-theme="light"] #day-action-sheet { background: rgba(0,0,0,0.35); }
+        [data-theme="light"] #day-action-box {
+            background: #f0e8db;
+            border-color: rgba(0,0,0,0.10);
+        }
+        [data-theme="light"] .day-action-btn {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.09);
+            color: var(--text);
+        }
+        [data-theme="light"] .day-action-btn:active { background: rgba(0,0,0,0.10); }
+        [data-theme="light"] .day-action-cancel { color: var(--muted); }
+        [data-theme="light"] #edit-modal { background: rgba(0,0,0,0.35); }
+        [data-theme="light"] #edit-modal-box {
+            background: #f0e8db;
+            border-color: rgba(0,0,0,0.10);
+        }
+        [data-theme="light"] #ex-options-modal { background: rgba(0,0,0,0.35); }
+        [data-theme="light"] #ex-options-box {
+            background: #f0e8db;
+            border-color: rgba(0,0,0,0.10);
+        }
+        [data-theme="light"] .ex-option-item {
+            border-color: rgba(0,0,0,0.07);
+            color: var(--text);
+        }
+        [data-theme="light"] .ex-option-item:active { background: rgba(0,0,0,0.07); }
+        [data-theme="light"] .settings-card {
+            background: rgba(0,0,0,0.04);
+            border-color: rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .logo-upload-area {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.10);
+            color: var(--text);
+        }
+        [data-theme="light"] .color-swatch { border-color: rgba(0,0,0,0.10); }
+        [data-theme="light"] #autosave-toast {
+            background: rgba(28,14,5,0.88);
+            color: #f2ebe1;
+        }
+        [data-theme="light"] .weight-delta.eq {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .fallo-check,
+        [data-theme="light"] .series-check {
+            border-color: var(--accent);
+        }
+        [data-theme="light"] .fallo-row { border-color: rgba(0,0,0,0.07); }
+        [data-theme="light"] .done-day-chip {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.10);
+            color: var(--text);
+        }
+        [data-theme="light"] .done-day-chip.selected {
+            background: var(--accent);
+            color: #fff;
+        }
+        [data-theme="light"] #day-done-confirm-btn {
+            background: var(--accent);
+            color: #fff;
+        }
+        [data-theme="light"] .splash-screen { background: #f2ebe1; }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
