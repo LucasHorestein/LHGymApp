@@ -31,6 +31,15 @@
             --font:      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --bg-image:  none;
         }
+        [data-theme="light"] {
+            --bg:        #f2ebe1;
+            --surface:   rgba(235,222,205,0.80);
+            --surface-h: rgba(220,205,185,0.90);
+            --border:    rgba(180,80,10,0.20);
+            --danger:    #b5394f;
+            --text:      #1c0e05;
+            --muted:     rgba(28,14,5,0.48);
+        }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -1254,6 +1263,16 @@
                 </label>
             </div>
 
+            <!-- Tema -->
+            <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
+                <h3 style="color:var(--text); margin-bottom:8px; font-size:0.85rem; letter-spacing:1px; text-align:left;">Tema</h3>
+                <p style="font-size:0.82rem; color:var(--muted); margin-bottom:12px; text-align:left;">Apariencia de la app.</p>
+                <div style="display:flex; gap:10px;">
+                    <button id="theme-dark-btn" onclick="applyTheme('dark')" style="flex:1; padding:12px 0; border-radius:12px; border:2px solid var(--accent); background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; cursor:pointer; transition:all 0.2s;">🌙 Oscuro</button>
+                    <button id="theme-light-btn" onclick="applyTheme('light')" style="flex:1; padding:12px 0; border-radius:12px; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-size:0.85rem; font-weight:700; cursor:pointer; transition:all 0.2s;">☀️ Claro</button>
+                </div>
+            </div>
+
             <!-- Color de acento -->
             <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
                 <h3 style="color:var(--text); margin-bottom:8px; font-size:0.85rem; letter-spacing:1px; text-align:left;">Color De Acento</h3>
@@ -1813,6 +1832,31 @@
         function applyHeaderLogo(base64Img) {
             const logoEl = document.querySelector('.logo-img');
             if (logoEl) logoEl.src = base64Img;
+        }
+
+        function applyTheme(theme, save = true) {
+            document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : '');
+            const darkBtn  = document.getElementById('theme-dark-btn');
+            const lightBtn = document.getElementById('theme-light-btn');
+            if (darkBtn && lightBtn) {
+                if (theme === 'light') {
+                    darkBtn.style.border  = '1px solid var(--border)';
+                    darkBtn.style.color   = 'var(--muted)';
+                    lightBtn.style.border = '2px solid var(--accent)';
+                    lightBtn.style.color  = 'var(--text)';
+                } else {
+                    darkBtn.style.border  = '2px solid var(--accent)';
+                    darkBtn.style.color   = 'var(--text)';
+                    lightBtn.style.border = '1px solid var(--border)';
+                    lightBtn.style.color  = 'var(--muted)';
+                }
+            }
+            if (save) {
+                const config = getConfig();
+                config.theme = theme;
+                saveConfig(config);
+                showToast(theme === 'light' ? '☀️ Modo claro' : '🌙 Modo oscuro');
+            }
         }
 
         function applyAccentColor(hex, save = true) {
@@ -4376,6 +4420,7 @@ ${rows}
             }
             if (config.logo) applyBgImage(config.logo);
             if (config.appIcon) applyHeaderLogo(config.appIcon);
+            if (config.theme) applyTheme(config.theme, false);
             if (config.accentColor) applyAccentColor(config.accentColor, false);
             updateManifest();
             requestAnimationFrame(() => {
