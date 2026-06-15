@@ -191,6 +191,57 @@
         }
         [data-theme="light"] .splash-screen { background: #f2ebe1; }
 
+        /* ── LIGHT MODE: hardcoded dark backgrounds ── */
+        [data-theme="light"] .card.primary {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(var(--accent-rgb),0.30);
+        }
+        [data-theme="light"] #day-modal-box {
+            background: #ede5d8;
+        }
+        [data-theme="light"] #confirm-box {
+            background: #ede5d8;
+            border-color: rgba(0,0,0,0.08);
+        }
+
+        /* ── LIGHT MODE: hardcoded white text ── */
+        [data-theme="light"] .mini-history { color: var(--muted); }
+        [data-theme="light"] .mini-history span { color: var(--accent); }
+
+        /* ── LIGHT MODE: white-transparent surfaces ── */
+        [data-theme="light"] .stepper-btn {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.10);
+        }
+        [data-theme="light"] .stepper-btn:active { background: rgba(0,0,0,0.12); }
+        [data-theme="light"] .confirm-no {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.10);
+            color: var(--text);
+        }
+        [data-theme="light"] .day-modal-input {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.12);
+            color: var(--text);
+        }
+        [data-theme="light"] .day-modal-input:focus {
+            background: rgba(0,0,0,0.09);
+            border-color: var(--accent);
+        }
+        [data-theme="light"] select.reps-select:focus {
+            background: rgba(0,0,0,0.09);
+        }
+        [data-theme="light"] .timer-preset-btn {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.10);
+            color: var(--muted);
+        }
+        [data-theme="light"] .done-badge {
+            background: rgba(0,80,30,0.12);
+            color: #1a6b3a;
+            border-color: rgba(0,80,30,0.20);
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
         html {
