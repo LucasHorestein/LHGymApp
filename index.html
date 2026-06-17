@@ -195,8 +195,17 @@
 
         /* ── LIGHT MODE: hardcoded dark backgrounds ── */
         [data-theme="light"] .card.primary {
-            background: rgba(0,0,0,0.05);
+            background: rgba(210,190,165,0.55);
+            border-color: rgba(var(--accent-rgb),0.40);
+        }
+        [data-theme="light"] .card {
+            background: rgba(210,190,165,0.55);
             border-color: rgba(var(--accent-rgb),0.30);
+        }
+        [data-theme="light"] .card:active { background: rgba(195,172,145,0.70); }
+        [data-theme="light"] .card.today {
+            background: rgba(210,190,165,0.75);
+            border-color: rgba(var(--accent-rgb),0.60);
         }
         [data-theme="light"] #day-modal-box {
             background: #ede5d8;
