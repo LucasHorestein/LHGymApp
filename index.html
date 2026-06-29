@@ -3952,10 +3952,10 @@ ${rows}
             // ex-done-check removed
             if (isDone) {
                 saveCurrentWorkoutState();
-                // Stop timer on exercise completion
                 if (activeTimer && activeTimer.name === name) {
                     clearInterval(activeTimer.interval);
-                    activeTimer.interval = null; activeTimer.running = false;
+                    activeTimer = null;
+                    clearTimerState();
                     const pb = document.getElementById('tpause-' + name.replace(/[^a-zA-Z0-9]/g,'_'));
                     if (pb) pb.textContent = '▶';
                 }
@@ -3968,7 +3968,6 @@ ${rows}
                     }
                 }
             } else if (wasChecking && activeTimer && activeTimer.name === name && !activeTimer.running) {
-                // Auto-start timer after completing a set (not the last one)
                 const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
                 activeTimer.seconds = activeTimer.mode === 'timer' ? activeTimer.configured : 0;
                 const disp = document.getElementById('tdisp-' + safeId);
@@ -4048,7 +4047,8 @@ ${rows}
                 saveCurrentWorkoutState();
                 if (activeTimer && activeTimer.name === name) {
                     clearInterval(activeTimer.interval);
-                    activeTimer.interval = null; activeTimer.running = false;
+                    activeTimer = null;
+                    clearTimerState();
                     const pb = document.getElementById('tpause-' + name.replace(/[^a-zA-Z0-9]/g,'_'));
                     if (pb) pb.textContent = '▶';
                 }
