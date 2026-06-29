@@ -851,6 +851,38 @@
             font-family: var(--font); outline: none;
         }
         .timer-manual-input:focus { border-color: var(--accent); }
+        /* Timer selection modal */
+        .timer-modal-overlay {
+            position: fixed; inset: 0; z-index: 600;
+            background: rgba(0,0,0,0.55); display: flex;
+            align-items: center; justify-content: center;
+        }
+        .timer-modal-box {
+            background: var(--surface); border-radius: 20px;
+            padding: 22px 24px 20px; border: 1px solid var(--border);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5); min-width: 230px;
+        }
+        .timer-modal-title {
+            font-size: 0.75rem; color: var(--muted); text-align: center;
+            margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .timer-modal-presets {
+            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+        }
+        .timer-modal-preset {
+            padding: 12px 18px; border-radius: 14px; font-size: 1.05rem;
+            font-weight: 800; cursor: pointer; font-family: var(--font);
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+            color: var(--text); transition: background 0.15s;
+        }
+        .timer-modal-preset.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .timer-modal-preset:active { opacity: 0.7; }
+        [data-theme="light"] .timer-modal-preset { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.15); }
+        /* Fallo en combo grid */
+        .combo-fallo-f {
+            width: 64px; text-align: center; color: var(--accent);
+            font-weight: 900; font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+        }
         /* Clock popover */
         .card-clock-wrap { position: relative; }
         .clock-popover {
@@ -1866,6 +1898,7 @@
         let activeTimer = null;       // { name, interval, seconds, running }
         let completedSets = {};       // { exerciseName: checkedCount }
         let expandedFields = {};      // { name: { notes: bool, link: bool } }
+        let comboFallo = {};          // { exerciseName: { a: bool, b: bool } }
 
         // --- HELPERS ---
         const getLogs       = () => JSON.parse(localStorage.getItem('gym_logs') || '{}');
@@ -2252,6 +2285,9 @@
                 defFalloData = sd.falloData || [];
                 defNotes     = sd.notes     || "";
                 if (sd.completed) completedSets[item.n] = sd.completed;
+                if (defCombined && (sd.comboFalloA || sd.comboFalloB)) {
+                    comboFallo[item.n] = { a: !!sd.comboFalloA, b: !!sd.comboFalloB };
+                }
                 if (defCombined && sd.fecha) {
                     const w1 = sd.weight || '?'; const w2 = sd.weight2 || '?';
                     historyLabel = `Último: <span>${w1}kg + ${w2}kg</span>`;
@@ -2267,6 +2303,8 @@
             if (!defImg  && item.img) defImg  = item.img;
 
             const isFallo   = defReps === 'Fallo';
+            const defFalloA = defCombined ? !!(comboFallo[item.n]?.a) : false;
+            const defFalloB = defCombined ? !!(comboFallo[item.n]?.b) : false;
             const numSets   = parseInt(defSets) || 4;
             const numReps   = isFallo ? 1 : (parseInt(defReps) || 1);
             const checkedCount = completedSets[item.n] || 0;
@@ -2382,18 +2420,24 @@
                     <div class="stats-row">
                         <div class="stat-cell">
                             <label class="stat-label">Reps A</label>
-                            <div class="stepper-box">
-                                <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
-                                <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="${numReps||''}">
-                                <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
+                            <div class="reps-stepper-wrap">
+                                <div class="stepper-box"${defFalloA?' style="display:none"':''}>
+                                    <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
+                                    <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="${defFalloA?'':(numReps||'')}" ${defFalloA?'disabled':''}>
+                                    <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
+                                </div>
+                                <button class="fallo-toggle combo-fallo-a${defFalloA?' active expanded':''}" onclick="toggleComboFallo(this,'a','${safeName}')">Fallo</button>
                             </div>
                         </div>
                         <div class="stat-cell">
                             <label class="stat-label">Reps B</label>
-                            <div class="stepper-box">
-                                <button class="stepper-btn" onclick="stepReps2(this,-1)">−</button>
-                                <input type="number" inputmode="numeric" min="1" max="99" class="in-reps2-num" value="${defReps2||''}">
-                                <button class="stepper-btn" onclick="stepReps2(this,1)">＋</button>
+                            <div class="reps-stepper-wrap">
+                                <div class="stepper-box"${defFalloB?' style="display:none"':''}>
+                                    <button class="stepper-btn" onclick="stepReps2(this,-1)">−</button>
+                                    <input type="number" inputmode="numeric" min="1" max="99" class="in-reps2-num" value="${defFalloB?'':(defReps2||'')}" ${defFalloB?'disabled':''}>
+                                    <button class="stepper-btn" onclick="stepReps2(this,1)">＋</button>
+                                </div>
+                                <button class="fallo-toggle combo-fallo-b${defFalloB?' active expanded':''}" onclick="toggleComboFallo(this,'b','${safeName}')">Fallo</button>
                             </div>
                         </div>
                     </div>
@@ -3611,7 +3655,9 @@ ${rows}
                 const img       = (allData[name] || {}).img || '';
                 const completed = completedSets[name] || 0;
                 if (sets || reps || weight || weight2 || link || img || notes || completed || falloData.some(v=>v) || comboData.some(r=>r[0]||r[1])) {
-                    allData[name] = { sets, reps, reps2: reps2Save, weight, weight2, combined: isCombined, falloData, comboData, link, img, notes, completed, fecha: today };
+                    allData[name] = { sets, reps, reps2: reps2Save, weight, weight2, combined: isCombined,
+                        comboFalloA: comboFallo[name]?.a || false, comboFalloB: comboFallo[name]?.b || false,
+                        falloData, comboData, link, img, notes, completed, fecha: today };
                 }
                 const histEl = card.querySelector('.mini-history');
                 if (histEl) {
@@ -3772,25 +3818,44 @@ ${rows}
         }
 
         function openClockPopover(btn, name) {
-            closeClockPopover();
-            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
-            const timerRow = document.getElementById('timer-row-' + safeId);
-            const isOpen = timerRow && timerRow.style.display !== 'none';
-            if (isOpen) {
-                // Toggle off
-                timerRow.style.display = 'none';
-                if (activeTimer && activeTimer.name === name) {
-                    clearInterval(activeTimer.interval);
-                    activeTimer = null;
-                }
-            } else {
-                activateClockMode(name, 'timer');
-            }
+            openTimerModal(name);
         }
 
         function closeClockPopover() {
             const p = document.getElementById('clock-popover');
             if (p) p.remove();
+        }
+
+        function openTimerModal(name) {
+            const existing = document.getElementById('timer-modal');
+            if (existing) existing.remove();
+            const allData = getExData();
+            const configured = allData[name]?.timerTime || 60;
+            const safeName = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            const presets = [{l:'30s',s:30},{l:'45s',s:45},{l:'1m',s:60},{l:'1:30',s:90},{l:'2m',s:120},{l:'3m',s:180}];
+            const presetsHtml = presets.map(function(p) {
+                const sel = configured === p.s ? ' sel' : '';
+                return '<button class="timer-modal-preset' + sel + '" onclick="selectTimerPreset(\'' + safeName + '\',' + p.s + ')">' + p.l + '</button>';
+            }).join('');
+            const overlay = document.createElement('div');
+            overlay.id = 'timer-modal';
+            overlay.className = 'timer-modal-overlay';
+            overlay.innerHTML = '<div class="timer-modal-box" onclick="event.stopPropagation()"><div class="timer-modal-title">Tiempo de descanso</div><div class="timer-modal-presets">' + presetsHtml + '</div></div>';
+            overlay.addEventListener('click', closeTimerModal);
+            document.body.appendChild(overlay);
+        }
+
+        function closeTimerModal() {
+            const m = document.getElementById('timer-modal');
+            if (m) m.remove();
+        }
+
+        function selectTimerPreset(name, seconds) {
+            closeTimerModal();
+            setTimerPreset(name, seconds);
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const timerRow = document.getElementById('timer-row-' + safeId);
+            if (timerRow) timerRow.style.display = 'flex';
         }
 
         function activateClockMode(name, mode) {
@@ -3819,23 +3884,11 @@ ${rows}
             const timerRow = document.getElementById('timer-row-' + safeId);
             if (!timerRow) return;
             timerRow.classList.add('timer-mode');
-            const presets = [{l:'30s',s:30},{l:'45s',s:45},{l:'1m',s:60},{l:'1:30',s:90},{l:'2m',s:120},{l:'3m',s:180}];
-            const presetsHtml = presets.map(p =>
-                `<button class="timer-preset-btn${configured===p.s?' sel':''}" onclick="setTimerPreset('${name}',${p.s})">${p.l}</button>`
-            ).join('');
-            const mins = Math.floor(configured / 60);
-            const secs = configured % 60;
-            const manualVal = mins > 0 ? `${mins}:${String(secs).padStart(2,'0')}` : String(secs);
             timerRow.innerHTML = `
                 <div class="timer-main-row">
                     <span class="timer-display" id="tdisp-${safeId}">${fmtTimer(configured)}</span>
                     <button class="timer-action-btn" id="tpause-${safeId}" onclick="toggleCardTimerPause(this,'${name}')">▶</button>
                     <button class="timer-action-btn" onclick="resetCardTimer('${name}')">↻</button>
-                </div>
-                <div class="timer-presets">
-                    ${presetsHtml}
-                    <input type="text" class="timer-manual-input" placeholder="m:ss" value="${manualVal}"
-                        onblur="setTimerManual('${name}',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
                 </div>`;
         }
 
@@ -4075,17 +4128,20 @@ ${rows}
         function toggleCombined(btn) {
             const card = btn.closest('.exercise-card');
             const isCombined = btn.classList.toggle('active');
-            if (isCombined) {
-                const falloBtn = card.querySelector('.fallo-toggle');
-                if (falloBtn && falloBtn.classList.contains('active')) toggleFallo(falloBtn);
-            }
             const statsWrap = card.querySelector('.stats-wrap');
             const falloGrid = card.querySelector('.fallo-grid');
             const comboGrid = card.querySelector('.combo-grid');
             const name    = card.dataset.name;
             const safeId  = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const safeName = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 
             if (isCombined) {
+                // Deactivate regular fallo when entering combined mode
+                const falloBtn = card.querySelector('.fallo-toggle:not(.combo-fallo-a):not(.combo-fallo-b)');
+                if (falloBtn && falloBtn.classList.contains('active')) toggleFallo(falloBtn);
+                if (!comboFallo[name]) comboFallo[name] = { a: false, b: false };
+                const falloA = comboFallo[name].a;
+                const falloB = comboFallo[name].b;
                 const setsVal = card.querySelector('.in-sets')?.value || '4';
                 const curW    = card.querySelector('.in-weight')?.value || '';
                 const prevW   = card.querySelector('.in-weight')?.dataset.prev || '';
@@ -4103,18 +4159,24 @@ ${rows}
                     <div class="stats-row">
                         <div class="stat-cell">
                             <label class="stat-label">Reps A</label>
-                            <div class="stepper-box">
-                                <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
-                                <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="">
-                                <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
+                            <div class="reps-stepper-wrap">
+                                <div class="stepper-box"${falloA?' style="display:none"':''}>
+                                    <button class="stepper-btn" onclick="stepReps(this,-1)">−</button>
+                                    <input type="number" inputmode="numeric" min="1" max="99" class="in-reps-num" value="" ${falloA?'disabled':''}>
+                                    <button class="stepper-btn" onclick="stepReps(this,1)">＋</button>
+                                </div>
+                                <button class="fallo-toggle combo-fallo-a${falloA?' active expanded':''}" onclick="toggleComboFallo(this,'a','${safeName}')">Fallo</button>
                             </div>
                         </div>
                         <div class="stat-cell">
                             <label class="stat-label">Reps B</label>
-                            <div class="stepper-box">
-                                <button class="stepper-btn" onclick="stepReps2(this,-1)">−</button>
-                                <input type="number" inputmode="numeric" min="1" max="99" class="in-reps2-num" value="">
-                                <button class="stepper-btn" onclick="stepReps2(this,1)">＋</button>
+                            <div class="reps-stepper-wrap">
+                                <div class="stepper-box"${falloB?' style="display:none"':''}>
+                                    <button class="stepper-btn" onclick="stepReps2(this,-1)">−</button>
+                                    <input type="number" inputmode="numeric" min="1" max="99" class="in-reps2-num" value="" ${falloB?'disabled':''}>
+                                    <button class="stepper-btn" onclick="stepReps2(this,1)">＋</button>
+                                </div>
+                                <button class="fallo-toggle combo-fallo-b${falloB?' active expanded':''}" onclick="toggleComboFallo(this,'b','${safeName}')">Fallo</button>
                             </div>
                         </div>
                     </div>
@@ -4192,6 +4254,8 @@ ${rows}
             const sets     = parseInt(card.querySelector('.in-sets').value) || 4;
             const grid     = card.querySelector('.combo-grid');
             if (!grid) return;
+            const falloA   = comboFallo[name]?.a || false;
+            const falloB   = comboFallo[name]?.b || false;
             const prevRows = Array.from(grid.querySelectorAll('.combo-row'));
             const prevData = prevRows.map(r => [
                 r.querySelector('.combo-a')?.value || '',
@@ -4202,13 +4266,32 @@ ${rows}
             for (let i = 0; i < sets; i++) {
                 const row = document.createElement('div');
                 row.className = 'combo-row';
+                const colA = falloA
+                    ? `<span class="combo-fallo-f">F</span>`
+                    : `<input type="number" inputmode="numeric" min="0" class="combo-input combo-a" placeholder="—" value="${prevData[i]?.[0]||''}">`;
+                const colB = falloB
+                    ? `<span class="combo-fallo-f">F</span>`
+                    : `<input type="number" inputmode="numeric" min="0" class="combo-input combo-b" placeholder="—" value="${prevData[i]?.[1]||''}">`;
                 row.innerHTML = `<span class="fallo-label">S${i+1}</span>
-                    <input type="number" inputmode="numeric" min="0" class="combo-input combo-a" placeholder="—" value="${prevData[i]?.[0]||''}">
+                    ${colA}
                     <span class="combo-sep">+</span>
-                    <input type="number" inputmode="numeric" min="0" class="combo-input combo-b" placeholder="—" value="${prevData[i]?.[1]||''}">
+                    ${colB}
                     <button class="fallo-check ${i < checked ? 'checked' : ''}" onclick="toggleFalloCheck(this,'${safeName}',${sets})">✓</button>`;
                 grid.appendChild(row);
             }
+        }
+
+        function toggleComboFallo(btn, which, name) {
+            if (!comboFallo[name]) comboFallo[name] = { a: false, b: false };
+            const isActive = btn.classList.toggle('active');
+            comboFallo[name][which] = isActive;
+            if (isActive) btn.classList.add('expanded'); else btn.classList.remove('expanded');
+            const wrap = btn.closest('.reps-stepper-wrap');
+            const box = wrap?.querySelector('.stepper-box');
+            if (box) box.style.display = isActive ? 'none' : '';
+            const card = btn.closest('.exercise-card');
+            rebuildComboGrid(card);
+            scheduleAutoSave();
         }
 
         // --- I1: EXPAND FIELD ---
