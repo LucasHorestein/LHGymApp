@@ -4152,7 +4152,9 @@ ${rows}
                     if (!allCards[i].classList.contains('completed')) {
                         const sep = allCards[i].previousElementSibling;
                         const scrollTarget = (sep && sep.classList.contains('rest-separator')) ? sep : allCards[i];
-                        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        const container = document.querySelector('.view.active');
+                        const targetTop = scrollTarget.getBoundingClientRect().top + container.scrollTop - container.getBoundingClientRect().top - 16;
+                        container.scrollTo({ top: targetTop, behavior: 'smooth' });
                         break;
                     }
                 }
@@ -4247,7 +4249,9 @@ ${rows}
                     if (!allCards[i].classList.contains('completed')) {
                         const sep = allCards[i].previousElementSibling;
                         const scrollTarget = (sep && sep.classList.contains('rest-separator')) ? sep : allCards[i];
-                        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        const container = document.querySelector('.view.active');
+                        const targetTop = scrollTarget.getBoundingClientRect().top + container.scrollTop - container.getBoundingClientRect().top - 16;
+                        container.scrollTo({ top: targetTop, behavior: 'smooth' });
                         break;
                     }
                 }
