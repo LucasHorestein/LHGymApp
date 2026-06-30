@@ -4150,7 +4150,9 @@ ${rows}
                 const ci = allCards.indexOf(card);
                 for (let i = ci + 1; i < allCards.length; i++) {
                     if (!allCards[i].classList.contains('completed')) {
-                        allCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        const sep = allCards[i].previousElementSibling;
+                        const scrollTarget = (sep && sep.classList.contains('rest-separator')) ? sep : allCards[i];
+                        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         break;
                     }
                 }
@@ -4243,7 +4245,9 @@ ${rows}
                 const ci = allCards.indexOf(card);
                 for (let i = ci + 1; i < allCards.length; i++) {
                     if (!allCards[i].classList.contains('completed')) {
-                        allCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        const sep = allCards[i].previousElementSibling;
+                        const scrollTarget = (sep && sep.classList.contains('rest-separator')) ? sep : allCards[i];
+                        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         break;
                     }
                 }
