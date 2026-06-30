@@ -878,6 +878,34 @@
         .timer-modal-preset.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
         .timer-modal-preset:active { opacity: 0.7; }
         [data-theme="light"] .timer-modal-preset { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.15); }
+        /* Rest separator between exercises */
+        .rest-separator { display: flex; flex-direction: column; align-items: center; padding: 2px 16px 4px; gap: 3px; }
+        .rest-sep-row { display: flex; align-items: center; gap: 8px; width: 100%; }
+        .rest-sep-line { flex: 1; height: 1px; background: var(--border); opacity: 0.5; }
+        .rest-sep-btn {
+            padding: 4px 14px; border-radius: 99px; font-size: 0.73rem;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--muted); font-family: var(--font); cursor: pointer;
+            display: flex; align-items: center; gap: 5px; white-space: nowrap;
+        }
+        .rest-sep-btn:active { opacity: 0.7; }
+        [data-theme="light"] .rest-sep-btn { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); }
+        .rest-sel-label { color: var(--accent); font-weight: 800; }
+        .rest-separator .card-timer-row { border-top: none; background: none; padding: 4px 8px 6px; }
+        /* Timer modal manual input */
+        .timer-modal-manual { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
+        .timer-modal-input {
+            flex: 1; padding: 9px 12px; border-radius: 10px; font-size: 0.9rem;
+            background: rgba(255,255,255,0.07); border: 1px solid var(--border);
+            color: var(--text); font-family: var(--font); outline: none; text-align: center;
+        }
+        .timer-modal-input:focus { border-color: var(--accent); }
+        [data-theme="light"] .timer-modal-input { background: rgba(0,0,0,0.05); }
+        .timer-modal-ok {
+            padding: 9px 16px; border-radius: 10px; background: var(--accent);
+            border: none; color: #fff; font-size: 0.9rem; cursor: pointer;
+            font-family: var(--font); font-weight: 800;
+        }
         /* Fallo en combo grid */
         .combo-fallo-f {
             width: 64px; text-align: center; color: var(--accent);
@@ -1899,6 +1927,7 @@
         let completedSets = {};       // { exerciseName: checkedCount }
         let expandedFields = {};      // { name: { notes: bool, link: bool } }
         let comboFallo = {};          // { exerciseName: { a: bool, b: bool } }
+        let _timerModalName = null;   // name of exercise/rest currently in modal
 
         // --- HELPERS ---
         const getLogs       = () => JSON.parse(localStorage.getItem('gym_logs') || '{}');
@@ -2516,6 +2545,7 @@
         function renderExerciseList(dayData, savedData) {
             const container = document.getElementById('workout-view');
             container.innerHTML = '';
+            let _restSepIdx = 0;
 
             const exerciseCount = dayData.ejercicios.filter(e => !e.titulo).length;
 
@@ -2564,10 +2594,13 @@
                     container.appendChild(wrapper);
                 }
 
-                group.exercises.forEach(({ item, originalIdx }) => {
-                    if (item.active === false) return;
+                const activeExercises = group.exercises.filter(({ item }) => item.active !== false);
+                activeExercises.forEach(({ item, originalIdx }, i) => {
                     const el = buildExerciseCard(item, originalIdx, savedData);
                     container.appendChild(el);
+                    if (i < activeExercises.length - 1) {
+                        container.appendChild(buildRestSeparator(_restSepIdx++));
+                    }
                 });
             });
 
@@ -3817,6 +3850,27 @@ ${rows}
             try { navigator.vibrate && navigator.vibrate([150, 80, 150, 80, 150]); } catch(e) {}
         }
 
+        function buildRestSeparator(idx) {
+            const name = '__rest_' + idx + '__';
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const allData = getExData();
+            const configured = allData['__rest__']?.timerTime || 180;
+            const sep = document.createElement('div');
+            sep.className = 'rest-separator';
+            sep.innerHTML = '<div class="rest-sep-row">'
+                + '<div class="rest-sep-line"></div>'
+                + '<button class="rest-sep-btn" onclick="openTimerModal(\'' + name + '\')">⏱ Descanso <span class="rest-sel-label">' + fmtTimer(configured) + '</span></button>'
+                + '<div class="rest-sep-line"></div>'
+                + '</div>'
+                + '<div class="card-timer-row timer-mode" id="timer-row-' + safeId + '" style="display:none">'
+                + '<div class="timer-main-row">'
+                + '<span class="timer-display" id="tdisp-' + safeId + '">' + fmtTimer(configured) + '</span>'
+                + '<button class="timer-action-btn" id="tpause-' + safeId + '" onclick="toggleCardTimerPause(this,\'' + name + '\')">▶</button>'
+                + '<button class="timer-action-btn" onclick="resetCardTimer(\'' + name + '\')">↻</button>'
+                + '</div></div>';
+            return sep;
+        }
+
         function openClockPopover(btn, name) {
             openTimerModal(name);
         }
@@ -3829,8 +3883,11 @@ ${rows}
         function openTimerModal(name) {
             const existing = document.getElementById('timer-modal');
             if (existing) existing.remove();
+            _timerModalName = name;
             const allData = getExData();
-            const configured = allData[name]?.timerTime || 60;
+            const configKey = name.startsWith('__rest') ? '__rest__' : name;
+            const defaultSecs = name.startsWith('__rest') ? 180 : 60;
+            const configured = allData[configKey]?.timerTime || defaultSecs;
             const safeName = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
             const presets = [{l:'30s',s:30},{l:'45s',s:45},{l:'1m',s:60},{l:'1:30',s:90},{l:'2m',s:120},{l:'3m',s:180}];
             const presetsHtml = presets.map(function(p) {
@@ -3840,7 +3897,13 @@ ${rows}
             const overlay = document.createElement('div');
             overlay.id = 'timer-modal';
             overlay.className = 'timer-modal-overlay';
-            overlay.innerHTML = '<div class="timer-modal-box" onclick="event.stopPropagation()"><div class="timer-modal-title">Tiempo de descanso</div><div class="timer-modal-presets">' + presetsHtml + '</div></div>';
+            overlay.innerHTML = '<div class="timer-modal-box" onclick="event.stopPropagation()">'
+                + '<div class="timer-modal-title">Tiempo de descanso</div>'
+                + '<div class="timer-modal-presets">' + presetsHtml + '</div>'
+                + '<div class="timer-modal-manual">'
+                + '<input type="text" id="timer-modal-input" class="timer-modal-input" placeholder="m:ss  ó  segundos" onkeydown="if(event.key===\'Enter\'){confirmTimerManual();}">'
+                + '<button class="timer-modal-ok" onclick="confirmTimerManual()">✓</button>'
+                + '</div></div>';
             overlay.addEventListener('click', closeTimerModal);
             document.body.appendChild(overlay);
         }
@@ -3848,6 +3911,24 @@ ${rows}
         function closeTimerModal() {
             const m = document.getElementById('timer-modal');
             if (m) m.remove();
+        }
+
+        function parseTimerInput(val) {
+            val = (val || '').trim();
+            if (!val) return 0;
+            if (val.includes(':')) {
+                const parts = val.split(':');
+                return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+            }
+            return parseInt(val) || 0;
+        }
+
+        function confirmTimerManual() {
+            const input = document.getElementById('timer-modal-input');
+            const seconds = parseTimerInput(input ? input.value : '');
+            if (seconds > 0 && _timerModalName) {
+                selectTimerPreset(_timerModalName, seconds);
+            }
         }
 
         function selectTimerPreset(name, seconds) {
@@ -3913,10 +3994,14 @@ ${rows}
                 activeTimer = { name, mode: 'timer', configured: seconds, seconds, running: false, interval: null, everStarted: false };
             }
             const allData = getExData();
-            if (!allData[name]) allData[name] = {};
-            allData[name].timerTime = seconds;
+            const configKey = name.startsWith('__rest') ? '__rest__' : name;
+            if (!allData[configKey]) allData[configKey] = {};
+            allData[configKey].timerTime = seconds;
             saveExData(allData);
             buildTimerModeRow(name, safeId, seconds);
+            if (name.startsWith('__rest')) {
+                document.querySelectorAll('.rest-sel-label').forEach(function(el) { el.textContent = fmtTimer(seconds); });
+            }
         }
 
         function setTimerManual(name, val) {
