@@ -911,6 +911,9 @@
             width: 64px; text-align: center; color: var(--accent);
             font-weight: 900; font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
         }
+        .combo-input.fallo-col {
+            border-color: var(--accent); color: var(--accent);
+        }
         /* Clock popover */
         .card-clock-wrap { position: relative; }
         .clock-popover {
@@ -4379,12 +4382,16 @@ ${rows}
                 r.querySelector('.combo-b')?.value || ''
             ]);
             const checked  = completedSets[name] || 0;
+            const targetA  = card.querySelector('.in-reps-num')?.value || '';
+            const targetB  = card.querySelector('.in-reps2-num')?.value || '';
             grid.innerHTML = '';
             for (let i = 0; i < sets; i++) {
                 const row = document.createElement('div');
                 row.className = 'combo-row';
-                const colA = `<input type="number" inputmode="numeric" min="0" class="combo-input combo-a" placeholder="—" value="${prevData[i]?.[0]||''}">`;
-                const colB = `<input type="number" inputmode="numeric" min="0" class="combo-input combo-b" placeholder="—" value="${prevData[i]?.[1]||''}">`;
+                const valA = prevData[i]?.[0] || (falloA ? '' : targetA);
+                const valB = prevData[i]?.[1] || (falloB ? '' : targetB);
+                const colA = `<input type="number" inputmode="numeric" min="0" class="combo-input combo-a${falloA ? ' fallo-col' : ''}" placeholder="—" value="${valA}">`;
+                const colB = `<input type="number" inputmode="numeric" min="0" class="combo-input combo-b${falloB ? ' fallo-col' : ''}" placeholder="—" value="${valB}">`;
                 row.innerHTML = `<span class="fallo-label">S${i+1}</span>
                     ${colA}
                     <span class="combo-sep">+</span>
