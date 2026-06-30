@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -4383,12 +4383,8 @@ ${rows}
             for (let i = 0; i < sets; i++) {
                 const row = document.createElement('div');
                 row.className = 'combo-row';
-                const colA = falloA
-                    ? `<span class="combo-fallo-f">F</span>`
-                    : `<input type="number" inputmode="numeric" min="0" class="combo-input combo-a" placeholder="—" value="${prevData[i]?.[0]||''}">`;
-                const colB = falloB
-                    ? `<span class="combo-fallo-f">F</span>`
-                    : `<input type="number" inputmode="numeric" min="0" class="combo-input combo-b" placeholder="—" value="${prevData[i]?.[1]||''}">`;
+                const colA = `<input type="number" inputmode="numeric" min="0" class="combo-input combo-a" placeholder="—" value="${prevData[i]?.[0]||''}">`;
+                const colB = `<input type="number" inputmode="numeric" min="0" class="combo-input combo-b" placeholder="—" value="${prevData[i]?.[1]||''}">`;
                 row.innerHTML = `<span class="fallo-label">S${i+1}</span>
                     ${colA}
                     <span class="combo-sep">+</span>
