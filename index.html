@@ -2370,7 +2370,7 @@
             const delta2Html = prevWeight2 !== '' ? `<span class="weight-delta eq" id="delta2-${safeId}">Último peso: ${prevWeight2}kg</span>` : `<span class="weight-delta eq" id="delta2-${safeId}" style="display:none"></span>`;
 
             // Series checks
-            let checksHtml = `<div class="series-checks"${(isFallo || defCombined) ? ' style="display:none"' : ''}>`;
+            let checksHtml = `<div class="series-checks"${(isFallo || (defCombined && (defFalloA || defFalloB))) ? ' style="display:none"' : ''}>`;
             for (let si = 0; si < numSets; si++) {
                 checksHtml += `<button class="series-check ${si < checkedCount ? 'checked' : ''}" onclick="toggleSeriesCheck(this,'${safeName}',${numSets})">✓</button>`;
             }
@@ -2526,7 +2526,7 @@
                     `}
                 </div>
                 <div class="fallo-grid" style="${(isFallo && !defCombined) ? 'display:flex' : 'display:none'}">${falloRowsHtml}</div>
-                <div class="combo-grid" style="${defCombined ? 'display:flex' : 'display:none'}">${comboRowsHtml}</div>
+                <div class="combo-grid" style="${defCombined && (defFalloA || defFalloB) ? 'display:flex' : 'display:none'}">${comboRowsHtml}</div>
                 ${checksHtml}
                 <div class="mini-history">${historyLabel}</div>
                 ${defImg ? `<div class="photo-wrap-row">${photoSection}</div>` : photoSection}
@@ -4296,9 +4296,15 @@ ${rows}
                         </div>
                     </div>`;
                 if (falloGrid) falloGrid.style.display = 'none';
-                const seriesChecksC = card.querySelector('.series-checks');
-                if (seriesChecksC) seriesChecksC.style.display = 'none';
-                if (comboGrid) { rebuildComboGrid(card); comboGrid.style.display = 'flex'; }
+                if (falloA || falloB) {
+                    const seriesChecksC = card.querySelector('.series-checks');
+                    if (seriesChecksC) seriesChecksC.style.display = 'none';
+                    if (comboGrid) { rebuildComboGrid(card); comboGrid.style.display = 'flex'; }
+                } else {
+                    if (comboGrid) comboGrid.style.display = 'none';
+                    const seriesChecksC = card.querySelector('.series-checks');
+                    if (seriesChecksC) seriesChecksC.style.display = '';
+                }
             } else {
                 const setsVal = card.querySelector('.in-sets')?.value || '4';
                 const curW1   = card.querySelector('.in-w1')?.value || '';
@@ -4385,7 +4391,18 @@ ${rows}
             const box = wrap?.querySelector('.stepper-box');
             if (box) box.style.display = isActive ? 'none' : '';
             const card = btn.closest('.exercise-card');
-            rebuildComboGrid(card);
+            const falloA = comboFallo[name]?.a || false;
+            const falloB = comboFallo[name]?.b || false;
+            const comboGrid = card.querySelector('.combo-grid');
+            const seriesChecks = card.querySelector('.series-checks');
+            if (falloA || falloB) {
+                rebuildComboGrid(card);
+                if (comboGrid) comboGrid.style.display = 'flex';
+                if (seriesChecks) seriesChecks.style.display = 'none';
+            } else {
+                if (comboGrid) comboGrid.style.display = 'none';
+                if (seriesChecks) seriesChecks.style.display = '';
+            }
             scheduleAutoSave();
         }
 
