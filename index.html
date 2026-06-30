@@ -3859,7 +3859,8 @@ ${rows}
             sep.className = 'rest-separator';
             sep.innerHTML = '<div class="rest-sep-row">'
                 + '<div class="rest-sep-line"></div>'
-                + '<button class="rest-sep-btn" onclick="openTimerModal(\'' + name + '\')">⏱ Descanso <span class="rest-sel-label">' + fmtTimer(configured) + '</span></button>'
+                + '<span class="rest-sel-label" onclick="openTimerModal(\'' + name + '\')" style="cursor:pointer;color:var(--accent);font-size:0.78rem;font-weight:800">' + fmtTimer(configured) + '</span>'
+                + '<button class="timer-action-btn rest-play-btn" id="rplay-' + safeId + '" onclick="startRestTimer(\'' + name + '\')">▶</button>'
                 + '<div class="rest-sep-line"></div>'
                 + '</div>'
                 + '<div class="card-timer-row timer-mode" id="timer-row-' + safeId + '" style="display:none">'
@@ -3869,6 +3870,15 @@ ${rows}
                 + '<button class="timer-action-btn" onclick="resetCardTimer(\'' + name + '\')">↻</button>'
                 + '</div></div>';
             return sep;
+        }
+
+        function startRestTimer(name) {
+            const allData = getExData();
+            const seconds = allData['__rest__']?.timerTime || 180;
+            selectTimerPreset(name, seconds);
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const pb = document.getElementById('tpause-' + safeId);
+            if (pb) toggleCardTimerPause(pb, name);
         }
 
         function openClockPopover(btn, name) {
