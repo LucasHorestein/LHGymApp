@@ -832,6 +832,11 @@
             color: var(--accent); font-size: 0.9rem; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
+        .timer-close-btn {
+            width: 26px; height: 26px; font-size: 0.75rem;
+            background: transparent; border-color: rgba(255,255,255,0.15);
+            color: var(--text-muted, #888); margin-left: 4px;
+        }
         .timer-action-btn:active { background: rgba(232,114,42,0.25); }
         .timer-presets {
             display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;
@@ -3998,6 +4003,7 @@ ${rows}
                     <span class="timer-display" id="tdisp-${safeId}">${fmtTimer(configured)}</span>
                     <button class="timer-action-btn" id="tpause-${safeId}" onclick="toggleCardTimerPause(this,'${name}')">▶</button>
                     <button class="timer-action-btn" onclick="resetCardTimer('${name}')">↻</button>
+                    <button class="timer-action-btn timer-close-btn" onclick="hideCardTimer('${name}')">✕</button>
                 </div>`;
         }
 
@@ -4100,6 +4106,19 @@ ${rows}
             const resetTo = (activeTimer?.name === name && activeTimer?.mode === 'timer') ? (activeTimer.configured || 0) : 0;
             if (disp) disp.textContent = fmtTimer(resetTo);
             if (pauseBtn) pauseBtn.textContent = '▶';
+        }
+
+        function hideCardTimer(name) {
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            if (activeTimer && activeTimer.name === name) {
+                clearInterval(activeTimer.interval);
+                activeTimer = null;
+            }
+            const timerRow = document.getElementById('timer-row-' + safeId);
+            if (timerRow) {
+                timerRow.classList.remove('timer-mode');
+                timerRow.style.display = 'none';
+            }
         }
 
         // --- WORKOUT TOTAL TIMER (C2 removed) ---
