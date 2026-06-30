@@ -3859,26 +3859,41 @@ ${rows}
             sep.className = 'rest-separator';
             sep.innerHTML = '<div class="rest-sep-row">'
                 + '<div class="rest-sep-line"></div>'
-                + '<span class="rest-sel-label" onclick="openTimerModal(\'' + name + '\')" style="cursor:pointer;color:var(--accent);font-size:0.78rem;font-weight:800">' + fmtTimer(configured) + '</span>'
-                + '<button class="timer-action-btn rest-play-btn" id="rplay-' + safeId + '" onclick="startRestTimer(\'' + name + '\')">▶</button>'
-                + '<div class="rest-sep-line"></div>'
+                + '<div class="timer-main-row" style="gap:8px">'
+                + '<span class="rest-sel-label timer-display" id="tdisp-' + safeId + '" onclick="openTimerModal(\'' + name + '\')" style="cursor:pointer;min-width:54px;text-align:center">' + fmtTimer(configured) + '</span>'
+                + '<button class="timer-action-btn" id="tpause-' + safeId + '" onclick="toggleRestTimer(this,\'' + name + '\')">▶</button>'
+                + '<button class="timer-action-btn" onclick="resetRestTimer(\'' + name + '\')">↻</button>'
                 + '</div>'
-                + '<div class="card-timer-row timer-mode" id="timer-row-' + safeId + '" style="display:none">'
-                + '<div class="timer-main-row">'
-                + '<span class="timer-display" id="tdisp-' + safeId + '">' + fmtTimer(configured) + '</span>'
-                + '<button class="timer-action-btn" id="tpause-' + safeId + '" onclick="toggleCardTimerPause(this,\'' + name + '\')">▶</button>'
-                + '<button class="timer-action-btn" onclick="resetCardTimer(\'' + name + '\')">↻</button>'
-                + '</div></div>';
+                + '<div class="rest-sep-line"></div>'
+                + '</div>';
             return sep;
         }
 
-        function startRestTimer(name) {
+        function toggleRestTimer(btn, name) {
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            if (!activeTimer || activeTimer.name !== name) {
+                const allData = getExData();
+                const seconds = allData['__rest__']?.timerTime || 180;
+                if (activeTimer) { clearInterval(activeTimer.interval); activeTimer = null; }
+                activeTimer = { name, mode: 'timer', configured: seconds, seconds, running: false, interval: null, everStarted: false };
+            }
+            toggleCardTimerPause(btn, name);
+        }
+
+        function resetRestTimer(name) {
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
             const allData = getExData();
             const seconds = allData['__rest__']?.timerTime || 180;
-            selectTimerPreset(name, seconds);
-            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            if (activeTimer && activeTimer.name === name) {
+                clearInterval(activeTimer.interval);
+                activeTimer.interval = null; activeTimer.running = false;
+                activeTimer.seconds = seconds; activeTimer.configured = seconds;
+            }
+            const disp = document.getElementById('tdisp-' + safeId);
             const pb = document.getElementById('tpause-' + safeId);
-            if (pb) toggleCardTimerPause(pb, name);
+            if (disp) disp.textContent = fmtTimer(seconds);
+            if (pb) pb.textContent = '▶';
+            clearTimerState();
         }
 
         function openClockPopover(btn, name) {
@@ -4008,9 +4023,10 @@ ${rows}
             if (!allData[configKey]) allData[configKey] = {};
             allData[configKey].timerTime = seconds;
             saveExData(allData);
-            buildTimerModeRow(name, safeId, seconds);
             if (name.startsWith('__rest')) {
-                document.querySelectorAll('.rest-sel-label').forEach(function(el) { el.textContent = fmtTimer(seconds); });
+                document.querySelectorAll('[id^="tdisp-__rest"]').forEach(function(el) { el.textContent = fmtTimer(seconds); });
+            } else {
+                buildTimerModeRow(name, safeId, seconds);
             }
         }
 
