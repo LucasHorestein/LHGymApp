@@ -2243,7 +2243,7 @@
         function openWorkout(index) {
             const isNewDay = currentDayIdx !== index;
             if (isNewDay) {
-                if (activeTimer) { clearInterval(activeTimer.interval); activeTimer = null; }
+                if (activeTimer) { clearInterval(activeTimer.interval); activeTimer = null; clearTimerState(); }
                 completedSets = {};
                 expandedFields = {};
             }
@@ -2572,6 +2572,8 @@
             }
 
             const groups = groupExercises(dayData.ejercicios);
+            const totalActive = groups.reduce((n, g) => n + g.exercises.filter(({ item }) => item.active !== false).length, 0);
+            let _renderedCards = 0;
 
             groups.forEach(group => {
                 if (group.titulo) {
@@ -2604,10 +2606,11 @@
                 }
 
                 const activeExercises = group.exercises.filter(({ item }) => item.active !== false);
-                activeExercises.forEach(({ item, originalIdx }, i) => {
+                activeExercises.forEach(({ item, originalIdx }) => {
                     const el = buildExerciseCard(item, originalIdx, savedData);
                     container.appendChild(el);
-                    if (i < activeExercises.length - 1) {
+                    _renderedCards++;
+                    if (_renderedCards < totalActive) {
                         container.appendChild(buildRestSeparator(_restSepIdx++));
                     }
                 });
@@ -4059,6 +4062,7 @@ ${rows}
                 }
                 clearInterval(activeTimer.interval);
                 activeTimer.interval = null; activeTimer.running = false;
+                clearTimerState();
                 btn.textContent = '▶';
             } else {
                 activeTimer.running = true; activeTimer.everStarted = true;
@@ -4103,6 +4107,7 @@ ${rows}
                 clearInterval(activeTimer.interval);
                 activeTimer.interval = null; activeTimer.running = false;
                 activeTimer.seconds = activeTimer.mode === 'timer' ? activeTimer.configured : 0;
+                clearTimerState();
             }
             const resetTo = (activeTimer?.name === name && activeTimer?.mode === 'timer') ? (activeTimer.configured || 0) : 0;
             if (disp) disp.textContent = fmtTimer(resetTo);
@@ -4114,6 +4119,7 @@ ${rows}
             if (activeTimer && activeTimer.name === name) {
                 clearInterval(activeTimer.interval);
                 activeTimer = null;
+                clearTimerState();
             }
             const timerRow = document.getElementById('timer-row-' + safeId);
             if (timerRow) {
@@ -4150,7 +4156,8 @@ ${rows}
                 const ci = allCards.indexOf(card);
                 for (let i = ci + 1; i < allCards.length; i++) {
                     if (!allCards[i].classList.contains('completed')) {
-                        const sep = allCards[i].previousElementSibling;
+                        let sep = allCards[i].previousElementSibling;
+                        while (sep && sep.classList.contains('muscle-group-wrapper')) sep = sep.previousElementSibling;
                         const scrollTarget = (sep && sep.classList.contains('rest-separator')) ? sep : allCards[i];
                         const container = document.querySelector('.view.active');
                         const targetTop = scrollTarget.getBoundingClientRect().top + container.scrollTop - container.getBoundingClientRect().top - 16;
@@ -4247,7 +4254,8 @@ ${rows}
                 const ci = allCards.indexOf(card);
                 for (let i = ci + 1; i < allCards.length; i++) {
                     if (!allCards[i].classList.contains('completed')) {
-                        const sep = allCards[i].previousElementSibling;
+                        let sep = allCards[i].previousElementSibling;
+                        while (sep && sep.classList.contains('muscle-group-wrapper')) sep = sep.previousElementSibling;
                         const scrollTarget = (sep && sep.classList.contains('rest-separator')) ? sep : allCards[i];
                         const container = document.querySelector('.view.active');
                         const targetTop = scrollTarget.getBoundingClientRect().top + container.scrollTop - container.getBoundingClientRect().top - 16;
@@ -4890,8 +4898,11 @@ ${rows}
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) return;
             // If timer lost from memory (long lock), restore from localStorage
-            if (!activeTimer) restoreTimerState();
+            let justRestored = false;
+            if (!activeTimer) { restoreTimerState(); justRestored = !!activeTimer; }
             if (!activeTimer) return;
+            // Paused or already-finished timers are frozen: nothing to sync, never alert
+            if (!activeTimer.running && !justRestored) return;
             const elapsed = (Date.now() - activeTimer.startTime) / 1000;
             const safeId  = activeTimer.name.replace(/[^a-zA-Z0-9]/g,'_');
             const disp    = document.getElementById('tdisp-' + safeId);
@@ -4905,7 +4916,9 @@ ${rows}
                     }
                     activeTimer.seconds = activeTimer.configured;
                     clearTimerState();
-                    playTimerAlert();
+                    // Alert only if it expired recently — a timer overdue for
+                    // several minutes (abandoned session) restores silently
+                    if (elapsed - activeTimer.startSeconds < 300) playTimerAlert();
                     if (disp) disp.textContent = fmtTimer(activeTimer.configured);
                     const pb = document.getElementById('tpause-' + safeId);
                     if (pb) pb.textContent = '▶';
