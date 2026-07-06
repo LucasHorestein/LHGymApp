@@ -388,6 +388,17 @@
             background: rgba(74,222,128,0.18); color: #4ade80;
             border: 1px solid rgba(74,222,128,0.3); white-space: nowrap;
         }
+        .day-drag-handle {
+            margin-left: auto; align-self: stretch;
+            display: flex; align-items: center;
+            padding: 0 2px 0 14px;
+            color: rgba(var(--accent-rgb),0.55);
+            font-size: 1.05rem; cursor: grab;
+            flex-shrink: 0;
+        }
+        .day-drag-handle.hold-ready { color: var(--accent); }
+        .day-drag-handle:active { cursor: grabbing; }
+        .card.is-dragging { opacity: 0.25; }
         .day-badge {
             min-width: 60px; height: 60px; border-radius: 16px;
             background: linear-gradient(145deg, var(--accent), var(--accent2));
@@ -2230,8 +2241,10 @@
                             ${rawTs ? '✓ ' + displayTs : 'Sin registros'}
                         </span>`}
                     </div>
+                    <span class="day-drag-handle">⠿</span>
                 `;
 
+                card._dayIdx = index;
                 attachLongPress(card, index);
 
                 container.appendChild(card);
@@ -3197,6 +3210,7 @@ ${rows}
         function attachLongPress(card, index) {
             let timer = null, sx = 0, sy = 0;
             card.addEventListener('touchstart', e => {
+                if (e.target.closest('.day-drag-handle')) return;
                 const t = e.touches[0];
                 sx = t.clientX; sy = t.clientY;
                 card.classList.add('pressing');
@@ -3222,7 +3236,8 @@ ${rows}
             };
             card.addEventListener('touchend', cancel, { passive: true });
             card.addEventListener('touchcancel', cancel, { passive: true });
-            card.onclick = () => {
+            card.onclick = (e) => {
+                if (e.target.closest('.day-drag-handle')) return;
                 if (_lpBlocked) { _lpBlocked = false; return; }
                 openWorkout(index);
             };
@@ -3597,6 +3612,14 @@ ${rows}
             autoSaveTimer = setTimeout(() => { saveCurrentWorkoutState(); }, 700);
         }
 
+        // Flush any pending debounced save immediately (leaving the day, app
+        // backgrounded, PWA killed). Must run BEFORE workout state is cleared.
+        function flushWorkoutSave() {
+            if (currentDayIdx === null) return;
+            clearTimeout(autoSaveTimer);
+            saveCurrentWorkoutState();
+        }
+
         // handleRepsChange removed — replaced by toggleFallo + stepReps
 
         function rebuildFalloGrid(card) {
@@ -3734,6 +3757,7 @@ ${rows}
 
         function goHome() {
             history.replaceState({ page: 'dashboard' }, '');
+            flushWorkoutSave();
             if (activeTimer) { clearInterval(activeTimer.interval); activeTimer = null; }
             clearTimerState();
             completedSets = {};
@@ -3860,6 +3884,22 @@ ${rows}
                 });
             } catch(e) {}
             try { navigator.vibrate && navigator.vibrate([150, 80, 150, 80, 150]); } catch(e) {}
+        }
+
+        // When a rest timer hits 00:00, auto-scroll to the next uncompleted exercise
+        function scrollToNextAfterTimer(name) {
+            const safeId = name.replace(/[^a-zA-Z0-9]/g,'_');
+            const disp = document.getElementById('tdisp-' + safeId);
+            const container = document.querySelector('.view.active');
+            if (!disp || !container) return;
+            let el = disp.closest('.rest-separator, .exercise-card');
+            el = el ? el.nextElementSibling : null;
+            while (el && !(el.classList.contains('exercise-card') && !el.classList.contains('completed'))) {
+                el = el.nextElementSibling;
+            }
+            if (!el) return;
+            const targetTop = el.getBoundingClientRect().top + container.scrollTop - container.getBoundingClientRect().top - 16;
+            container.scrollTo({ top: targetTop, behavior: 'smooth' });
         }
 
         function buildRestSeparator(idx) {
@@ -4084,6 +4124,7 @@ ${rows}
                             activeTimer.seconds = activeTimer.configured;
                             clearTimerState();
                             playTimerAlert();
+                            scrollToNextAfterTimer(name);
                             if (disp) disp.textContent = fmtTimer(activeTimer.configured);
                             const pb = document.getElementById('tpause-' + safeId);
                             if (pb) pb.textContent = '▶';
@@ -4795,6 +4836,122 @@ ${rows}
             }, { passive: true });
         })();
 
+        // --- DRAG & DROP DE DÍAS (dashboard, 250ms hold en handle ⠿) ---
+        function applyDayOrder(order) {
+            // El historial de "último entrenamiento" sigue al contenido del día,
+            // el número de día pasa a ser el de la nueva posición
+            const logs = getLogs();
+            const stamps = routineData.map(d => logs[d.dia]);
+            routineData = order.map(i => routineData[i]);
+            const newLogs = {};
+            order.forEach((oldIdx, i) => { if (stamps[oldIdx]) newLogs[i + 1] = stamps[oldIdx]; });
+            routineData.forEach((d, i) => { d.dia = i + 1; });
+            localStorage.setItem('gym_logs', JSON.stringify(newLogs));
+            saveRoutineStructure();
+            renderDashboard();
+        }
+
+        (function initDayDrag() {
+            let drag = null, holdTimer = null, startX = 0, startY = 0, activeHandle = null;
+
+            function container() { return document.getElementById('dashboard-view'); }
+            function dayCards() {
+                return Array.from(container().children).filter(el => el._dayIdx !== undefined);
+            }
+
+            function doPlacement(touchY) {
+                if (!drag) return;
+                const cRect = container().getBoundingClientRect();
+                const ghostY = Math.min(Math.max(touchY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
+                drag.ghost.style.top = ghostY + 'px';
+                const sibs = dayCards().filter(s => s !== drag.item);
+                dayCards().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
+                let insertBefore = null;
+                for (const sib of sibs) {
+                    const r = sib.getBoundingClientRect();
+                    if (touchY < r.top + r.height / 2) { insertBefore = sib; break; }
+                }
+                if (insertBefore) {
+                    container().insertBefore(drag.item, insertBefore);
+                    insertBefore.classList.add('drag-insert-above');
+                } else {
+                    container().appendChild(drag.item);
+                    if (sibs.length) sibs[sibs.length - 1].classList.add('drag-insert-below');
+                }
+            }
+
+            function startDrag(handle, dragItem, touch) {
+                const rect = dragItem.getBoundingClientRect();
+                const ghost = dragItem.cloneNode(true);
+                ghost.classList.add('drag-ghost');
+                ghost.style.top    = rect.top + 'px';
+                ghost.style.height = rect.height + 'px';
+                document.body.appendChild(ghost);
+                dragItem.classList.add('is-dragging');
+                drag = { item: dragItem, ghost, offsetY: touch.clientY - rect.top };
+                _autoScroll.update(touch.clientY);
+                _autoScroll.start(container(), doPlacement);
+                document.addEventListener('touchmove',   onMove, { passive: false });
+                document.addEventListener('touchend',    onEnd,  { passive: true });
+                document.addEventListener('touchcancel', onEnd,  { passive: true });
+            }
+
+            function onMove(e) {
+                if (!drag) return;
+                e.preventDefault();
+                const touchY = e.touches[0].clientY;
+                _autoScroll.update(touchY);
+                doPlacement(touchY);
+            }
+
+            function onEnd() {
+                if (!drag) return;
+                _autoScroll.stop();
+                drag.ghost.remove();
+                drag.item.classList.remove('is-dragging');
+                dayCards().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
+                document.removeEventListener('touchmove',   onMove);
+                document.removeEventListener('touchend',    onEnd);
+                document.removeEventListener('touchcancel', onEnd);
+                const order = dayCards().map(el => el._dayIdx);
+                drag = null;
+                if (order.some((v, i) => v !== i)) applyDayOrder(order);
+            }
+
+            document.addEventListener('touchstart', e => {
+                const handle = e.target.closest('.day-drag-handle');
+                if (!handle) return;
+                const dragItem = handle.closest('.card');
+                if (!dragItem || dragItem._dayIdx === undefined) return;
+                const touch = e.touches[0];
+                startX = touch.clientX; startY = touch.clientY;
+                activeHandle = handle;
+                handle.classList.add('hold-ready');
+                holdTimer = setTimeout(() => {
+                    holdTimer = null;
+                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
+                    if (navigator.vibrate) navigator.vibrate(40);
+                    startDrag(handle, dragItem, touch);
+                }, 250);
+            }, { passive: true });
+
+            document.addEventListener('touchmove', e => {
+                if (!holdTimer) return;
+                const t = e.touches[0];
+                if (Math.abs(t.clientX - startX) > 10 || Math.abs(t.clientY - startY) > 10) {
+                    clearTimeout(holdTimer); holdTimer = null;
+                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
+                }
+            }, { passive: true });
+
+            const cancelHold = () => {
+                if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+                if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
+            };
+            document.addEventListener('touchend',    cancelHold, { passive: true });
+            document.addEventListener('touchcancel', cancelHold, { passive: true });
+        })();
+
         // --- SWIPE BACK GESTURE ---
         (function() {
             const EDGE_ZONE   = 35;   // px desde el borde (izq o der) para activar
@@ -4896,7 +5053,8 @@ ${rows}
 
         // ── TIMER: sync when returning from locked screen (5+ min) ──
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden) return;
+            // App backgrounded (lock, app switch, PWA about to be killed): persist everything
+            if (document.hidden) { flushWorkoutSave(); return; }
             // If timer lost from memory (long lock), restore from localStorage
             let justRestored = false;
             if (!activeTimer) { restoreTimerState(); justRestored = !!activeTimer; }
@@ -4918,7 +5076,10 @@ ${rows}
                     clearTimerState();
                     // Alert only if it expired recently — a timer overdue for
                     // several minutes (abandoned session) restores silently
-                    if (elapsed - activeTimer.startSeconds < 300) playTimerAlert();
+                    if (elapsed - activeTimer.startSeconds < 300) {
+                        playTimerAlert();
+                        scrollToNextAfterTimer(activeTimer.name);
+                    }
                     if (disp) disp.textContent = fmtTimer(activeTimer.configured);
                     const pb = document.getElementById('tpause-' + safeId);
                     if (pb) pb.textContent = '▶';
@@ -4929,6 +5090,9 @@ ${rows}
                 if (disp) disp.textContent = fmtTimer(total);
             }
         });
+
+        // iOS Safari / PWA kill: pagehide is the last reliable event
+        window.addEventListener('pagehide', flushWorkoutSave);
 
         // ── HEADER: hide on scroll down, show on scroll up ──
         (() => {
