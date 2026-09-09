@@ -910,7 +910,7 @@
         .rest-sel-label { color: var(--accent); font-weight: 800; }
         .rest-separator .card-timer-row { border-top: none; background: none; padding: 4px 8px 6px; }
         /* Timer modal manual input */
-        .timer-modal-manual { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
+        .timer-modal-manual { display: flex; gap: 8px; margin-top: 14px; align-items: center; justify-content: center; }
         .timer-modal-input {
             flex: 1; padding: 9px 12px; border-radius: 10px; font-size: 0.9rem;
             background: rgba(255,255,255,0.07); border: 1px solid var(--border);
@@ -921,10 +921,13 @@
         .timer-modal-input-sm { flex: none; width: 56px; }
         .timer-modal-colon { color: var(--text); opacity: 0.6; font-weight: 800; }
         .timer-modal-ok {
-            padding: 9px 16px; border-radius: 10px; background: var(--accent);
-            border: none; color: #fff; font-size: 0.9rem; cursor: pointer;
+            padding: 9px 16px; border-radius: 10px;
+            background: rgba(var(--accent-rgb), 0.15);
+            border: 1.5px solid var(--accent); color: var(--accent);
+            font-size: 0.9rem; cursor: pointer;
             font-family: var(--font); font-weight: 800;
         }
+        .timer-modal-ok:active { background: rgba(var(--accent-rgb), 0.3); }
         /* Fallo en combo grid */
         .combo-fallo-f {
             width: 64px; text-align: center; color: var(--accent);
