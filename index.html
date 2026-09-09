@@ -918,6 +918,8 @@
         }
         .timer-modal-input:focus { border-color: var(--accent); }
         [data-theme="light"] .timer-modal-input { background: rgba(0,0,0,0.05); }
+        .timer-modal-input-sm { flex: none; width: 56px; }
+        .timer-modal-colon { color: var(--text); opacity: 0.6; font-weight: 800; }
         .timer-modal-ok {
             padding: 9px 16px; border-radius: 10px; background: var(--accent);
             border: none; color: #fff; font-size: 0.9rem; cursor: pointer;
@@ -3978,7 +3980,9 @@ ${rows}
                 + '<div class="timer-modal-title">Tiempo de descanso</div>'
                 + '<div class="timer-modal-presets">' + presetsHtml + '</div>'
                 + '<div class="timer-modal-manual">'
-                + '<input type="text" id="timer-modal-input" class="timer-modal-input" placeholder="m:ss  ó  segundos" oninput="this.value=this.value.replace(/[^0-9:]/g,\'\')" onkeydown="if(event.key===\'Enter\'){confirmTimerManual();}">'
+                + '<input type="number" inputmode="numeric" pattern="[0-9]*" id="timer-modal-min" class="timer-modal-input timer-modal-input-sm" placeholder="min" min="0" onkeydown="if(event.key===\'Enter\'){confirmTimerManual();}">'
+                + '<span class="timer-modal-colon">:</span>'
+                + '<input type="number" inputmode="numeric" pattern="[0-9]*" id="timer-modal-sec" class="timer-modal-input timer-modal-input-sm" placeholder="seg" min="0" max="59" onkeydown="if(event.key===\'Enter\'){confirmTimerManual();}">'
                 + '<button class="timer-modal-ok" onclick="confirmTimerManual()">✓</button>'
                 + '</div></div>';
             overlay.addEventListener('click', closeTimerModal);
@@ -3990,19 +3994,12 @@ ${rows}
             if (m) m.remove();
         }
 
-        function parseTimerInput(val) {
-            val = (val || '').trim();
-            if (!val) return 0;
-            if (val.includes(':')) {
-                const parts = val.split(':');
-                return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
-            }
-            return parseInt(val) || 0;
-        }
-
         function confirmTimerManual() {
-            const input = document.getElementById('timer-modal-input');
-            const seconds = parseTimerInput(input ? input.value : '');
+            const minInput = document.getElementById('timer-modal-min');
+            const secInput = document.getElementById('timer-modal-sec');
+            const mins = parseInt(minInput ? minInput.value : '') || 0;
+            const secs = parseInt(secInput ? secInput.value : '') || 0;
+            const seconds = mins * 60 + secs;
             if (seconds > 0 && _timerModalName) {
                 selectTimerPreset(_timerModalName, seconds);
             }
