@@ -1567,6 +1567,16 @@
                 </div>
             </div>
 
+            <!-- Sonido del timer -->
+            <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
+                <h3 style="color:var(--text); margin-bottom:8px; font-size:0.85rem; letter-spacing:1px; text-align:left;">Sonido Del Timer</h3>
+                <p style="font-size:0.82rem; color:var(--muted); margin-bottom:12px; text-align:left;">Alerta sonora al terminar el descanso.</p>
+                <div style="display:flex; gap:10px;">
+                    <button id="timer-sound-on-btn" onclick="applyTimerSound(true)" style="flex:1; padding:12px 0; border-radius:12px; border:2px solid var(--accent); background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; cursor:pointer; transition:all 0.2s;">🔊 Activado</button>
+                    <button id="timer-sound-off-btn" onclick="applyTimerSound(false)" style="flex:1; padding:12px 0; border-radius:12px; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-size:0.85rem; font-weight:700; cursor:pointer; transition:all 0.2s;">🔇 Silenciado</button>
+                </div>
+            </div>
+
             <!-- Color de acento -->
             <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
                 <h3 style="color:var(--text); margin-bottom:8px; font-size:0.85rem; letter-spacing:1px; text-align:left;">Color De Acento</h3>
@@ -1946,6 +1956,7 @@
 
         // --- SESSION STATE ---
         let activeTimer = null;       // { name, interval, seconds, running }
+        let timerSoundEnabled = true; // sonido del timer, configurable en Ajustes
         let completedSets = {};       // { exerciseName: checkedCount }
         let expandedFields = {};      // { name: { notes: bool, link: bool } }
         let comboFallo = {};          // { exerciseName: { a: bool, b: bool } }
@@ -3868,8 +3879,34 @@ ${rows}
             } catch(e) { clearTimerState(); }
         }
 
+        function applyTimerSound(enabled, save = true) {
+            timerSoundEnabled = enabled;
+            const onBtn  = document.getElementById('timer-sound-on-btn');
+            const offBtn = document.getElementById('timer-sound-off-btn');
+            if (onBtn && offBtn) {
+                if (enabled) {
+                    onBtn.style.border  = '2px solid var(--accent)';
+                    onBtn.style.color   = 'var(--text)';
+                    offBtn.style.border = '1px solid var(--border)';
+                    offBtn.style.color  = 'var(--muted)';
+                } else {
+                    onBtn.style.border  = '1px solid var(--border)';
+                    onBtn.style.color   = 'var(--muted)';
+                    offBtn.style.border = '2px solid var(--accent)';
+                    offBtn.style.color  = 'var(--text)';
+                }
+            }
+            if (save) {
+                const config = getConfig();
+                config.timerSound = enabled;
+                saveConfig(config);
+                showToast(enabled ? '🔊 Sonido del timer activado' : '🔇 Sonido del timer desactivado');
+            }
+        }
+
         let _audioCtx = null;
         function playTimerAlert() {
+            if (!timerSoundEnabled) return;
             try {
                 if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (_audioCtx.state === 'suspended') _audioCtx.resume();
@@ -5040,6 +5077,7 @@ ${rows}
             if (config.appIcon) applyHeaderLogo(config.appIcon);
             if (config.theme) applyTheme(config.theme, false);
             if (config.accentColor) applyAccentColor(config.accentColor, false);
+            applyTimerSound(config.timerSound !== false, false);
             updateManifest();
             requestAnimationFrame(() => {
                 renderDashboard();
