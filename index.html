@@ -3978,7 +3978,7 @@ ${rows}
                 + '<div class="timer-modal-title">Tiempo de descanso</div>'
                 + '<div class="timer-modal-presets">' + presetsHtml + '</div>'
                 + '<div class="timer-modal-manual">'
-                + '<input type="text" id="timer-modal-input" class="timer-modal-input" placeholder="m:ss  ó  segundos" onkeydown="if(event.key===\'Enter\'){confirmTimerManual();}">'
+                + '<input type="text" id="timer-modal-input" class="timer-modal-input" placeholder="m:ss  ó  segundos" oninput="this.value=this.value.replace(/[^0-9:]/g,\'\')" onkeydown="if(event.key===\'Enter\'){confirmTimerManual();}">'
                 + '<button class="timer-modal-ok" onclick="confirmTimerManual()">✓</button>'
                 + '</div></div>';
             overlay.addEventListener('click', closeTimerModal);
@@ -4124,7 +4124,9 @@ ${rows}
                             activeTimer.seconds = activeTimer.configured;
                             clearTimerState();
                             playTimerAlert();
-                            scrollToNextAfterTimer(name);
+                            // Solo el descanso entre ejercicios avanza a la próxima card;
+                            // el timer propio de un ejercicio (ej. plancha) no debe hacerlo.
+                            if (name.startsWith('__rest')) scrollToNextAfterTimer(name);
                             if (disp) disp.textContent = fmtTimer(activeTimer.configured);
                             const pb = document.getElementById('tpause-' + safeId);
                             if (pb) pb.textContent = '▶';
@@ -5078,7 +5080,7 @@ ${rows}
                     // several minutes (abandoned session) restores silently
                     if (elapsed - activeTimer.startSeconds < 300) {
                         playTimerAlert();
-                        scrollToNextAfterTimer(activeTimer.name);
+                        if (activeTimer.name.startsWith('__rest')) scrollToNextAfterTimer(activeTimer.name);
                     }
                     if (disp) disp.textContent = fmtTimer(activeTimer.configured);
                     const pb = document.getElementById('tpause-' + safeId);
