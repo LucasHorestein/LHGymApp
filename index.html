@@ -918,6 +918,8 @@
         }
         .timer-modal-input:focus { border-color: var(--accent); }
         [data-theme="light"] .timer-modal-input { background: rgba(0,0,0,0.05); }
+        .timer-modal-input-sm { flex: none; width: 56px; }
+        .timer-modal-colon { color: var(--text); opacity: 0.6; font-weight: 800; }
         .timer-modal-ok {
             padding: 9px 16px; border-radius: 10px; background: var(--accent);
             border: none; color: #fff; font-size: 0.9rem; cursor: pointer;
@@ -1565,6 +1567,16 @@
                 </div>
             </div>
 
+            <!-- Sonido del timer -->
+            <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
+                <h3 style="color:var(--text); margin-bottom:8px; font-size:0.85rem; letter-spacing:1px; text-align:left;">Sonido Del Timer</h3>
+                <p style="font-size:0.82rem; color:var(--muted); margin-bottom:12px; text-align:left;">Alerta sonora al terminar el descanso.</p>
+                <div style="display:flex; gap:10px;">
+                    <button id="timer-sound-on-btn" onclick="applyTimerSound(true)" style="flex:1; padding:12px 0; border-radius:12px; border:2px solid var(--accent); background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; cursor:pointer; transition:all 0.2s;">🔊 Activado</button>
+                    <button id="timer-sound-off-btn" onclick="applyTimerSound(false)" style="flex:1; padding:12px 0; border-radius:12px; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-size:0.85rem; font-weight:700; cursor:pointer; transition:all 0.2s;">🔇 Silenciado</button>
+                </div>
+            </div>
+
             <!-- Color de acento -->
             <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:20px;">
                 <h3 style="color:var(--text); margin-bottom:8px; font-size:0.85rem; letter-spacing:1px; text-align:left;">Color De Acento</h3>
@@ -1944,6 +1956,7 @@
 
         // --- SESSION STATE ---
         let activeTimer = null;       // { name, interval, seconds, running }
+        let timerSoundEnabled = true; // sonido del timer, configurable en Ajustes
         let completedSets = {};       // { exerciseName: checkedCount }
         let expandedFields = {};      // { name: { notes: bool, link: bool } }
         let comboFallo = {};          // { exerciseName: { a: bool, b: bool } }
@@ -3866,8 +3879,34 @@ ${rows}
             } catch(e) { clearTimerState(); }
         }
 
+        function applyTimerSound(enabled, save = true) {
+            timerSoundEnabled = enabled;
+            const onBtn  = document.getElementById('timer-sound-on-btn');
+            const offBtn = document.getElementById('timer-sound-off-btn');
+            if (onBtn && offBtn) {
+                if (enabled) {
+                    onBtn.style.border  = '2px solid var(--accent)';
+                    onBtn.style.color   = 'var(--text)';
+                    offBtn.style.border = '1px solid var(--border)';
+                    offBtn.style.color  = 'var(--muted)';
+                } else {
+                    onBtn.style.border  = '1px solid var(--border)';
+                    onBtn.style.color   = 'var(--muted)';
+                    offBtn.style.border = '2px solid var(--accent)';
+                    offBtn.style.color  = 'var(--text)';
+                }
+            }
+            if (save) {
+                const config = getConfig();
+                config.timerSound = enabled;
+                saveConfig(config);
+                showToast(enabled ? '🔊 Sonido del timer activado' : '🔇 Sonido del timer desactivado');
+            }
+        }
+
         let _audioCtx = null;
         function playTimerAlert() {
+            if (!timerSoundEnabled) return;
             try {
                 if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (_audioCtx.state === 'suspended') _audioCtx.resume();
@@ -3978,7 +4017,9 @@ ${rows}
                 + '<div class="timer-modal-title">Tiempo de descanso</div>'
                 + '<div class="timer-modal-presets">' + presetsHtml + '</div>'
                 + '<div class="timer-modal-manual">'
-                + '<input type="text" id="timer-modal-input" class="timer-modal-input" placeholder="m:ss  ó  segundos" oninput="this.value=this.value.replace(/[^0-9:]/g,\'\')" onkeydown="if(event.key===\'Enter\'){confirmTimerManual();}">'
+                + '<input type="number" inputmode="numeric" pattern="[0-9]*" id="timer-modal-min" class="timer-modal-input timer-modal-input-sm" placeholder="min" min="0" onkeydown="if(event.key===\'Enter\'){confirmTimerManual();}">'
+                + '<span class="timer-modal-colon">:</span>'
+                + '<input type="number" inputmode="numeric" pattern="[0-9]*" id="timer-modal-sec" class="timer-modal-input timer-modal-input-sm" placeholder="seg" min="0" max="59" onkeydown="if(event.key===\'Enter\'){confirmTimerManual();}">'
                 + '<button class="timer-modal-ok" onclick="confirmTimerManual()">✓</button>'
                 + '</div></div>';
             overlay.addEventListener('click', closeTimerModal);
@@ -3990,19 +4031,12 @@ ${rows}
             if (m) m.remove();
         }
 
-        function parseTimerInput(val) {
-            val = (val || '').trim();
-            if (!val) return 0;
-            if (val.includes(':')) {
-                const parts = val.split(':');
-                return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
-            }
-            return parseInt(val) || 0;
-        }
-
         function confirmTimerManual() {
-            const input = document.getElementById('timer-modal-input');
-            const seconds = parseTimerInput(input ? input.value : '');
+            const minInput = document.getElementById('timer-modal-min');
+            const secInput = document.getElementById('timer-modal-sec');
+            const mins = parseInt(minInput ? minInput.value : '') || 0;
+            const secs = parseInt(secInput ? secInput.value : '') || 0;
+            const seconds = mins * 60 + secs;
             if (seconds > 0 && _timerModalName) {
                 selectTimerPreset(_timerModalName, seconds);
             }
@@ -5043,6 +5077,7 @@ ${rows}
             if (config.appIcon) applyHeaderLogo(config.appIcon);
             if (config.theme) applyTheme(config.theme, false);
             if (config.accentColor) applyAccentColor(config.accentColor, false);
+            applyTimerSound(config.timerSound !== false, false);
             updateManifest();
             requestAnimationFrame(() => {
                 renderDashboard();
