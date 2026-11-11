@@ -634,7 +634,7 @@
         .img-preview-container img { width: 100%; height: 100%; object-fit: cover; }
         .img-placeholder { font-size: 1.4rem; color: var(--muted); }
 
-        /* J1 Drag handle — 44×44 tap target, 250ms hold */
+        /* J1 Drag handle — 44×44 tap target, arrastre inmediato */
         .drag-handle {
             width: 44px; height: 44px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
@@ -657,6 +657,14 @@
             background: var(--surface);
             overflow: hidden;
         }
+        .reorder-ghost { will-change: transform; transform-origin: 50% 40%; opacity: 1 !important;
+            background: linear-gradient(var(--surface), var(--surface)), var(--bg) !important; }
+        .muscle-group-wrapper.reorder-ghost { margin-top: 0; padding: 0 6px; }
+        .reorder-slot { box-shadow: none !important; background: rgba(var(--accent-rgb),0.06) !important;
+            outline: 2px dashed rgba(var(--accent-rgb),0.55); outline-offset: -2px; border-radius: 14px; }
+        .reorder-slot > * { visibility: hidden; }
+        .reorder-hidden { visibility: hidden; }
+        body.is-reordering, body.is-reordering * { user-select: none !important; -webkit-user-select: none !important; cursor: grabbing !important; }
         .drag-insert-above { border-top: 2.5px solid var(--accent) !important; }
         .drag-insert-below { border-bottom: 2.5px solid var(--accent) !important; }
 
@@ -2630,7 +2638,7 @@
                             </div>
                         </div>
                     `;
-                    wrapper._exData = { titulo: group.titulo };
+                    wrapper._exData = dayData.ejercicios[group.tituloIdx];
                     container.appendChild(wrapper);
                 }
 
@@ -4723,7 +4731,7 @@ ${rows}
         // para re-evaluar la posición de inserción sin esperar touchmove.
         const _autoScroll = {
             _raf: null, _touchY: 0, _container: null, _onTick: null,
-            ZONE: 80, MAX_SPEED: 14,
+            ZONE: 90, MAX_SPEED: 18,
             start(container, onTick) {
                 this._container = container;
                 this._onTick = onTick || null;
@@ -4742,11 +4750,12 @@ ${rows}
                 const distTop = y - rect.top;
                 const distBot = rect.bottom - y;
                 let scrolled = false;
-                if (distTop < this.ZONE && distTop > 0) {
-                    this._container.scrollTop -= (1 - distTop / this.ZONE) * this.MAX_SPEED;
+                // Si el dedo sale del contenedor (ej. sobre el header) sigue a velocidad máxima
+                if (distTop < this.ZONE && this._container.scrollTop > 0) {
+                    this._container.scrollTop -= (1 - Math.max(distTop, 0) / this.ZONE) * this.MAX_SPEED;
                     scrolled = true;
-                } else if (distBot < this.ZONE && distBot > 0) {
-                    this._container.scrollTop += (1 - distBot / this.ZONE) * this.MAX_SPEED;
+                } else if (distBot < this.ZONE) {
+                    this._container.scrollTop += (1 - Math.max(distBot, 0) / this.ZONE) * this.MAX_SPEED;
                     scrolled = true;
                 }
                 if (scrolled && this._onTick) this._onTick(this._touchY);
@@ -4754,125 +4763,246 @@ ${rows}
             }
         };
 
-        // --- DRAG & DROP UNIFICADO (ejercicios + grupos, 250ms hold) ---
+        // --- DRAG & DROP DE EJERCICIOS Y GRUPOS (fluido, con Pointer Events) ---
+        // Durante el arrastre el DOM no se reordena: la card original queda como
+        // hueco punteado y las demás se desplazan con transform (animado). Las
+        // posiciones se miden una sola vez al empezar (en coordenadas del contenido,
+        // así el auto-scroll no las invalida). El orden real se guarda al soltar.
         (function initUnifiedDrag() {
+            const SHIFT_MS = 180;
             let drag = null;
-            let holdTimer = null;
-            let startX = 0, startY = 0;
-            let activeHandle = null;
+            let landing = false;
+
+            const view = () => document.getElementById('workout-view');
 
             function allDraggables() {
-                return Array.from(document.getElementById('workout-view').children)
-                    .filter(el => el._exData);
+                return Array.from(view().children).filter(el => el._exData);
             }
 
-            function doPlacement(touchY) {
-                if (!drag) return;
-                const container = document.getElementById('workout-view');
+            // Una "unidad" = el ítem arrastrable + lo que lo sigue hasta el próximo
+            // (separador de descanso). Así el separador se mueve junto con su card.
+            function buildUnits(container) {
                 const cRect = container.getBoundingClientRect();
-                const ghostY = Math.min(Math.max(touchY - drag.offsetY, cRect.top), cRect.bottom - drag.ghost.offsetHeight);
-                drag.ghost.style.top = ghostY + 'px';
-                const sibs = allDraggables().filter(s => s !== drag.item);
-                allDraggables().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
-                let insertBefore = null;
-                for (const sib of sibs) {
-                    const r = sib.getBoundingClientRect();
-                    if (touchY < r.top + r.height / 2) { insertBefore = sib; break; }
-                }
-                const addBtn = container.querySelector('.add-ex-btn');
-                if (insertBefore) {
-                    container.insertBefore(drag.item, insertBefore);
-                    insertBefore.classList.add('drag-insert-above');
-                } else {
-                    container.insertBefore(drag.item, addBtn || null);
-                    if (sibs.length) sibs[sibs.length - 1].classList.add('drag-insert-below');
-                }
+                const toContent = y => y - cRect.top + container.scrollTop;
+                const items = allDraggables();
+                const units = items.map(el => {
+                    const els = [el];
+                    let n = el.nextElementSibling;
+                    while (n && !n._exData && !n.classList.contains('add-ex-btn')) { els.push(n); n = n.nextElementSibling; }
+                    return { el, els, top: toContent(el.getBoundingClientRect().top) };
+                });
+                const gap = parseFloat(getComputedStyle(container).rowGap) || 0;
+                units.forEach((u, i) => {
+                    const r = u.el.getBoundingClientRect();
+                    const hidden = u.el.offsetParent === null; // ej. filtrado por búsqueda
+                    if (i < units.length - 1) {
+                        u.h = units[i + 1].top - u.top;
+                    } else {
+                        const last = u.els[u.els.length - 1].getBoundingClientRect();
+                        u.h = hidden ? 0 : (toContent(last.bottom) - u.top + gap);
+                    }
+                    u.h = Math.max(0, u.h);
+                    u.cardH = hidden ? 0 : r.height;
+                    u.hidden = hidden;
+                });
+                return units;
             }
 
-            function startDrag(handle, dragItem, touch) {
-                const rect = dragItem.getBoundingClientRect();
-                const ghost = dragItem.cloneNode(true);
-                ghost.classList.add('drag-ghost');
-                ghost.style.top    = rect.top + 'px';
-                ghost.style.height = rect.height + 'px';
-                document.body.appendChild(ghost);
-                dragItem.classList.add('is-dragging');
-                drag = { item: dragItem, ghost, offsetY: touch.clientY - rect.top };
-                _autoScroll.update(touch.clientY);
-                _autoScroll.start(document.getElementById('workout-view'), doPlacement);
-                document.addEventListener('touchmove',   onMove, { passive: false });
-                document.addEventListener('touchend',    onEnd,  { passive: true });
-                document.addEventListener('touchcancel', onEnd,  { passive: true });
+            function contentY(clientY) {
+                const c = view();
+                return clientY - c.getBoundingClientRect().top + c.scrollTop;
             }
 
-            function onMove(e) {
+            function setShift(unit, px) {
+                if (unit.shift === px) return;
+                unit.shift = px;
+                const t = px ? `translate3d(0,${px}px,0)` : '';
+                unit.els.forEach(e => { e.style.transform = t; });
+            }
+
+            function updateTarget(clientY) {
                 if (!drag) return;
-                e.preventDefault();
-                const touchY = e.touches[0].clientY;
-                _autoScroll.update(touchY);
-                doPlacement(touchY);
-            }
-
-            function onEnd() {
-                if (!drag) return;
-                _autoScroll.stop();
-                drag.ghost.remove();
-                drag.item.classList.remove('is-dragging');
-                allDraggables().forEach(s => s.classList.remove('drag-insert-above', 'drag-insert-below'));
-                document.removeEventListener('touchmove',   onMove);
-                document.removeEventListener('touchend',    onEnd);
-                document.removeEventListener('touchcancel', onEnd);
-                if (currentDayIdx !== null) {
-                    const newOrder = allDraggables().map(el => el._exData).filter(Boolean);
-                    if (newOrder.length) {
-                        routineData[currentDayIdx].ejercicios = newOrder;
-                        saveRoutineStructure();
-                        tempSaveInputs();
-                        openWorkout(currentDayIdx);
+                const { units, from } = drag;
+                // Bordes de la card flotante en coordenadas del contenido.
+                // Se cambia de lugar apenas el borde se mete en el vecino,
+                // así con cards altas no hace falta arrastrar cientos de px.
+                const gTop = contentY(clientY) - drag.grabOffset;
+                const gBottom = gTop + drag.itemH;
+                // Umbral: superponerse la mitad de la card más chica (máx. 120px)
+                const need = u => Math.min(u.cardH, drag.itemH, 240) / 2;
+                let to = from;
+                for (let k = from + 1; k < units.length; k++) {
+                    const u = units[k];
+                    if (!u.hidden && gBottom > u.top + need(u)) to = k;
+                }
+                if (to === from) {
+                    for (let k = from - 1; k >= 0; k--) {
+                        const u = units[k];
+                        if (!u.hidden && gTop < u.top + u.cardH - need(u)) to = k;
                     }
                 }
-                drag = null;
+                if (to === drag.to) return;
+                drag.to = to;
+
+                const H = units[from].h;
+                let slotShift = 0;
+                units.forEach((u, k) => {
+                    if (k === from) return;
+                    if (to > from && k > from && k <= to) { setShift(u, -H); slotShift += u.h; }
+                    else if (to < from && k < from && k >= to) { setShift(u, H); slotShift -= u.h; }
+                    else setShift(u, 0);
+                });
+                setShift(units[from], slotShift);
+                if (navigator.vibrate) navigator.vibrate(8);
             }
 
-            document.addEventListener('touchstart', e => {
-                const handle = e.target.closest('.drag-handle, .group-drag-handle');
+            function moveGhost(clientY) {
+                drag.lastY = clientY;
+                drag.ghost.style.transform = `translate3d(0,${clientY - drag.startY}px,0) scale(1.03)`;
+            }
+
+            function start(handle, item, e) {
+                const container = view();
+                const units = buildUnits(container);
+                const from = units.findIndex(u => u.el === item);
+                if (from < 0) return;
+
+                const rect = item.getBoundingClientRect();
+                const ghost = item.cloneNode(true);
+                ghost.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+                ghost.classList.add('drag-ghost', 'reorder-ghost');
+                Object.assign(ghost.style, {
+                    top: rect.top + 'px', left: rect.left + 'px', right: 'auto',
+                    width: rect.width + 'px', height: rect.height + 'px',
+                    transform: 'translate3d(0,0,0) scale(1.03)', transition: 'none'
+                });
+                document.body.appendChild(ghost);
+
+                units.forEach(u => {
+                    u.shift = 0;
+                    u.els.forEach(el => { el.style.transition = `transform ${SHIFT_MS}ms cubic-bezier(.2,.8,.2,1)`; });
+                });
+                item.classList.add('reorder-slot');
+                units[from].els.slice(1).forEach(el => el.classList.add('reorder-hidden'));
+                document.body.classList.add('is-reordering');
+
+                drag = {
+                    item, handle, ghost, units, from, to: from,
+                    pointerId: e.pointerId,
+                    startY: e.clientY, lastY: e.clientY,
+                    grabOffset: e.clientY - rect.top, itemH: rect.height
+                };
+                try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+                if (navigator.vibrate) navigator.vibrate(25);
+
+                _autoScroll.update(e.clientY);
+                _autoScroll.start(container, y => updateTarget(y));
+            }
+
+            function cleanup(d) {
+                const { units, item, ghost } = d;
+                ghost.remove();
+                item.classList.remove('reorder-slot');
+                units.forEach(u => u.els.forEach(el => {
+                    el.style.transition = ''; el.style.transform = '';
+                    el.classList.remove('reorder-hidden');
+                }));
+                document.body.classList.remove('is-reordering');
+            }
+
+            function commit(from, to) {
+                if (currentDayIdx === null || from === to) return;
+                const day = routineData[currentDayIdx];
+                const visible = allDraggables().map(el => el._exData);
+                const [moved] = visible.splice(from, 1);
+                visible.splice(to, 0, moved);
+
+                // Los ejercicios desactivados no se renderizan: los conservamos al
+                // final de su grupo (o al principio si no tienen grupo).
+                const hiddenByGroup = new Map();
+                const leading = [];
+                let currentTitle = null;
+                const visibleSet = new Set(visible);
+                day.ejercicios.forEach(it => {
+                    if (it.titulo) { currentTitle = it; return; }
+                    if (visibleSet.has(it)) return;
+                    if (!currentTitle) leading.push(it);
+                    else {
+                        if (!hiddenByGroup.has(currentTitle)) hiddenByGroup.set(currentTitle, []);
+                        hiddenByGroup.get(currentTitle).push(it);
+                    }
+                });
+                const result = [...leading];
+                let openTitle = null;
+                const flush = () => { if (openTitle && hiddenByGroup.has(openTitle)) result.push(...hiddenByGroup.get(openTitle)); };
+                visible.forEach(it => {
+                    if (it.titulo) { flush(); openTitle = it; }
+                    result.push(it);
+                });
+                flush();
+                // Seguridad: nunca perder un ejercicio
+                day.ejercicios.forEach(it => { if (!result.includes(it)) result.push(it); });
+
+                tempSaveInputs();
+                day.ejercicios = result;
+                saveRoutineStructure();
+                const c = view();
+                const scroll = c.scrollTop;
+                renderExerciseList(day, getExData());
+                c.scrollTop = scroll;
+            }
+
+            function finish(cancelled) {
+                if (!drag) return;
+                const d = drag;
+                drag = null;
+                _autoScroll.stop();
+                try { d.handle.releasePointerCapture(d.pointerId); } catch (_) {}
+                const to = cancelled ? d.from : d.to;
+                // Animación: la card flotante "aterriza" en el hueco
+                const slotRect = d.item.getBoundingClientRect();
+                const landY = cancelled ? 0 : slotRect.top - parseFloat(d.ghost.style.top);
+                d.ghost.style.transition = 'transform 150ms ease-out';
+                d.ghost.style.transform = `translate3d(0,${landY}px,0) scale(1)`;
+                if (cancelled) d.units.forEach(u => setShift(u, 0));
+                landing = true;
+                setTimeout(() => {
+                    cleanup(d);
+                    landing = false;
+                    commit(d.from, to);
+                }, 160);
+            }
+
+            document.addEventListener('pointerdown', e => {
+                if (drag || landing) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                const handle = e.target.closest('#workout-view .drag-handle, #workout-view .group-drag-handle');
                 if (!handle) return;
-                const dragItem = handle.closest('.exercise-card, .muscle-group-wrapper');
-                if (!dragItem) return;
-                const touch = e.touches[0];
-                startX = touch.clientX; startY = touch.clientY;
-                activeHandle = handle;
-                handle.classList.add('hold-ready');
-                holdTimer = setTimeout(() => {
-                    holdTimer = null;
-                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
-                    if (navigator.vibrate) navigator.vibrate(40);
-                    startDrag(handle, dragItem, touch);
-                }, 250);
-            }, { passive: true });
+                const item = handle.closest('.exercise-card, .muscle-group-wrapper');
+                if (!item || !item._exData) return;
+                e.preventDefault();
+                start(handle, item, e);
+            });
 
-            document.addEventListener('touchmove', e => {
-                if (!holdTimer) return;
-                const touch = e.touches[0];
-                if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
-                    clearTimeout(holdTimer); holdTimer = null;
-                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
-                }
-            }, { passive: true });
+            document.addEventListener('pointermove', e => {
+                if (!drag || e.pointerId !== drag.pointerId) return;
+                e.preventDefault();
+                moveGhost(e.clientY);
+                _autoScroll.update(e.clientY);
+                updateTarget(e.clientY);
+            }, { passive: false });
 
-            document.addEventListener('touchend', e => {
-                if (holdTimer) {
-                    clearTimeout(holdTimer); holdTimer = null;
-                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
-                }
-            }, { passive: true });
-
-            document.addEventListener('touchcancel', e => {
-                if (holdTimer) {
-                    clearTimeout(holdTimer); holdTimer = null;
-                    if (activeHandle) { activeHandle.classList.remove('hold-ready'); activeHandle = null; }
-                }
-            }, { passive: true });
+            document.addEventListener('pointerup', e => {
+                if (drag && e.pointerId === drag.pointerId) finish(false);
+            });
+            document.addEventListener('pointercancel', e => {
+                if (drag && e.pointerId === drag.pointerId) finish(true);
+            });
+            // Evitar que el navegador haga scroll o abra menú contextual desde la manija
+            document.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, { passive: false });
+            document.addEventListener('contextmenu', e => {
+                if (drag || e.target.closest('#workout-view .drag-handle, #workout-view .group-drag-handle')) e.preventDefault();
+            });
         })();
 
         // --- DRAG & DROP DE DÍAS (dashboard, 250ms hold en handle ⠿) ---
